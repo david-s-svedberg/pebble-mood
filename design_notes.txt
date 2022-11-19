@@ -1,0 +1,136 @@
+Use Cases:
+==========
+
+Add and Edit Metric Group
+    Able to set Group name
+    Able to set registration time
+    Able to add and remove metrics
+
+Add and Edit Metric
+    Able to set Metric name
+        Voice To Text
+    Able to set Metric type
+        interval
+            Set max
+        bool
+
+Get Registration Alarm
+    Alarm vibrates phone until handled (or timeout)
+
+Handle Alarm
+    User can either:
+        Register
+        Silence
+        Snooze
+
+Timeout Alarm
+    If user doesn't handle alarm it is considered Snoozed for 5 minutes
+
+Silence alarm
+    Vibration stops but app stays on Alarm screen
+
+Register
+    Alarm stops and registration screen is shown
+
+Snooze
+    Alarm is snoozed for preset incremented minutes per press
+    After 5 seconds without press, snooze-wakup is scheduled and app exits
+
+User Launch:
+Show last 7 days averages in list for each metric
+
+Configure
+
+Wakeup Launch:
+
+## Data
+
+### Config
+{
+    Metrics Groups:
+    [
+        {
+            Name: "Morning"
+            Time: "7:20"
+            Metrics:
+            [
+                {
+                    Id: 1
+                    Name: "Sleep"
+                    Type: "Interval"
+                    Max: 5
+                    Last: 3
+                }
+            ]
+        }
+        {
+            Name: "Evening"
+            Time: "21:30"
+            Metrics:
+            [
+                {
+                    Id: 2
+                    Name: "Mood"
+                    Type: "Interval"
+                    Max: 5
+                    Last: 3
+                }
+                {
+                    Id: 3
+                    Name: "Exercise"
+                    Type: "Bool"
+                },
+                {
+                    Id: 4
+                    Name: "Sugar"
+                    Type: "Bool"
+                },
+            ]
+        }
+    ]
+}
+
+### Registrations
+
+[
+    {
+        Date: "2022-11-02"
+        Id: 1
+        Value: 3
+    }
+    {
+        Date: "2022-11-02"
+        Id: 2
+        Value: 4
+    }
+    {
+        Date: "2022-11-02"
+        Id: 3
+        Value: 1
+    }
+    {
+        Date: "2022-11-02"
+        Id: 4
+        Value: 0
+    }
+    {
+        Date: "2022-11-03"
+        Id: 1
+        Value: 1
+    }
+    {
+        Date: "2022-11-03"
+        Id: 2
+        Value: 2
+    }
+    {
+        Date: "2022-11-03"
+        Id: 3
+        Value: 0
+    }
+    {
+        Date: "2022-11-03"
+        Id: 4
+        Value: 1
+    }
+]

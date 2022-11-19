@@ -1,0 +1,35 @@
+{
+    "name": "Ubuntu 18.04 & Git",
+    "dockerFile": "Dockerfile",
+
+    "settings": {
+        "terminal.integrated.profiles.linux": {
+            "bash": {
+                "path": "bash",
+                "icon": "terminal-bash"
+            },
+            "zsh": {
+                "path": "zsh"
+            },
+            "fish": {
+                "path": "fish"
+            },
+            "tmux": {
+                "path": "tmux",
+                "icon": "terminal-tmux"
+            },
+            "pwsh": {
+                "path": "pwsh",
+                "icon": "terminal-powershell"
+            }
+        }
+    },
+
+    "extensions": [
+        "ms-vscode.cpptools",
+        "shardulm94.trailing-spaces",
+        "ms-vscode.cpptools-extension-pack",
+        "Tyriar.luna-paint"
+    ]
+
+}
