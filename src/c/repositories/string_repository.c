@@ -1,11 +1,11 @@
 #include "string_repository.h"
 #include "dynamic_repository.h"
-#include "data.h"
+#include "../data.h"
 
 static DynamicData strings =
 {
-    .meta_data_storage_key = STRING_META_DATA,
-    .items_storage_key = STRINGS_DATA,
+    .meta_data_storage_key = DataKeys_STRING_META_DATA,
+    .items_storage_key = DataKeys_STRINGS_DATA,
     .item_size = sizeof(String),
     .number_of_items = 0,
     .next_id = 0,
@@ -41,13 +41,13 @@ void strings_init()
 {
     dynamic_init(&strings);
 
-    if(persist_exists(STRING_CHAR_DATA_KEY))
+    if(persist_exists(DataKeys_STRING_CHAR_DATA))
     {
-        m_total_string_char_length = persist_get_size(STRING_CHAR_DATA_KEY);
+        m_total_string_char_length = persist_get_size(DataKeys_STRING_CHAR_DATA);
         m_string_values_data = (char*) malloc(m_total_string_char_length);
         if(m_total_string_char_length > 0)
         {
-            persist_read_data(STRING_CHAR_DATA_KEY, m_string_values_data, m_total_string_char_length);
+            persist_read_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
         }
     }
 
@@ -76,17 +76,17 @@ String* string_get(const uint16_t id)
 
 String* string_add(char* value)
 {
+    size_t string_length = strlen(value) + 1;
     String new_string =
     {
-        .length = strlen(value) + 1;
+        .length = string_length,
     };
-    dynamic_add(&strings, (byte*)new_string, set_string_id);
+    dynamic_add(&strings, (byte*)&new_string, set_string_id);
     size_t old_char_size = m_total_string_char_length;
     m_total_string_char_length += string_length;
-
     char* new_string_values_data = (char*)malloc(m_total_string_char_length);
     memcpy(new_string_values_data, m_string_values_data, old_char_size);
-    memcpy(&new_string_values_data[old_char_size], new_string->value, new_string->length);
+    memcpy(&new_string_values_data[old_char_size], value, new_string.length);
 
     int current_string_values_index = 0;
     for(int i = 0; i < strings.number_of_items; i++)
@@ -95,18 +95,15 @@ String* string_add(char* value)
         current_string->value = &new_string_values_data[current_string_values_index];
         current_string_values_index += current_string->length;
     }
-
     free(m_string_values_data);
     m_string_values_data = new_string_values_data;
-
-    persist_write_data(STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
-
+    persist_write_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
     return string_get(new_string.id);
 }
 
 void string_delete(const uint16_t delete_id)
 {
-    String* delete_string = get_string(delete_id);
+    String* delete_string = string_get(delete_id);
     if(delete_string != NULL)
     {
         m_total_string_char_length -= delete_string->length;
@@ -142,10 +139,10 @@ void string_delete(const uint16_t delete_id)
 
         if(m_string_values_data == NULL)
         {
-            persist_delete(STRING_CHAR_DATA);
+            persist_delete(DataKeys_STRING_CHAR_DATA);
         } else
         {
-            persist_write_data(STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
+            persist_write_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
         }
     }
 }

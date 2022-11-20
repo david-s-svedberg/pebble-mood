@@ -13,6 +13,9 @@
         "gcolor_definitions.h": "c",
         "icons.h": "c",
         "data.h": "c",
-        "string_repository.h": "c"
+        "string_repository.h": "c",
+        "app_config_repository.h": "c",
+        "metric_group_config_window.h": "c",
+        "config_menu_window.h": "c"
     }
 }

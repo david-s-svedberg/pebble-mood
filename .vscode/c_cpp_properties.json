@@ -4,6 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/build/include",
+                "${workspaceFolder}/build",
+                "${workspaceFolder}/build/src",
                 "/usr/include/**",
                 "/root/.pebble-sdk/SDKs/4.3/sdk-core/pebble/**",
                 "/usr/lib/gcc/x86_64-linux-gnu/7.5.0/include"

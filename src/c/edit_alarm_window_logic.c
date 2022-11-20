@@ -56,12 +56,12 @@ static void un_highlight_minutes()
 
 static void update_alarm_active_text()
 {
-    text_layer_set_text(m_edit_alarm_active_layer, m_edit_alarm->active ? "Active" : "Inactive");
+    text_layer_set_text(m_edit_alarm_active_layer, m_metrics_group->alarm.active ? "Active" : "Inactive");
 }
 
 static void toggle_enabled(ClickRecognizerRef recognizer, void* context)
 {
-    m_edit_alarm->active = !m_edit_alarm->active;
+    m_metrics_group->alarm.active = !m_metrics_group->alarm.active;
     update_alarm_active_text();
 }
 
@@ -69,22 +69,22 @@ static void increase_time(ClickRecognizerRef recognizer, void* context)
 {
     if(m_current_edit_step == 0)
     {
-        if(m_edit_alarm->time.hour < 23)
+        if(m_metrics_group->alarm.time.hour < 23)
         {
-            m_edit_alarm->time.hour++;
+            m_metrics_group->alarm.time.hour++;
         } else
         {
-            m_edit_alarm->time.hour = 0;
+            m_metrics_group->alarm.time.hour = 0;
         }
 
     } else if(m_current_edit_step == 1)
     {
-        if(m_edit_alarm->time.minute < 59)
+        if(m_metrics_group->alarm.time.minute < 59)
         {
-            m_edit_alarm->time.minute++;
+            m_metrics_group->alarm.time.minute++;
         } else
         {
-            m_edit_alarm->time.minute = 0;
+            m_metrics_group->alarm.time.minute = 0;
         }
     }
     update_edit_alarm_time_layers();
@@ -167,7 +167,7 @@ void change_to_init_edit_alarm_actions()
 {
     action_bar_layer_set_click_config_provider(m_edit_alarm_action_bar_layer, edit_alarm_action_bar_click_config_provider);
 
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, m_edit_alarm->active ? get_alarm_icon() : get_no_alarm_icon(), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, m_metrics_group->alarm.active ? get_alarm_icon() : get_no_alarm_icon(), true);
     action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_edit_icon(), true);
     action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_check_icon(), true);
 }
@@ -184,8 +184,8 @@ void update_edit_alarm_time_layers()
 {
     static char hour_buffer[3];
     static char minute_buffer[3];
-    fill_time_unit_string(hour_buffer, m_edit_alarm->time.hour);
-    fill_time_unit_string(minute_buffer, m_edit_alarm->time.minute);
+    fill_time_unit_string(hour_buffer, m_metrics_group->alarm.time.hour);
+    fill_time_unit_string(minute_buffer, m_metrics_group->alarm.time.minute);
 
     text_layer_set_text(m_edit_alarm_time_hour_layer, hour_buffer);
     text_layer_set_text(m_edit_alarm_time_minute_layer, minute_buffer);
@@ -202,6 +202,11 @@ void set_edit_alarm_layers(
     m_edit_alarm_time_hour_layer = edit_alarm_time_hour_layer;
     m_edit_alarm_time_minute_layer = edit_alarm_time_minute_layer;
     m_edit_alarm_action_bar_layer = edit_alarm_action_bar_layer;
+}
+
+Alarm* get_edit_alarm()
+{
+    return &m_metrics_group->alarm;
 }
 
 void set_metrics_group(MetricsGroup* metrics_group)

@@ -2,8 +2,9 @@
 
 #include <pebble.h>
 
-#include "persistance.h"
 #include "format.h"
+#include "repositories/metrics_repository.h"
+#include "repositories/app_config_repository.h"
 
 static WakeupId schedule(Alarm* alarm, time_t time)
 {
@@ -49,9 +50,9 @@ static WakeupId schedule(Alarm* alarm, time_t time)
     return id;
 }
 
-void schedule_snooze_alarm(time_t wakup_time)
+void schedule_snooze_alarm(Alarm* alarm, time_t wakup_time)
 {
-    Alarm* snooze_alarm = get_snooze_alarm();
+    Alarm* snooze_alarm = config_get_snooze_alarm();
     snooze_alarm->time.hour = alarm->time.hour;
     snooze_alarm->time.minute = alarm->time.minute;
     snooze_alarm->active = true;
@@ -60,8 +61,20 @@ void schedule_snooze_alarm(time_t wakup_time)
 
 void ensure_all_alarms_scheduled()
 {
-    schedule_alarm(get_daily_alarm());
-    schedule_alarm(get_snooze_alarm());
+    MetricsGroup* metric_groups = metrics_groups_get_all();
+    for(uint16_t i = 0; i < metrics_groups_count(); i++)
+    {
+        MetricsGroup* current_metric_group = &metric_groups[i];
+        if(current_metric_group->alarm.active)
+        {
+            bool scheduled = wakeup_query(current_metric_group->alarm.wakeup_id, NULL);
+            if(!scheduled)
+            {
+                schedule_alarm(&current_metric_group->alarm);
+            }
+        }
+    }
+    schedule_alarm(config_get_summer_time_alarm());
 }
 
 static struct tm get_alarm_time_base(Alarm* alarm)
@@ -121,7 +134,6 @@ void unschedule_all()
 TimeOfDay get_scheduled_time(Alarm* alarm)
 {
     time_t scheduled_time;
-    bool isScheduled = wakeup_query(alarm->wakeup_id, &scheduled_time);
     struct tm* local_scheduled_time = localtime(&scheduled_time);
     TimeOfDay scheduled_time_of_day =
     {
@@ -129,6 +141,59 @@ TimeOfDay get_scheduled_time(Alarm* alarm)
         .minute = local_scheduled_time->tm_min
     };
     return scheduled_time_of_day;
+}
+
+static Alarm* get_next_schedueled(Alarm** alarms, size_t number_of_alarms)
+{
+    time_t now = time(NULL);
+    Alarm* next = NULL;
+    uint32_t currentlyClosest = 0;
+    time_t wakup_time;
+    for(size_t i = 0; i < number_of_alarms; i++)
+    {
+        Alarm* current = *(alarms + i);
+        if(current != NULL)
+        {
+            if(current->active)
+            {
+                bool scheduled = wakeup_query(current->wakeup_id, &wakup_time);
+                if(scheduled)
+                {
+                    uint32_t minutesUntilAlarm = (wakup_time - now)/SECONDS_PER_MINUTE;
+                    if(next == NULL || minutesUntilAlarm < currentlyClosest)
+                    {
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm:%d is currently closest with %d minutes until alarm", current->index, (int)minutesUntilAlarm);
+                        next = current;
+                        currentlyClosest = minutesUntilAlarm;
+                    } else {
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm:%d is not closer with %d minutes until alarm", current->index, (int)minutesUntilAlarm);
+                    }
+                } else {
+                    APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm:%d not scheduled", current->index);
+                }
+            } else {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm:%d not active", current->index);
+            }
+
+        }
+    }
+    return next;
+}
+
+Alarm* get_next_alarm()
+{
+    size_t number_of_alarms = metrics_groups_count() + 1;
+    Alarm** all_alarms = (Alarm**)malloc(number_of_alarms);
+
+    MetricsGroup* metric_groups = metrics_groups_get_all();
+    for(uint16_t i = 0; i < metrics_groups_count(); i++)
+    {
+        MetricsGroup* current_metric_group = &metric_groups[i];
+        all_alarms[i] = &current_metric_group->alarm;
+    }
+    all_alarms[number_of_alarms] = config_get_snooze_alarm();
+
+    return get_next_schedueled(all_alarms, sizeof(all_alarms)/sizeof(all_alarms[0]));
 }
 
 char* get_next_alarm_time_string()

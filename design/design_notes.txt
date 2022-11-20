@@ -3,7 +3,7 @@ Use Cases:
 
 Add and Edit Metric Group
     Able to set Group name
-    Able to set registration time
+    Able to set registration alarm time
     Able to add and remove metrics
 
 Add and Edit Metric

@@ -3,7 +3,7 @@
 #include <pebble.h>
 
 #include "data.h"
-#include "metrics_repository.h"
+#include "repositories/metrics_repository.h"
 
 void set_edit_alarm_layers(
     TextLayer *edit_alarm_active_layer,

@@ -2,6 +2,7 @@
 
 #include <pebble.h>
 
+#include "repositories/app_config_repository.h"
 #include "edit_alarm_window_logic.h"
 #include "persistance.h"
 #include "icons.h"
@@ -19,7 +20,7 @@ static ActionBarLayer* edit_alarm_action_bar_layer;
 static void setup_edit_alarm_action_bar_layer(Layer *window_layer, GRect bounds)
 {
     edit_alarm_action_bar_layer = action_bar_layer_create();
-    action_bar_layer_set_background_color(edit_alarm_action_bar_layer, get_foreground_color());
+    action_bar_layer_set_background_color(edit_alarm_action_bar_layer, config_get_foreground_color());
     action_bar_layer_add_to_window(edit_alarm_action_bar_layer, edit_alarm_window);
     action_bar_layer_set_click_config_provider(edit_alarm_action_bar_layer, edit_alarm_action_bar_click_config_provider);
 
@@ -32,9 +33,9 @@ static void setup_edit_alarm_active_layer(Layer *window_layer, GRect bounds)
 {
     edit_alarm_active_layer = text_layer_create(GRect(0, 14, bounds.size.w - ACTION_BAR_WIDTH, 30));
 
-    text_layer_set_background_color(edit_alarm_active_layer, get_background_color());
+    text_layer_set_background_color(edit_alarm_active_layer, config_get_background_color());
 
-    text_layer_set_text_color(edit_alarm_active_layer, get_foreground_color());
+    text_layer_set_text_color(edit_alarm_active_layer, config_get_foreground_color());
     text_layer_set_font(edit_alarm_active_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
 
     text_layer_set_text_alignment(edit_alarm_active_layer, GTextAlignmentCenter);
@@ -57,8 +58,8 @@ static void setup_edit_alarm_time_layer(Layer *window_layer, GRect bounds)
     edit_alarm_time_colon_layer = text_layer_create(GRect(50, y - 1, 18, height));
     edit_alarm_time_minute_layer = text_layer_create(GRect(68, y, 28, height));
 
-    GColor background_color = get_background_color();
-    GColor foreground_color = get_foreground_color();
+    GColor background_color = config_get_background_color();
+    GColor foreground_color = config_get_foreground_color();
     text_layer_set_background_color(edit_alarm_time_hour_layer, background_color);
     text_layer_set_background_color(edit_alarm_time_colon_layer, background_color);
     text_layer_set_background_color(edit_alarm_time_minute_layer, background_color);
@@ -86,7 +87,7 @@ static void setup_status_bar(Layer *window_layer, GRect bounds)
 {
     status_bar = status_bar_layer_create();
 
-    status_bar_layer_set_colors(status_bar, get_background_color(), get_foreground_color());
+    status_bar_layer_set_colors(status_bar, config_get_background_color(), config_get_foreground_color());
     status_bar_layer_set_separator_mode(status_bar, StatusBarLayerSeparatorModeDotted);
 
     layer_add_child(window_layer, status_bar_layer_get_layer(status_bar));
@@ -94,7 +95,7 @@ static void setup_status_bar(Layer *window_layer, GRect bounds)
 
 static void load_edit_alarm_window(Window *edit_alarm_window)
 {
-    window_set_background_color(edit_alarm_window, get_background_color());
+    window_set_background_color(edit_alarm_window, config_get_background_color());
     Layer *edit_alarm_window_layer = window_get_root_layer(edit_alarm_window);
     GRect edit_alarm_window_bounds = layer_get_bounds(edit_alarm_window_layer);
 
@@ -123,6 +124,8 @@ static void unload_edit_alarm_window(Window *window)
 
 void setup_edit_alarm_window(MetricsGroup* metrics_group)
 {
+    set_metrics_group(metrics_group);
+
     edit_alarm_window = window_create();
 
     window_set_window_handlers(edit_alarm_window, (WindowHandlers) {

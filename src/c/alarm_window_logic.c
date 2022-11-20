@@ -6,6 +6,8 @@
 #include "format.h"
 #include "scheduler.h"
 #include "register_mood_window.h"
+#include "repositories/app_config_repository.h"
+#include "repositories/metrics_repository.h"
 
 static Window *m_alarm_window;
 
@@ -59,7 +61,7 @@ static void close_alarm()
 
 static void set_timeout()
 {
-    uint16_t timeout_milli_sec = get_alarm_timeout() * SEC_IN_MS;
+    uint16_t timeout_milli_sec = config_get_alarm_timeout() * SEC_IN_MS;
     bool rescheduled = false;
     if(m_alarm_timedout != NULL)
     {
@@ -105,15 +107,15 @@ static void register_mood_handler(ClickRecognizerRef recognizer, void* context)
         app_timer_cancel(m_alarm_timedout);
     }
     window_stack_remove(m_alarm_window, true);
-    setup_register_mood_window();
+    //setup_register_mood_window();
 }
 
 static void snooze_selection_done(void* data)
 {
     time_t t = time(NULL);
     t += (SECONDS_PER_MINUTE * m_snooze_minutes);
-    schedule_snooze_alarm(t);
-    save_data();
+    schedule_snooze_alarm(m_wakup_alarm, t);
+    config_save();
     close_alarm();
 }
 
@@ -170,14 +172,15 @@ void setup_alarm_state(int32_t alarm_index)
 {
     if(alarm_index == SNOOZED_ALARM_ID)
     {
-        m_wakup_alarm = get_snooze_alarm();
+        m_wakup_alarm = config_get_snooze_alarm();
         m_wakup_alarm->active = false;
     } else {
-        m_wakup_alarm = get_alarm(alarm_index);
+        MetricsGroup* metric_group = metrics_group_get(alarm_index);
+        m_wakup_alarm = &metric_group->alarm;
     }
 
     schedule_alarm(m_wakup_alarm);
-    save_data();
+    config_save();
     run_vibration(NULL);
     set_timeout();
 }

@@ -6,10 +6,10 @@
 
 #define CURRENT_DATA_VERSION (1)
 
-#define SNOOZED_ALARM_ID (1)
-#define SUMMER_TIME_ALARM_ID (2)
+#define SNOOZED_ALARM_ID (-1)
+#define SUMMER_TIME_ALARM_ID (-2)
 
-enum DataKeys {
+typedef enum {
     DataKeys_NONE,
     DataKeys_STRING_META_DATA,
     DataKeys_STRINGS_DATA,
@@ -18,7 +18,11 @@ enum DataKeys {
     DataKeys_METRICS_GROUP_DATA,
     DataKeys_METRICS_META_DATA,
     DataKeys_METRICS_DATA,
-}
+    DataKeys_REGISTRATIONS_META_DATA,
+    DataKeys_REGISTRATIONS_DATA,
+    DataKeys_APP_CONFIG,
+    DataKeys_FIRST_START,
+} DataKeys;
 
 typedef struct {
     uint8_t hour;
@@ -32,37 +36,54 @@ typedef struct {
     WakeupId wakeup_id;
 } Alarm;
 
-
-
-enum MetricType {
-    NONE,
-    Interval,
-    Bool
-}
-
-typedef struct {
-    uint8_t index;
-    uint8_t group_id;
-    Alarm alarm;
-    String name;
-    MetricType type;
-} Metric;
-
 typedef struct {
     uint8_t data_version;
 
     Alarm snooze_alarm;
     Alarm summer_time_alarm;
+    uint8_t alarm_timeout_sec;
 
     GColor8 background_color;
     GColor8 foreground_color;
+} AppConfig;
 
-    uint8_t number_of_groups;
-    uint8_t number_of_strings;
-    uint8_t number_of_metrics;
+typedef enum
+{
+    MetricsType_NONE,
+    MetricsType_BOOL,
+    MetricsType_INTERVAL,
+} MetricsType;
 
+typedef struct {
+    uint16_t id;
+    size_t length;
+    char* value;
+} String;
 
-    uint8_t next_group_id;
-    uint8_t next_metric_id;
-    uint8_t next_string_id;
-} Data;
+typedef struct
+{
+    uint16_t id;
+    Alarm    alarm;
+    uint16_t title_id;
+    String*  title;
+} MetricsGroup;
+
+typedef struct
+{
+    uint16_t        id;
+    uint16_t        group_id;
+    MetricsGroup*   group;
+    uint16_t        title_id;
+    String*         title;
+    MetricsType     type;
+    uint8_t         max_value;
+} Metrics;
+
+typedef struct
+{
+    uint16_t    id;
+    uint16_t    metrics_id;
+    Metrics*    metric;
+    uint8_t     value;
+    time_t      time_stamp;
+} Registration;

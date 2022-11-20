@@ -15,7 +15,7 @@
         {
             "label": "install pebble",
             "type": "shell",
-            "command": "pebble build && pebble install --logs --phone 192.168.1.107",
+            "command": "pebble build && pebble install --logs --phone 192.168.1.161",
             "runOptions": {
                 "instanceLimit": 1,
                 "runOn": "default"

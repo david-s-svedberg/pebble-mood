@@ -38,7 +38,6 @@ void dynamic_add(DynamicData* data, byte* item_to_add, SetItemId set_item_id_fun
 
 void dynamic_delete(const uint16_t delete_id, DynamicData* data, GetItemId get_item_id_function)
 {
-    size_t old_items_size = data->number_of_items * data->item_size;
     uint16_t old_number_of_items = data->number_of_items--;
     size_t new_items_size = data->number_of_items * data->item_size;
 
@@ -74,8 +73,8 @@ byte* dynamic_get(const uint16_t id, DynamicData* data, SameIdPredicate same_id_
     byte* found = NULL;
     for(int i = 0; i < data->number_of_items; i++)
     {
-        byte* current_item = &m_metrics->items[i * data->item_size];
-        if(current_item->id == id)
+        byte* current_item = &data->items[i * data->item_size];
+        if(same_id_predicate_function(id, current_item))
         {
             found = current_item;
             break;
