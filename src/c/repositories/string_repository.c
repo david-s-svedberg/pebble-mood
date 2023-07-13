@@ -62,6 +62,7 @@ String* strings_get_all()
 String* string_get(const uint16_t id)
 {
     String* found = NULL;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "strings.number_of_items:%d", strings.number_of_items);
     for(int i = 0; i < strings.number_of_items; i++)
     {
         String* current_string = (String*)&strings.items[i * strings.item_size];

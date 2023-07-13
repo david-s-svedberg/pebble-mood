@@ -110,6 +110,7 @@ static void change_max_value(int index, void *context)
 
 static void update_metric_group_items()
 {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "metric title*:%d", (int)m_metric->title);
     m_title_item.subtitle = m_metric->title->value;
     m_type_item.subtitle = m_metric->type == MetricsType_BOOL ? "Yes/No" : "Interval";
     static char max_value[2];
@@ -183,7 +184,7 @@ static void setup_status_bar(Layer *window_layer, GRect bounds)
     layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
 }
 
-static void load_main_window(Window *window)
+static void load_metrics_config_window(Window *window)
 {
     window_set_background_color(window, config_get_background_color());
     Layer *window_layer = window_get_root_layer(window);
@@ -198,14 +199,14 @@ static void load_main_window(Window *window)
         NULL);
 }
 
-static void unload_main_window(Window *window)
+static void unload_metrics_config_window(Window *window)
 {
     status_bar_layer_destroy(m_status_bar);
     simple_menu_layer_destroy(m_config_menu_layer);
     dictation_session_destroy(m_dictation_session);
 }
 
-static void appear_config_windows(Window *window)
+static void appear_metrics_config_windows(Window *window)
 {
     update_metric_group_items();
     update_metric_items();
@@ -214,13 +215,14 @@ static void appear_config_windows(Window *window)
 
 void setup_metrics_config_window(Metrics* metric)
 {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "metric*:%d", (int)metric);
     m_metric = metric;
     m_config_window = window_create();
 
     window_set_window_handlers(m_config_window, (WindowHandlers) {
-        .load = load_main_window,
-        .unload = unload_main_window,
-        .appear = appear_config_windows,
+        .load = load_metrics_config_window,
+        .unload = unload_metrics_config_window,
+        .appear = appear_metrics_config_windows,
     });
 
     window_stack_push(m_config_window, true);

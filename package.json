@@ -225,10 +225,10 @@
             "aplite",
             "basalt"
         ],
-        "uuid": "b60baf1a-4dbf-4daf-8c55-0560c4b982a8",
+        "uuid": "b60baf1a-4dbf-4daf-8c55-056946b982a8",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "1.3.0"
+    "version": "1.0.0"
 }

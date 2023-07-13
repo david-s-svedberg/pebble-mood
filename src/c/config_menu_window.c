@@ -153,13 +153,16 @@ static void update_metric_groups_items()
 
     MetricsGroup* metrics_groups = metrics_groups_get_all();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "metrics_groups:%d", (int)metrics_groups);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Number of metric groups:%d", (int)number_of_metrics_groups);
     for(uint16_t i = 0; i < number_of_metrics_groups; i++)
     {
         MetricsGroup* current_metrics_group = &metrics_groups[i];
         SimpleMenuItem* metrics_group_menu_item = &m_metrics_group_items[i];
         APP_LOG(APP_LOG_LEVEL_DEBUG, "current_metrics_group:%d", (int)current_metrics_group);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "metrics_group_menu_item:%d", (int)metrics_group_menu_item);
-        m_metric_ids_index_map[i] = current_metrics_group->id;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_metrics_group->id:%d", current_metrics_group->id);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_metrics_group->title*:%d", (int)current_metrics_group->title);
+        m_metrics_group_id_index_map[i] = current_metrics_group->id;
         metrics_group_menu_item->title = current_metrics_group->title->value;
         metrics_group_menu_item->callback = config_metrics_group;
     }
@@ -239,7 +242,7 @@ static void unload_config_window(Window *window)
     free_dynamically_allocated_data();
 }
 
-static void appear_config_windows(Window *window)
+static void appear_metrics_config_windows(Window *window)
 {
     update_metric_groups_items();
     update_metric_items();
@@ -254,7 +257,7 @@ void setup_config_window()
     window_set_window_handlers(m_config_window, (WindowHandlers) {
         .load = load_config_window,
         .unload = unload_config_window,
-        .appear = appear_config_windows,
+        .appear = appear_metrics_config_windows,
     });
 
     window_stack_push(m_config_window, true);

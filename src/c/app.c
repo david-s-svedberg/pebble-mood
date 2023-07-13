@@ -1,6 +1,8 @@
 #include "app.h"
 
 #include "config_menu_window.h"
+#include "metrics_config_window.h"
+#include "metric_group_config_window.h"
 #include "repositories/app_config_repository.h"
 #include "repositories/metrics_repository.h"
 #include "repositories/string_repository.h"
@@ -59,7 +61,9 @@ void deinit()
 {
     APP_LOG(APP_LOG_LEVEL_INFO, "Deiniting Mood");
 
-    // tear_down_config_window();
+    tear_down_config_window();
+    tear_down_metric_group_config_window();
+    tear_down_metrics_config_window();
     // tear_down_edit_alarm_window();
     // tear_down_alarm_window();
 

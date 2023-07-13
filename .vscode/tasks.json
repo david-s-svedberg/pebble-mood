@@ -20,6 +20,26 @@
                 "instanceLimit": 1,
                 "runOn": "default"
             }
+        },
+        {
+            "label": "kill-buck",
+            "type": "shell",
+            "command": "pkill -KILL -f vscode-task && exit 0"
+        },
+        {
+            "label": "buck",
+            "type": "shell",
+            "command": "exec -a vscode-task pebble install --logs --phone 192.168.1.161",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "runOptions": {
+                "instanceLimit": 999
+            },
+            "dependsOn": ["kill-buck", "build pebble"],
+            "dependsOrder": "sequence"
         }
     ]
 }

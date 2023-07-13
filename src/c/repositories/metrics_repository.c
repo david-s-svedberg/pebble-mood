@@ -85,7 +85,10 @@ void metrics_init()
     for(int i = 0; i < m_metrics_groups.number_of_items; i++)
     {
         MetricsGroup* current_group = (MetricsGroup*)&m_metrics_groups.items[i];
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_group->id:%d", current_group->id);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_group->title_id:%d", current_group->title_id);
         current_group->title = string_get(current_group->title_id);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_group->title*:%d", (int)current_group->title);
     }
 
     for(int i = 0; i < m_metrics.number_of_items; i++)
@@ -178,7 +181,9 @@ Metrics* metrics_new()
         .type = MetricsType_BOOL,
     };
     uint16_t new_id = metrics_add(&new);
-    return metrics_get(new_id);
+    Metrics* stored = metrics_get(new_id);
+    metrics_set_title(stored, "New Metric");
+    return stored;
 }
 
 MetricsGroup* metrics_group_new()
