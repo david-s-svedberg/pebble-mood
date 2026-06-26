@@ -8,7 +8,9 @@ static DynamicData strings =
     .items_storage_key = DataKeys_STRINGS_DATA,
     .item_size = sizeof(String),
     .number_of_items = 0,
-    .next_id = 0,
+    // Start ids at 1 so 0 is a reserved "no string" sentinel (used by
+    // title_id / option_text_ids that may be unset).
+    .next_id = 1,
     .items = NULL,
 };
 

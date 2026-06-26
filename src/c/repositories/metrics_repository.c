@@ -230,6 +230,31 @@ void metrics_set_title(Metrics* metrics, char* title)
     metrics_save();
 }
 
+void metrics_set_option_text(Metrics* metrics, uint8_t option, char* text)
+{
+    if(option >= MAX_METRIC_OPTIONS)
+    {
+        return;
+    }
+    if(metrics->option_text_ids[option] != 0)
+    {
+        string_delete(metrics->option_text_ids[option]);
+    }
+    String* new_string = string_add(text);
+    metrics->option_text_ids[option] = new_string->id;
+    metrics_save();
+}
+
+const char* metrics_get_option_text(Metrics* metrics, uint8_t option)
+{
+    if(option >= MAX_METRIC_OPTIONS || metrics->option_text_ids[option] == 0)
+    {
+        return "";
+    }
+    String* string = string_get(metrics->option_text_ids[option]);
+    return string != NULL ? string->value : "";
+}
+
 void metrics_groups_set_title(MetricsGroup* metrics_group, char* title)
 {
     if(metrics_group->title != NULL)

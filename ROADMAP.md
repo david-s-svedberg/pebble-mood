@@ -52,9 +52,9 @@ Status:
 - [x] `IconChoice`-register + ikon-väljare i metric-config (huvudikon + per alternativ).
 - [x] Registreringsfönstret mappar knappar per typ (2→Upp/Ner, 3→Upp/Select/Ner) och ritar
       huvudikonen centrerat.
-- [ ] **Text per alternativ** — redigerbar text per alternativ (fält `option_text_ids` finns).
-      Kräver en "ingen text"-sentinel; sträng-id:n börjar på 0 så 0 går inte att använda rakt
-      av (överväg att reservera id 0 = none, eller lagra id+1).
+- [x] **Text per alternativ** — redigerbar via röst i metric-config ("Option N text"-rad),
+      lagras i `option_text_ids`. Sträng-id:n börjar nu på 1 så 0 = "ingen text". (Visas ännu
+      inte på registreringsskärmen — det görs i ikon-/registrerings-polishen.)
 - [ ] **Ikon-assets + storlekar** (se nedan).
 
 ### Ikoner: fler + passande storlekar
@@ -147,8 +147,15 @@ Eget UI istället för dagens lista:
       med fallback "Time to register".
 - [ ] **Companion-app saknas** — exporten skickar registreringar till telefonen, men ingen
       mottagande app/analys finns än. Nästa: leverera datan vidare + bygg korrelations-UI.
-- [ ] **"Max visas för BOOL"** i metric-config (`SimpleMenuLayer` cachar `num_items`). Löses
-      i samband med avsnitt 2.
+- [x] **"Max visas för BOOL"** — löst: metric-config bygger nu raderna dynamiskt per typ, så
+      Max-raden finns bara för Interval.
+- [ ] **Re-registrering / dubbelräkning i snittet** — registreringar är tidsstämplade datapunkter
+      och flera per dag är giltiga (t.ex. humör morgon + kväll, samma metric i två grupper). Att
+      "ändra" via Idag-vyn lägger därför till en ny punkt snarare än att skriva över. 7-dagars­snittet
+      medelvärdar alla punkter. Rätt "senaste/medel per dag"-semantik (och ev. grupp-kontext på
+      registreringar) hör hemma i analys-/companion-lagret — medvetet inte ändrat i klockan nu.
+- [ ] **Snooze-tidsrad** — alarmets tidsrad visar gruppens registreringstid (meningsfullt även för
+      en snooze); bedömt som ej-bugg.
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. erbjuda ett textfritt/förvalt alternativ.
 - [x] **edit-alarm tidsindikator för emery** — centrerad i innehållsytan + större font

@@ -21,6 +21,8 @@ Metrics*        metrics_new();
 void            metrics_delete(const uint16_t delete_id);
 uint32_t        metrics_count();
 void            metrics_set_title(Metrics* metrics, char* title);
+void            metrics_set_option_text(Metrics* metrics, uint8_t option, char* text);
+const char*     metrics_get_option_text(Metrics* metrics, uint8_t option);
 void            metrics_save();
 
 void            registration_add(Registration* registration);

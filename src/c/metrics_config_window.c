@@ -8,7 +8,8 @@
 #include "icons.h"
 #include "edit_alarm_window.h"
 
-#define MAX_METRIC_ROWS (3 + MAX_METRIC_OPTIONS)  // Title, Type, Main icon + Max OR per-option icons
+// Title, Type, Main icon + Max OR per-option (icon + text) rows.
+#define MAX_METRIC_ROWS (3 + 2 * MAX_METRIC_OPTIONS)
 #define ROW_TEXT_LEN (20)
 
 typedef enum
@@ -18,6 +19,7 @@ typedef enum
     RowKind_MAIN_ICON,
     RowKind_MAX,
     RowKind_OPTION_ICON,
+    RowKind_OPTION_TEXT,
 } RowKind;
 
 static Window *m_config_window;
@@ -44,6 +46,7 @@ static uint16_t* m_group_id_index_map = NULL;
 
 static DictationSession* m_dictation_session;
 static Metrics* m_metric = NULL;
+static int m_dictation_target = -1;  // -1 = title, 0..N = option text
 
 static void create_menu();
 
@@ -125,6 +128,12 @@ static void build_metric_rows()
             set_row(r++, RowKind_OPTION_ICON, option, title,
                 icon_name(m_metric->option_icons[option]),
                 row_icon(m_metric->option_icons[option]));
+
+            const char* text = metrics_get_option_text(m_metric, option);
+            char text_title[ROW_TEXT_LEN];
+            snprintf(text_title, sizeof(text_title), "Option %d text", option + 1);
+            set_row(r++, RowKind_OPTION_TEXT, option, text_title,
+                (text[0] != '\0') ? text : "(none)", NULL);
         }
     }
 
@@ -242,6 +251,7 @@ static void metric_row_selected(int index, void *context)
     switch(m_row_kind[index])
     {
         case RowKind_TITLE:
+            m_dictation_target = -1;
             dictation_session_start(m_dictation_session);
             break;
         case RowKind_TYPE:
@@ -276,6 +286,10 @@ static void metric_row_selected(int index, void *context)
             mark_menu_dirty();
             break;
         }
+        case RowKind_OPTION_TEXT:
+            m_dictation_target = m_row_option[index];
+            dictation_session_start(m_dictation_session);
+            break;
     }
 }
 
@@ -287,7 +301,13 @@ static void dictation_session_callback(
 {
     if(status == DictationSessionStatusSuccess)
     {
-        metrics_set_title(m_metric, transcription);
+        if(m_dictation_target < 0)
+        {
+            metrics_set_title(m_metric, transcription);
+        } else
+        {
+            metrics_set_option_text(m_metric, (uint8_t)m_dictation_target, transcription);
+        }
         create_menu();
     }
 }
