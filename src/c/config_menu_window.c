@@ -68,10 +68,12 @@ static void free_dynamic_metric_data()
     if(m_metric_items != NULL)
     {
         free(m_metric_items);
+        m_metric_items = NULL;
     }
     if(m_metric_ids_index_map != NULL)
     {
         free(m_metric_ids_index_map);
+        m_metric_ids_index_map = NULL;
     }
 }
 
@@ -126,10 +128,12 @@ static void free_dynamic_metric_group_data()
     if(m_metrics_group_items != NULL)
     {
         free(m_metrics_group_items);
+        m_metrics_group_items = NULL;
     }
     if(m_metrics_group_id_index_map != NULL)
     {
         free(m_metrics_group_id_index_map);
+        m_metrics_group_id_index_map = NULL;
     }
 }
 
