@@ -87,8 +87,8 @@ static char* get_current_theme()
 
 static void update_app_config_items()
 {
-    static char timeout_buffer[2];
-    snprintf(timeout_buffer, 1, "%d", config_get_alarm_timeout() / 60);
+    static char timeout_buffer[4];
+    snprintf(timeout_buffer, sizeof(timeout_buffer), "%d", config_get_alarm_timeout() / 60);
     m_alarm_timeout_item.subtitle = timeout_buffer;
 
     m_theme_item.subtitle = get_current_theme();
@@ -99,7 +99,6 @@ static void update_metric_items()
     free_dynamic_metric_data();
 
     size_t number_of_metrics = metrics_count();
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "number_of_metrics:%d", number_of_metrics);
     size_t metric_items_size = (number_of_metrics + 1) * sizeof(SimpleMenuItem);
     m_metric_items = (SimpleMenuItem*)malloc(metric_items_size);
     memset(m_metric_items, 0, metric_items_size);
@@ -120,7 +119,6 @@ static void update_metric_items()
     add_item->callback = add_metrics;
     m_metrics_section.items = m_metric_items;
     m_metrics_section.num_items = number_of_metrics + 1;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "m_metrics_section.num_items:%d", (int)m_metrics_section.num_items);
 }
 
 static void free_dynamic_metric_group_data()
@@ -152,14 +150,11 @@ static void update_metric_groups_items()
     m_metrics_group_id_index_map = (uint16_t*)malloc(number_of_metrics_groups * sizeof(uint16_t));
 
     MetricsGroup* metrics_groups = metrics_groups_get_all();
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "metrics_groups:%d", (int)metrics_groups);
     for(uint16_t i = 0; i < number_of_metrics_groups; i++)
     {
         MetricsGroup* current_metrics_group = &metrics_groups[i];
         SimpleMenuItem* metrics_group_menu_item = &m_metrics_group_items[i];
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_metrics_group:%d", (int)current_metrics_group);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "metrics_group_menu_item:%d", (int)metrics_group_menu_item);
-        m_metric_ids_index_map[i] = current_metrics_group->id;
+        m_metrics_group_id_index_map[i] = current_metrics_group->id;
         metrics_group_menu_item->title = current_metrics_group->title->value;
         metrics_group_menu_item->callback = config_metrics_group;
     }
@@ -169,8 +164,6 @@ static void update_metric_groups_items()
 
     m_metrics_groups_section.num_items = number_of_metrics_groups + 1;
     m_metrics_groups_section.items = m_metrics_group_items;
-
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "m_metrics_groups_section.num_items:%d", (int)m_metrics_groups_section.num_items);
 }
 
 static void update_ui()

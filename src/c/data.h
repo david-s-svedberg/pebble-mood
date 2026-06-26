@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <pebble.h>
 
-#define CURRENT_DATA_VERSION (1)
+// Bump this whenever the AppConfig layout changes (and only append new fields
+// to the end of AppConfig). config_init() re-seeds when the stored version or
+// size no longer matches, so existing installs can't read a stale layout.
+#define CURRENT_DATA_VERSION (2)
 
 #define SNOOZED_ALARM_ID (-1)
 #define SUMMER_TIME_ALARM_ID (-2)
@@ -45,6 +48,11 @@ typedef struct {
 
     GColor8 background_color;
     GColor8 foreground_color;
+
+    // Append new fields below this line only, and bump CURRENT_DATA_VERSION.
+    // The group whose alarm was snoozed, so the registration target survives
+    // the app exit/relaunch that a snooze causes.
+    uint16_t snoozed_group_id;
 } AppConfig;
 
 typedef enum

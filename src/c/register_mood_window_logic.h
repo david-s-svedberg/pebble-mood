@@ -1,6 +1,14 @@
-// #pragma once
+#pragma once
 
-// #include <pebble.h>
+#include <pebble.h>
 
-// void setup_measurement_points();
-// void expose_ui(Window* mood_window, ActionBarLayer* action_bar, BitmapLayer* icon_layer, TextLayer* score_layer);
+#include "data.h"
+
+void register_mood_set_group(MetricsGroup* group);
+void register_mood_set_layers(
+    Window* window,
+    ActionBarLayer* action_bar,
+    TextLayer* title_layer,
+    TextLayer* value_layer);
+void register_mood_start();
+void register_mood_tear_down();

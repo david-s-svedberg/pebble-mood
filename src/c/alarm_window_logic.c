@@ -17,6 +17,7 @@ static TextLayer *m_snooze_time_layer;
 static ActionBarLayer* m_alarm_window_action_bar_layer;
 
 static Alarm* m_wakup_alarm;
+static MetricsGroup* m_registering_group = NULL;
 static bool m_alarm_silenced = false;
 
 static uint16_t snooze_progression[] = {5, 10, 15, 30, 60, 90, 120};
@@ -25,7 +26,7 @@ static AppTimer* m_snooze_selection_done = NULL;
 static AppTimer* m_silenced_timedout = NULL;
 static AppTimer* m_alarm_timedout = NULL;
 
-static const uint32_t const segments[] = { 50 };
+static const uint32_t segments[] = { 50 };
 static const VibePattern m_vibration_pattern =
 {
     .durations = segments,
@@ -107,13 +108,22 @@ static void register_mood_handler(ClickRecognizerRef recognizer, void* context)
         app_timer_cancel(m_alarm_timedout);
     }
     window_stack_remove(m_alarm_window, true);
-    //setup_register_mood_window();
+    if(m_registering_group != NULL)
+    {
+        setup_register_mood_window(m_registering_group);
+    }
 }
 
 static void snooze_selection_done(void* data)
 {
     time_t t = time(NULL);
     t += (SECONDS_PER_MINUTE * m_snooze_minutes);
+    // Persist which group is being registered so the snooze wakeup (which
+    // relaunches the app) can reopen registration for the right group.
+    if(m_registering_group != NULL)
+    {
+        config_set_snoozed_group_id(m_registering_group->id);
+    }
     schedule_snooze_alarm(m_wakup_alarm, t);
     config_save();
     close_alarm();
@@ -127,7 +137,7 @@ static void snooze_alarm_handler(ClickRecognizerRef recognizer, void* context)
 
     m_clicks++;
     m_snooze_minutes = snooze_progression[(m_clicks - 1) % ARRAY_LENGTH(snooze_progression)];
-    static char snooze_text_buffer[6];
+    static char snooze_text_buffer[8];
     snprintf(snooze_text_buffer, sizeof(snooze_text_buffer), "%dm", m_snooze_minutes);
     text_layer_set_text(m_snooze_time_layer, snooze_text_buffer);
     m_alarm_silenced = true;
@@ -174,9 +184,13 @@ void setup_alarm_state(int32_t alarm_index)
     {
         m_wakup_alarm = config_get_snooze_alarm();
         m_wakup_alarm->active = false;
+        // The snooze alarm carries no group of its own, so recover the group
+        // that was snoozed (persisted across the relaunch the snooze caused).
+        m_registering_group = metrics_group_get(config_get_snoozed_group_id());
     } else {
         MetricsGroup* metric_group = metrics_group_get(alarm_index);
         m_wakup_alarm = &metric_group->alarm;
+        m_registering_group = metric_group;
     }
 
     schedule_alarm(m_wakup_alarm);

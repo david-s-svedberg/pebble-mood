@@ -1,55 +1,42 @@
-FROM ubuntu:bionic
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 LABEL MAINTAINER="David Svedberg"
 
+# Pebble-emulatorns och SDK:ns systemberoenden (Core Devices pebble-tool).
+# Notera SDL2 (inte SDL1 som gamla Rebble-SDK:n krävde).
+# iptables/ipset/dnsutils/aggregate/jq behövs av remote-control-sandboxens firewall.
 ENV DEBIAN_FRONTEND=noninteractive
-# Install dependencies
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-    build-essential \
-    curl \
-    python2.7-dev \
-    python-pip \
-    libfreetype6 \
-    libc6-dev-i386 \
-   #
-   # Clean up
-   && apt-get autoremove -y \
-   && apt-get clean -y \
-   && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends \
+        nodejs \
+        npm \
+        libsdl2-2.0-0 \
+        libglib2.0-0 \
+        libpixman-1-0 \
+        libpng16-16t64 \
+        zlib1g \
+        libsndio7.0 \
+        iptables \
+        ipset \
+        dnsutils \
+        aggregate \
+        jq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
-# Install Pebble Tool
-ENV PEBBLE_TOOL_VERSION pebble-sdk-4.5-linux64
-ENV PEBBLE_PATH /root/pebble-dev
-ENV PEBBLE_HOME $PEBBLE_PATH/$PEBBLE_TOOL_VERSION
-ENV PATH $PEBBLE_HOME/bin:$PATH
+# uv hanterar Python-versionen och installerar pebble-tool. Läggs i /usr/local/bin
+# så att den är på PATH för alla användare i imagen.
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
-RUN mkdir -p $PEBBLE_PATH
-RUN curl -sSL https://developer.rebble.io/s3.amazonaws.com/assets.getpebble.com/pebble-tool/$PEBBLE_TOOL_VERSION.tar.bz2 \
-		| tar -v -C $PEBBLE_PATH -xj
+# Remote-control-sandboxens firewall: kopiera skriptet och ge vscode passwordless sudo för ENBART
+# det (least privilege), inte generell sudo.
+COPY init-firewall.sh /usr/local/bin/init-firewall.sh
+RUN chmod 0755 /usr/local/bin/init-firewall.sh \
+    && echo "vscode ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/vscode-firewall \
+    && chmod 0440 /etc/sudoers.d/vscode-firewall
 
-WORKDIR $PEBBLE_HOME
-
-RUN pip install --upgrade setuptools
-RUN pip install wheel
-
-RUN /bin/bash -c " \
-    pip install virtualenv \
-    && virtualenv .env \
-    && source .env/bin/activate \
-    && pip install -r requirements.txt \
-    && deactivate \
-    "
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-    libsdl1.2debian libfdt1 libpixman-1-0 npm
-
-RUN /bin/bash -c " \
-    mkdir -p /root/.pebble-sdk \
-    && touch /root/.pebble-sdk/NO_TRACKING \
-    "
-
-# Install Pebble SDK
-RUN yes | pebble sdk install https://github.com/aveao/PebbleArchive/raw/master/SDKCores/sdk-core-4.3.tar.bz2
-
-RUN apt-get install -y nodejs
+# Skapa mountpunkterna ägda av vscode INNAN named volumes monteras: en tom named volume ärver
+# katalogens ägare/rättigheter från imagen vid första monteringen, så vscode (uid 1000) kan skriva.
+RUN mkdir -p /home/vscode/.claude /home/vscode/.ssh \
+    && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.ssh \
+    && chmod 700 /home/vscode/.ssh

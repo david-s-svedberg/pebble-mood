@@ -21,7 +21,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -32,7 +33,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -43,7 +45,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -54,7 +57,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -65,7 +69,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -76,7 +81,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -87,7 +93,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -98,7 +105,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -109,7 +117,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -120,7 +129,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -131,7 +141,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -142,7 +153,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -153,7 +165,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -169,7 +182,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -180,7 +194,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -191,7 +206,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -202,7 +218,8 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 },
@@ -213,17 +230,29 @@
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
-                        "aplite"
+                        "aplite",
+                        "emery"
                     ],
                     "type": "bitmap"
                 }
             ]
         },
+        "messageKeys": [
+            "EXPORT_REQUEST",
+            "REG_INDEX",
+            "REG_TOTAL",
+            "REG_METRIC_ID",
+            "REG_METRIC_NAME",
+            "REG_METRIC_TYPE",
+            "REG_VALUE",
+            "REG_TIMESTAMP"
+        ],
         "sdkVersion": "3",
         "targetPlatforms": [
             "diorite",
             "aplite",
-            "basalt"
+            "basalt",
+            "emery"
         ],
         "uuid": "b60baf1a-4dbf-4daf-8c55-0560c4b982a8",
         "watchapp": {

@@ -133,7 +133,8 @@ void unschedule_all()
 
 TimeOfDay get_scheduled_time(Alarm* alarm)
 {
-    time_t scheduled_time;
+    time_t scheduled_time = 0;
+    wakeup_query(alarm->wakeup_id, &scheduled_time);
     struct tm* local_scheduled_time = localtime(&scheduled_time);
     TimeOfDay scheduled_time_of_day =
     {
@@ -182,18 +183,20 @@ static Alarm* get_next_schedueled(Alarm** alarms, size_t number_of_alarms)
 
 Alarm* get_next_alarm()
 {
-    size_t number_of_alarms = metrics_groups_count() + 1;
-    Alarm** all_alarms = (Alarm**)malloc(number_of_alarms);
+    uint16_t number_of_groups = metrics_groups_count();
+    size_t number_of_alarms = number_of_groups + 1;
+    Alarm** all_alarms = (Alarm**)malloc(number_of_alarms * sizeof(Alarm*));
 
     MetricsGroup* metric_groups = metrics_groups_get_all();
-    for(uint16_t i = 0; i < metrics_groups_count(); i++)
+    for(uint16_t i = 0; i < number_of_groups; i++)
     {
-        MetricsGroup* current_metric_group = &metric_groups[i];
-        all_alarms[i] = &current_metric_group->alarm;
+        all_alarms[i] = &metric_groups[i].alarm;
     }
-    all_alarms[number_of_alarms] = config_get_snooze_alarm();
+    all_alarms[number_of_groups] = config_get_snooze_alarm();
 
-    return get_next_schedueled(all_alarms, sizeof(all_alarms)/sizeof(all_alarms[0]));
+    Alarm* next = get_next_schedueled(all_alarms, number_of_alarms);
+    free(all_alarms);
+    return next;
 }
 
 char* get_next_alarm_time_string()

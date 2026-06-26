@@ -37,7 +37,7 @@ static SimpleMenuItem m_metric_items[3];
 static SimpleMenuSection m_metric_items_section =
 {
     .items = m_metric_items,
-    .num_items = sizeof(m_metric_items),
+    .num_items = 3,
     .title = "Metrics",
 };
 
@@ -112,10 +112,10 @@ static void update_metric_group_items()
 {
     m_title_item.subtitle = m_metric->title->value;
     m_type_item.subtitle = m_metric->type == MetricsType_BOOL ? "Yes/No" : "Interval";
-    static char max_value[2];
-    snprintf(max_value, 2, "%d", m_metric->max_value);
+    static char max_value[4];
+    snprintf(max_value, sizeof(max_value), "%d", m_metric->max_value);
     m_max_value_item.subtitle = max_value;
-    m_metric_group_items_section.num_items = m_metric->type == MetricsType_INTERVAL ? 3 : 2;
+    m_metric_items_section.num_items = m_metric->type == MetricsType_INTERVAL ? 3 : 2;
 }
 
 static void update_metric_items()
@@ -130,7 +130,9 @@ static void update_metric_items()
     }
 
     size_t number_of_metrics_groups = metrics_groups_count();
-    m_metric_group_items = (SimpleMenuItem*)malloc(number_of_metrics_groups * sizeof(SimpleMenuItem));
+    size_t group_items_size = number_of_metrics_groups * sizeof(SimpleMenuItem);
+    m_metric_group_items = (SimpleMenuItem*)malloc(group_items_size);
+    memset(m_metric_group_items, 0, group_items_size);
     m_metric_ids_index_map = (uint16_t*)malloc(number_of_metrics_groups * sizeof(uint16_t));
 
     MetricsGroup* metrics_groups = metrics_groups_get_all();

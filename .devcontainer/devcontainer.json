@@ -1,35 +1,57 @@
 {
-    "name": "Ubuntu 18.04 & Git",
-    "dockerFile": "Dockerfile",
-
-    "settings": {
-        "terminal.integrated.profiles.linux": {
-            "bash": {
-                "path": "bash",
-                "icon": "terminal-bash"
-            },
-            "zsh": {
-                "path": "zsh"
-            },
-            "fish": {
-                "path": "fish"
-            },
-            "tmux": {
-                "path": "tmux",
-                "icon": "terminal-tmux"
-            },
-            "pwsh": {
-                "path": "pwsh",
-                "icon": "terminal-powershell"
-            }
-        }
+    // REMOTE CONTROL: kör `claude` och `/rc` från en terminal INNE i containern
+    // ("Reopen in Container"), så agenten agerar i sandboxen, aldrig på host-maskinen.
+    "name": "Pebble SDK (pebble-mood)",
+    "build": {
+        "dockerfile": "Dockerfile"
     },
 
-    "extensions": [
-        "ms-vscode.cpptools",
-        "shardulm94.trailing-spaces",
-        "ms-vscode.cpptools-extension-pack",
-        "Tyriar.luna-paint"
-    ]
+    "remoteUser": "vscode",
 
+    // Firewallen kräver NET_ADMIN/NET_RAW.
+    "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+
+    "mounts": [
+        // Claude-diskussioner i en isolerad named volume (överlever rebuilds, blandas inte med host).
+        // Logga in Claude i containern första gången.
+        "source=pebble-mood-claude,target=/home/vscode/.claude,type=volume",
+        // Container-lokal deploy key i named volume. INGEN host-~/.ssh monteras (skulle exponera alla
+        // host-nycklar).
+        "source=pebble-mood-ssh,target=/home/vscode/.ssh,type=volume",
+        // Host-gitconfig read-only på en SIDO-sökväg (inte ~/.gitconfig). Läses den som ~/.gitconfig
+        // klagar git vid varje kommando på dess Windows-/WSL-safe.directory-rader ("not absolute").
+        // post-create.sh plockar istället ut user.name/email till en container-egen ~/.gitconfig.
+        "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig-host,type=bind,readonly"
+        // Medvetet INTE monterat: ~/.ssh (host), ~/.claude.json (drar in din globala MCP-uppsättning),
+        // och inga breda källkods-/secret-mounts.
+    ],
+
+    "remoteEnv": {
+        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin",
+        // GitHub-MCP:ns token matas in från host-env, bakas aldrig in i repots .mcp.json.
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
+    },
+
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    // Firewallen körs vid postStart, EFTER postCreate (som behöver publika internet för nedladdningar).
+    "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "bash",
+                        "icon": "terminal-bash"
+                    }
+                }
+            },
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
+                "shardulm94.trailing-spaces",
+                "Anthropic.claude-code"
+            ]
+        }
+    }
 }

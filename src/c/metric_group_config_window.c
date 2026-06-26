@@ -90,7 +90,9 @@ static void update_metric_items()
 {
     free_dynamically_allocated_data();
     size_t number_of_metrics = metrics_count();
-    m_metric_items = (SimpleMenuItem*)malloc(number_of_metrics * sizeof(SimpleMenuItem));
+    size_t metric_items_size = number_of_metrics * sizeof(SimpleMenuItem);
+    m_metric_items = (SimpleMenuItem*)malloc(metric_items_size);
+    memset(m_metric_items, 0, metric_items_size);
     m_metric_ids_index_map = (uint16_t*)malloc(number_of_metrics * sizeof(uint16_t));
     Metrics* metrics = metrics_get_all();
     for(uint16_t i = 0; i < number_of_metrics; i++)

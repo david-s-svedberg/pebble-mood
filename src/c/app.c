@@ -10,6 +10,7 @@
 #include "icons.h"
 #include "app_glance.h"
 #include "scheduler.h"
+#include "data_export.h"
 
 static void wakeup_handler(WakeupId id, int32_t alarm_index)
 {
@@ -26,6 +27,7 @@ void init()
         // So we remove them so no collisions happen
         wakeup_cancel_all();
     }
+    config_init();
     strings_init();
     metrics_init();
 
@@ -50,6 +52,10 @@ void init()
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting from non Wakeup");
 
         wakeup_service_subscribe(wakeup_handler);
+
+        // Open the AppMessage channel so a connected phone can pull
+        // registrations for the companion app (see data_export.c / pkjs).
+        data_export_init();
 
         setup_config_window();
     }

@@ -18,3 +18,5 @@ void        config_toggle_theme();
 Alarm*      config_get_snooze_alarm();
 Alarm*      config_get_summer_time_alarm();
 void        config_set_alarm_timeout(uint8_t sec);
+uint16_t    config_get_snoozed_group_id();
+void        config_set_snoozed_group_id(uint16_t group_id);

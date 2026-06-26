@@ -1,0 +1,26 @@
+{
+    "mcpServers": {
+        "context7": {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+        },
+        "filesystem": {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspaces/pebble-mood"]
+        },
+        "sequential-thinking": {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+        },
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp",
+            "headers": {
+                "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
+            }
+        }
+    }
+}

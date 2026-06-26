@@ -84,20 +84,20 @@ void metrics_init()
 
     for(int i = 0; i < m_metrics_groups.number_of_items; i++)
     {
-        MetricsGroup* current_group = (MetricsGroup*)&m_metrics_groups.items[i];
+        MetricsGroup* current_group = (MetricsGroup*)&m_metrics_groups.items[i * m_metrics_groups.item_size];
         current_group->title = string_get(current_group->title_id);
     }
 
     for(int i = 0; i < m_metrics.number_of_items; i++)
     {
-        Metrics* current_metrics = (Metrics*)&m_metrics.items[i];
+        Metrics* current_metrics = (Metrics*)&m_metrics.items[i * m_metrics.item_size];
         current_metrics->title = string_get(current_metrics->title_id);
         current_metrics->group = metrics_group_get(current_metrics->group_id);
     }
 
     for(int i = 0; i < m_registrations.number_of_items; i++)
     {
-        Registration* current_registration = (Registration*)&m_registrations.items[i];
+        Registration* current_registration = (Registration*)&m_registrations.items[i * m_registrations.item_size];
         current_registration->metric = metrics_get(current_registration->metrics_id);
     }
 }
@@ -137,7 +137,10 @@ uint32_t metrics_groups_count()
 
 void metrics_set_title(Metrics* metrics, char* title)
 {
-    string_delete(metrics->title_id);
+    if(metrics->title != NULL)
+    {
+        string_delete(metrics->title_id);
+    }
 
     String* new_string = string_add(title);
     metrics->title_id = new_string->id;
@@ -147,7 +150,10 @@ void metrics_set_title(Metrics* metrics, char* title)
 
 void metrics_groups_set_title(MetricsGroup* metrics_group, char* title)
 {
-    string_delete(metrics_group->title_id);
+    if(metrics_group->title != NULL)
+    {
+        string_delete(metrics_group->title_id);
+    }
     String* new_string = string_add(title);
     metrics_group->title_id = new_string->id;
     metrics_group->title = new_string;
@@ -178,7 +184,9 @@ Metrics* metrics_new()
         .type = MetricsType_BOOL,
     };
     uint16_t new_id = metrics_add(&new);
-    return metrics_get(new_id);
+    Metrics* stored = metrics_get(new_id);
+    metrics_set_title(stored, "New Metric");
+    return stored;
 }
 
 MetricsGroup* metrics_group_new()
@@ -214,17 +222,19 @@ uint32_t metrics_count()
 
 void metrics_save()
 {
-    persist_write_data(DataKeys_METRICS_DATA, &m_metrics, m_metrics.number_of_items * m_metrics.item_size);
+    dynamic_save(&m_metrics);
 }
 
 void metrics_groups_save()
 {
-    persist_write_data(DataKeys_METRICS_GROUP_DATA, &m_metrics_groups, m_metrics_groups.number_of_items * m_metrics_groups.item_size);
+    dynamic_save(&m_metrics_groups);
 }
 
 void registration_add(Registration* registration)
 {
     dynamic_add(&m_registrations, (byte*)registration, set_registration_id);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Registration saved: metric=%d value=%d (total=%d)",
+        registration->metrics_id, registration->value, (int)m_registrations.number_of_items);
 }
 
 Registration* registrations_get_for_metric(uint16_t metric_id)
