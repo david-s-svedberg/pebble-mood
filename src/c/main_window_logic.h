@@ -1,8 +1,10 @@
-// #pragma once
+#pragma once
 
-// #include <pebble.h>
+#include <pebble.h>
 
-// void take_next_medicine(ClickRecognizerRef recognizer, void* context);
-// void goto_config_window(ClickRecognizerRef recognizer, void* context);
-// void update_next_alarm_time();
-// void set_main_window_layers(TextLayer* next_alarm_layer);
+#include "data.h"
+
+// Writes a short summary of a metric's registrations over the last 7 days into
+// buffer: "3.4 avg (5)" for INTERVAL metrics, "57% yes (7)" for BOOL metrics,
+// or "No data" when there are no registrations in the window.
+void main_window_format_average(Metrics* metric, char* buffer, size_t size);

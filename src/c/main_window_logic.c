@@ -1,37 +1,37 @@
-// #include "main_window_logic.h"
+#include "main_window_logic.h"
 
-// #include "config_menu_window.h"
-// #include "persistance.h"
-// #include "format.h"
-// #include "scheduler.h"
+#include "repositories/metrics_repository.h"
 
-// static TextLayer* m_next_alarm_layer;
+void main_window_format_average(Metrics* metric, char* buffer, size_t size)
+{
+    time_t now = time(NULL);
+    time_t cutoff = now - (7 * SECONDS_PER_DAY);
 
-// void take_next_medicine(ClickRecognizerRef recognizer, void* context)
-// {
-//     APP_LOG(APP_LOG_LEVEL_DEBUG, "Take next medicine requested");
-//     vibes_long_pulse();
-//     Alarm* next = get_next_alarm();
-//     if(next != NULL)
-//     {
-//         unschedule_alarm(next);
-//         schedule_alarm_for_tomorrow(next);
-//         save_data();
-//         update_next_alarm_time();
-//     }
-// }
+    uint32_t count = 0;
+    uint32_t sum = 0;
 
-// void goto_config_window(ClickRecognizerRef recognizer, void* context)
-// {
-//     setup_config_menu_window(config_get_background_color(), config_get_foreground_color());
-// }
+    Registration* registrations = registrations_get_all();
+    uint32_t total = registrations_count();
+    for(uint32_t i = 0; i < total; i++)
+    {
+        Registration* reg = &registrations[i];
+        if(reg->metrics_id == metric->id && reg->time_stamp >= cutoff)
+        {
+            sum += reg->value;
+            count++;
+        }
+    }
 
-// void update_next_alarm_time()
-// {
-//     text_layer_set_text(m_next_alarm_layer, get_next_alarm_time_string());
-// }
-
-// void set_main_window_layers(TextLayer* next_alarm_layer)
-// {
-//     m_next_alarm_layer = next_alarm_layer;
-// }
+    if(count == 0)
+    {
+        snprintf(buffer, size, "No data");
+    } else if(metric->type == MetricsType_BOOL)
+    {
+        uint32_t percent = (sum * 100) / count;
+        snprintf(buffer, size, "%d%% yes (%d)", (int)percent, (int)count);
+    } else
+    {
+        uint32_t tenths = (sum * 10) / count;
+        snprintf(buffer, size, "%d.%d avg (%d)", (int)(tenths / 10), (int)(tenths % 10), (int)count);
+    }
+}

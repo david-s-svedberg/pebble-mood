@@ -237,6 +237,7 @@
                 }
             ]
         },
+        "enableMultiJS": true,
         "messageKeys": [
             "EXPORT_REQUEST",
             "REG_INDEX",

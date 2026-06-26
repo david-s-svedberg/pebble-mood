@@ -1,6 +1,7 @@
 #include "app.h"
 
 #include "config_menu_window.h"
+#include "main_window.h"
 #include "repositories/app_config_repository.h"
 #include "repositories/metrics_repository.h"
 #include "repositories/string_repository.h"
@@ -57,7 +58,7 @@ void init()
         // registrations for the companion app (see data_export.c / pkjs).
         data_export_init();
 
-        setup_config_window();
+        setup_main_window();
     }
 }
 
