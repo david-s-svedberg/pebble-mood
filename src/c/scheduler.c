@@ -31,10 +31,9 @@ static WakeupId schedule(Alarm* alarm, time_t time)
     {
         alarm->wakeup_id = id;
         // Persist the new wakeup id so the app can still query its alarms after
-        // a relaunch. The index tells us where the alarm lives. NB: index is a
-        // uint8_t, so the negative sentinels wrap (SNOOZED_ALARM_ID -> 255,
-        // SUMMER_TIME_ALARM_ID -> 254); everything else is a group id.
-        if(alarm->index == (uint8_t)SNOOZED_ALARM_ID || alarm->index == (uint8_t)SUMMER_TIME_ALARM_ID)
+        // a relaunch. The index tells us where the alarm lives: the snooze/DST
+        // alarms live in AppConfig, every other index is a group id.
+        if(alarm->index == SNOOZED_ALARM_ID || alarm->index == SUMMER_TIME_ALARM_ID)
         {
             config_save();
         } else

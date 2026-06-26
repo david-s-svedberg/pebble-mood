@@ -9,8 +9,12 @@
 // size no longer matches, so existing installs can't read a stale layout.
 #define CURRENT_DATA_VERSION (2)
 
-#define SNOOZED_ALARM_ID (-1)
-#define SUMMER_TIME_ALARM_ID (-2)
+// Reserved Alarm.index values for the non-group alarms. They live in a uint8_t
+// (Alarm.index) and are also used as the wakeup cookie (compared as int in
+// app.c / alarm_window_logic), so they must fit in a uint8_t and stay outside
+// the group-id range (group ids count up from 0).
+#define SNOOZED_ALARM_ID (255)
+#define SUMMER_TIME_ALARM_ID (254)
 
 typedef enum {
     DataKeys_NONE,

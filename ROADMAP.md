@@ -154,12 +154,12 @@ Eget UI istället för dagens lista:
 - [x] **edit-alarm tidsindikator för emery** — centrerad i innehållsytan + större font
       (BITHAM-42 på emery, GOTHIC-28 på 144px). Övriga layouter kan fortfarande ses över för
       emerys större skärm.
-- [ ] **`Alarm.index` är `uint8_t` men sentinels är negativa.** `SNOOZED_ALARM_ID` (-1) och
-      `SUMMER_TIME_ALARM_ID` (-2) lagras som 255/254, medan wakeup-cookien/`app.c`-jämförelserna
-      använder int (-1/-2). Det betyder att **snooze- och DST-wakeups inte routas rätt** (en
-      snoozad väckning matchar inte `== SNOOZED_ALARM_ID` och behandlas som grupp 255). Fix:
-      bredda `index` till int16/int32 (ändrar Alarm/MetricsGroup/AppConfig-layout → wipe + bumpa
-      `CURRENT_DATA_VERSION`). Då fungerar även `index >= 0`-checken naturligt.
+- [x] **`Alarm.index`-sentinels fixade.** `SNOOZED_ALARM_ID`/`SUMMER_TIME_ALARM_ID` är nu
+      255/254 istället för -1/-2. `index` är en `uint8_t` och användes som wakeup-cookie; de
+      negativa värdena wrappade till 255/254 i lagringen men jämfördes som int (-1/-2) → snooze/
+      DST-wakeups routades fel. Genom att definiera om konstanterna till de uint8-värden de redan
+      lagrades som matchar jämförelserna nu — utan struct-ändring eller migration (lagrad byte är
+      oförändrad). Grupp-id:n håller sig under 254.
 - [x] **Wakeup-id persisteras nu.** `schedule()` sparar gruppen (eller configen för snooze/DST)
       efter att `wakeup_id` satts, så appen kan fråga sina egna wakeups efter omstart (hemskärmens
       "nästa tid" blir korrekt istället för "None").
