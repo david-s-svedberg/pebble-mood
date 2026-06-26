@@ -28,6 +28,9 @@ iptables -P OUTPUT ACCEPT
 # Docker Desktops interna tjänster (inbäddad DNS-resolver + host-gateway) ligger på 192.168.65.0/24.
 # UTAN detta undantag dödar 192.168/16-blocket DNS och inget kan slås upp. Verifiera range på målet.
 iptables -A OUTPUT -d 192.168.65.0/24 -j ACCEPT
+# Pebble-klockan (via telefonen) på LAN:et — tillåt `pebble install --phone` att nå den.
+# Svarstrafiken släpps in av ESTABLISHED,RELATED-regeln i INPUT-kedjan nedan.
+iptables -A OUTPUT -d 192.168.1.161 -j ACCEPT
 # 172.16.0.0/12 lämnas ALLOWED med flit: Docker använder 172.17.x/172.18.x för sina bryggor och
 # docker-in-docker behöver dem.
 iptables -A OUTPUT -d 10.0.0.0/8 -j REJECT --reject-with icmp-admin-prohibited
