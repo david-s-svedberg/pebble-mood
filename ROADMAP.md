@@ -82,7 +82,13 @@ Status:
 
 ---
 
-## 4. Smarta alarm (hoppa över redan besvarat)
+## 4. Smarta alarm (hoppa över redan besvarat) — KLART
+
+Status: [x] implementerat och verifierat på emery. Gruppalarm frågar bara metrics som
+inte redan registrerats idag; om hela gruppen är besvarad visas inget alarm (ingen
+vibration) och appen avslutas direkt. Kvar: använd samma "registrerad idag"-koll för den
+riktiga "Idag"-vyn (Upp-knappen, avsnitt 6).
+
 
 - När en grupps alarm triggas ska metrics som **redan registrerats idag** (t.ex. spontant)
   **inte** visas i registreringsflödet.
@@ -145,7 +151,9 @@ Eget UI istället för dagens lista:
       i samband med avsnitt 2.
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. erbjuda ett textfritt/förvalt alternativ.
-- [ ] **edit-alarm-layout för emery** (200×228) — hårdkodade Y-koordinater tunade för 144×168.
+- [x] **edit-alarm tidsindikator för emery** — centrerad i innehållsytan + större font
+      (BITHAM-42 på emery, GOTHIC-28 på 144px). Övriga layouter kan fortfarande ses över för
+      emerys större skärm.
 - [ ] **Wakeup-id persisteras inte.** `scheduler.c` sätter `alarm.wakeup_id` i minnet men sparar
       aldrig gruppen, så efter omstart kan appen inte fråga sina egna wakeups (hemskärmen visar
       "Next: None" trots schemalagda alarm; själva alarmet bör ändå avfyras via systemet eftersom

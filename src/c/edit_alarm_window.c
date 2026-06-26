@@ -52,11 +52,23 @@ static void update_edit_alarm_window(Window* window)
 
 static void setup_edit_alarm_time_layer(Layer *window_layer, GRect bounds)
 {
-    uint16_t y = 68;
-    uint16_t height = 37;
-    edit_alarm_time_hour_layer = text_layer_create(GRect(20, y, 28, height));
-    edit_alarm_time_colon_layer = text_layer_create(GRect(50, y - 1, 18, height));
-    edit_alarm_time_minute_layer = text_layer_create(GRect(68, y, 28, height));
+    // Center the HH:MM group in the content area (left of the action bar) and
+    // scale up on the larger emery screen.
+    uint16_t content_w = bounds.size.w - ACTION_BAR_WIDTH;
+    bool big = bounds.size.w >= 180;
+
+    const char* font_key = big ? FONT_KEY_BITHAM_42_BOLD : FONT_KEY_GOTHIC_28_BOLD;
+    uint16_t height = big ? 50 : 37;
+    uint16_t hour_w = big ? 56 : 40;
+    uint16_t colon_w = big ? 20 : 16;
+    uint16_t minute_w = big ? 56 : 40;
+    uint16_t total_w = hour_w + colon_w + minute_w;
+    int16_t x = (content_w - total_w) / 2;
+    uint16_t y = (bounds.size.h - height) / 2;
+
+    edit_alarm_time_hour_layer = text_layer_create(GRect(x, y, hour_w, height));
+    edit_alarm_time_colon_layer = text_layer_create(GRect(x + hour_w, y - 2, colon_w, height));
+    edit_alarm_time_minute_layer = text_layer_create(GRect(x + hour_w + colon_w, y, minute_w, height));
 
     GColor background_color = config_get_background_color();
     GColor foreground_color = config_get_foreground_color();
@@ -68,9 +80,9 @@ static void setup_edit_alarm_time_layer(Layer *window_layer, GRect bounds)
     text_layer_set_text_color(edit_alarm_time_colon_layer, foreground_color);
     text_layer_set_text_color(edit_alarm_time_minute_layer, foreground_color);
 
-    text_layer_set_font(edit_alarm_time_hour_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_font(edit_alarm_time_colon_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_font(edit_alarm_time_minute_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+    text_layer_set_font(edit_alarm_time_hour_layer, fonts_get_system_font(font_key));
+    text_layer_set_font(edit_alarm_time_colon_layer, fonts_get_system_font(font_key));
+    text_layer_set_font(edit_alarm_time_minute_layer, fonts_get_system_font(font_key));
 
     text_layer_set_text_alignment(edit_alarm_time_hour_layer, GTextAlignmentCenter);
     text_layer_set_text_alignment(edit_alarm_time_colon_layer, GTextAlignmentCenter);
