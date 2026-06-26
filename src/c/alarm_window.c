@@ -37,7 +37,7 @@ static void setup_alarm_title_layer(Layer *window_layer, GRect bounds)
     text_layer_set_font(alarm_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(alarm_title_layer, GTextAlignmentCenter);
 
-    text_layer_set_text(alarm_title_layer, "Take Your Meds");
+    text_layer_set_text(alarm_title_layer, get_alarm_title());
 
     layer_add_child(window_layer, text_layer_get_layer(alarm_title_layer));
 }

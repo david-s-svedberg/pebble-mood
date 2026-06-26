@@ -12,3 +12,4 @@ void set_alarm_layers(
 void setup_alarm_state(int32_t alarm_index);
 void alarm_window_click_config_provider(void* context);
 char* get_wakeup_alarm_time_string();
+char* get_alarm_title();

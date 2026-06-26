@@ -178,6 +178,16 @@ char* get_wakeup_alarm_time_string()
     return alarm_time_buffer;
 }
 
+char* get_alarm_title()
+{
+    // Show which group's check-in this is; fall back to a generic prompt.
+    if(m_registering_group != NULL && m_registering_group->title != NULL)
+    {
+        return m_registering_group->title->value;
+    }
+    return "Time to register";
+}
+
 void setup_alarm_state(int32_t alarm_index)
 {
     if(alarm_index == SNOOZED_ALARM_ID)

@@ -143,8 +143,8 @@ Eget UI istället för dagens lista:
       inkopplad (`config_toggle_theme` finns men anropas inte).
 - [ ] **"App Config" → Alarm timeout**: `tick_alarm_timeout` är en tom stub — timeout går
       inte att ändra via UI (`config_set_alarm_timeout` finns).
-- [ ] **Hårdkodad alarmrubrik "Take Your Meds"** (kvarleva från medicinpåminnar-ursprunget) —
-      borde visa gruppens namn eller något generiskt ("Dags att checka in").
+- [x] **Alarmrubriken** visar nu gruppens namn (t.ex. "Morning") istället för "Take Your Meds",
+      med fallback "Time to register".
 - [ ] **Companion-app saknas** — exporten skickar registreringar till telefonen, men ingen
       mottagande app/analys finns än. Nästa: leverera datan vidare + bygg korrelations-UI.
 - [ ] **"Max visas för BOOL"** i metric-config (`SimpleMenuLayer` cachar `num_items`). Löses
