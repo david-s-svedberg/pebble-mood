@@ -12,6 +12,10 @@
 // Title, Type, Main icon + Max OR per-option (icon + text) rows.
 #define MAX_METRIC_ROWS (3 + 2 * MAX_METRIC_OPTIONS)
 #define ROW_TEXT_LEN (20)
+#define NO_ICON (0xFF)
+
+#define SECTION_METRIC (0)
+#define SECTION_GROUPS (1)
 
 typedef enum
 {
@@ -25,24 +29,18 @@ typedef enum
 
 static Window *m_config_window;
 static StatusBarLayer* m_status_bar;
-static SimpleMenuLayer* m_config_menu_layer = NULL;
+static MenuLayer* m_menu_layer = NULL;
 
-static SimpleMenuSection m_menu_sections[2];
-static SimpleMenuSection m_metric_items_section = { .title = "Metric" };
-static SimpleMenuSection m_metric_group_items_section = { .title = "In groups" };
-
-// Dynamic "Metric" section rows.
-static void metric_row_selected(int index, void *context);
-static GBitmap* row_icon(uint8_t choice);
-static SimpleMenuItem m_metric_items[MAX_METRIC_ROWS];
-static char m_row_title[MAX_METRIC_ROWS][ROW_TEXT_LEN];
-static char m_row_subtitle[MAX_METRIC_ROWS][ROW_TEXT_LEN];
+// "Metric" section rows, rebuilt whenever the metric or its type changes. The
+// icon is stored as an IconChoice (NO_ICON if the row has none) and resolved to
+// a bitmap at draw time, so the same row can render its black or white variant
+// depending on whether it is highlighted.
 static RowKind m_row_kind[MAX_METRIC_ROWS];
 static uint8_t m_row_option[MAX_METRIC_ROWS];
-
-// "In groups" section rows (toggle membership).
-static SimpleMenuItem* m_group_items = NULL;
-static uint16_t* m_group_id_index_map = NULL;
+static uint8_t m_row_icon_choice[MAX_METRIC_ROWS];
+static char m_row_title[MAX_METRIC_ROWS][ROW_TEXT_LEN];
+static char m_row_subtitle[MAX_METRIC_ROWS][ROW_TEXT_LEN];
+static int m_metric_row_count = 0;
 
 static DictationSession* m_dictation_session;
 static Metrics* m_metric = NULL;
@@ -50,7 +48,8 @@ static int m_dictation_target = -1;  // -1 = title, 0..N = option text
 static uint8_t m_pending_option = 0; // option index awaiting an icon pick
 static int m_icon_row_index = 0;     // row that opened the icon picker
 
-static void create_menu();
+static void metric_row_selected(int index);
+static void reload_menu();
 
 static void update_status_bar()
 {
@@ -59,7 +58,7 @@ static void update_status_bar()
 
 static void mark_menu_dirty()
 {
-    layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
+    layer_mark_dirty(menu_layer_get_layer(m_menu_layer));
     update_status_bar();
 }
 
@@ -74,20 +73,18 @@ static const char* type_label(MetricsType type)
 }
 
 static void set_row(int r, RowKind kind, uint8_t option, const char* title,
-    const char* subtitle, GBitmap* icon)
+    const char* subtitle, uint8_t icon_choice)
 {
     m_row_kind[r] = kind;
     m_row_option[r] = option;
+    m_row_icon_choice[r] = icon_choice;
     snprintf(m_row_title[r], ROW_TEXT_LEN, "%s", title);
-
-    m_metric_items[r] = (SimpleMenuItem){0};
-    m_metric_items[r].title = m_row_title[r];
-    m_metric_items[r].callback = metric_row_selected;
-    m_metric_items[r].icon = icon;
     if(subtitle != NULL)
     {
         snprintf(m_row_subtitle[r], ROW_TEXT_LEN, "%s", subtitle);
-        m_metric_items[r].subtitle = m_row_subtitle[r];
+    } else
+    {
+        m_row_subtitle[r][0] = '\0';
     }
 }
 
@@ -95,16 +92,16 @@ static void build_metric_rows()
 {
     int r = 0;
     set_row(r++, RowKind_TITLE, 0, "Title",
-        m_metric->title != NULL ? m_metric->title->value : "", NULL);
-    set_row(r++, RowKind_TYPE, 0, "Type", type_label(m_metric->type), NULL);
+        m_metric->title != NULL ? m_metric->title->value : "", NO_ICON);
+    set_row(r++, RowKind_TYPE, 0, "Type", type_label(m_metric->type), NO_ICON);
     set_row(r++, RowKind_MAIN_ICON, 0, "Main icon",
-        icon_choice_name(m_metric->main_icon), row_icon(m_metric->main_icon));
+        icon_choice_name(m_metric->main_icon), m_metric->main_icon);
 
     if(m_metric->type == MetricsType_INTERVAL)
     {
         char buffer[ROW_TEXT_LEN];
         snprintf(buffer, sizeof(buffer), "%d", m_metric->max_value);
-        set_row(r++, RowKind_MAX, 0, "Max", buffer, NULL);
+        set_row(r++, RowKind_MAX, 0, "Max", buffer, NO_ICON);
     } else
     {
         int options = (m_metric->type == MetricsType_THREE_OPTION) ? 3 : 2;
@@ -114,87 +111,26 @@ static void build_metric_rows()
             snprintf(title, sizeof(title), "Option %d icon", option + 1);
             set_row(r++, RowKind_OPTION_ICON, option, title,
                 icon_choice_name(m_metric->option_icons[option]),
-                row_icon(m_metric->option_icons[option]));
+                m_metric->option_icons[option]);
 
             const char* text = metrics_get_option_text(m_metric, option);
             char text_title[ROW_TEXT_LEN];
             snprintf(text_title, sizeof(text_title), "Option %d text", option + 1);
             set_row(r++, RowKind_OPTION_TEXT, option, text_title,
-                (text[0] != '\0') ? text : "(none)", NULL);
+                (text[0] != '\0') ? text : "(none)", NO_ICON);
         }
     }
 
-    m_metric_items_section.items = m_metric_items;
-    m_metric_items_section.num_items = r;
+    m_metric_row_count = r;
 }
 
-static void free_group_rows()
-{
-    if(m_group_items != NULL)
-    {
-        free(m_group_items);
-        m_group_items = NULL;
-    }
-    if(m_group_id_index_map != NULL)
-    {
-        free(m_group_id_index_map);
-        m_group_id_index_map = NULL;
-    }
-}
-
-static void toggle_connected_to_metrics_group(int index, void *context)
-{
-    uint16_t group_id = m_group_id_index_map[index];
-    metrics_group_toggle_metric(group_id, m_metric->id);
-    // Update just this row's checkmark so the cursor stays put.
-    bool member = metrics_group_has_metric(group_id, m_metric->id);
-    m_group_items[index].icon = member
-        ? (config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black())
-        : NULL;
-    layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
-}
-
-static void build_group_rows()
-{
-    free_group_rows();
-
-    size_t count = metrics_groups_count();
-    size_t items_size = count * sizeof(SimpleMenuItem);
-    m_group_items = (SimpleMenuItem*)malloc(items_size);
-    memset(m_group_items, 0, items_size);
-    m_group_id_index_map = (uint16_t*)malloc(count * sizeof(uint16_t));
-
-    MetricsGroup* groups = metrics_groups_get_all();
-    for(uint16_t i = 0; i < count; i++)
-    {
-        MetricsGroup* group = &groups[i];
-        m_group_id_index_map[i] = group->id;
-        if(metrics_group_has_metric(group->id, m_metric->id))
-        {
-            m_group_items[i].icon = config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black();
-        }
-        m_group_items[i].title = group->title->value;
-        m_group_items[i].callback = toggle_connected_to_metrics_group;
-    }
-    m_metric_group_items_section.items = m_group_items;
-    m_metric_group_items_section.num_items = count;
-}
-
-// Preview icon for a config row, sized to fit (main icons use their 20px row
-// variant). SimpleMenuLayer draws unselected rows on a white background, so we
-// use the black variant; it does vanish on the one selected (black) row, but the
-// name in the subtitle still identifies it, and selecting opens the picker.
-static GBitmap* row_icon(uint8_t choice)
-{
-    return get_icon_row_by_choice(choice, false);
-}
-
-// Refresh just the row that opened the picker, so the cursor stays put (a full
-// create_menu() would reset it to the top — and the row count doesn't change).
+// Refresh just the row that opened the picker, so the cursor stays put (the row
+// count doesn't change, so no reload is needed). The icon is resolved from the
+// choice at draw time, so storing the choice is enough.
 static void refresh_icon_row(uint8_t choice)
 {
     int r = m_icon_row_index;
-    m_metric_items[r].icon = row_icon(choice);
+    m_row_icon_choice[r] = choice;
     snprintf(m_row_subtitle[r], ROW_TEXT_LEN, "%s", icon_choice_name(choice));
     mark_menu_dirty();
 }
@@ -237,7 +173,7 @@ static void change_type()
     }
 }
 
-static void metric_row_selected(int index, void *context)
+static void metric_row_selected(int index)
 {
     switch(m_row_kind[index])
     {
@@ -248,7 +184,7 @@ static void metric_row_selected(int index, void *context)
         case RowKind_TYPE:
             change_type();
             metrics_save();
-            create_menu();          // row count changes with type
+            reload_menu();          // row count changes with type
             break;
         case RowKind_MAIN_ICON:
             m_icon_row_index = index;
@@ -265,18 +201,98 @@ static void metric_row_selected(int index, void *context)
             mark_menu_dirty();
             break;
         case RowKind_OPTION_ICON:
-        {
             m_pending_option = m_row_option[index];
             m_icon_row_index = index;
             setup_icon_picker_window(true, m_metric->option_icons[m_pending_option],
                 option_icon_picked, NULL);
             break;
-        }
         case RowKind_OPTION_TEXT:
             m_dictation_target = m_row_option[index];
             dictation_session_start(m_dictation_session);
             break;
     }
+}
+
+static void toggle_group_membership(int index)
+{
+    MetricsGroup* groups = metrics_groups_get_all();
+    metrics_group_toggle_metric(groups[index].id, m_metric->id);
+    // The checkmark is derived from live membership at draw time, so a repaint
+    // (cursor preserved) is enough.
+    mark_menu_dirty();
+}
+
+// --- MenuLayer callbacks ---------------------------------------------------
+
+static uint16_t menu_get_num_sections(MenuLayer* menu_layer, void* context)
+{
+    return 2;
+}
+
+static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void* context)
+{
+    if(section == SECTION_METRIC)
+    {
+        return (uint16_t)m_metric_row_count;
+    }
+    return (uint16_t)metrics_groups_count();
+}
+
+static int16_t menu_get_header_height(MenuLayer* menu_layer, uint16_t section, void* context)
+{
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
+static void menu_draw_header(GContext* ctx, const Layer* cell_layer, uint16_t section, void* context)
+{
+    menu_cell_basic_header_draw(ctx, cell_layer,
+        section == SECTION_METRIC ? "Metric" : "In groups");
+}
+
+static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* index, void* context)
+{
+    // MenuLayer paints the cell background and sets the context text colour from
+    // its normal/highlight colours before calling us; we only have to hand
+    // menu_cell_basic_draw an icon whose colour matches that background. On the
+    // highlighted (or dark-theme) cell that's the white variant, else black.
+    bool highlighted = menu_cell_layer_is_highlighted(cell_layer);
+    bool light = highlighted ? !config_is_dark_theme() : config_is_dark_theme();
+
+    if(index->section == SECTION_METRIC)
+    {
+        uint8_t choice = m_row_icon_choice[index->row];
+        GBitmap* icon = (choice == NO_ICON) ? NULL : get_icon_row_by_choice(choice, light);
+        const char* subtitle = m_row_subtitle[index->row][0] != '\0'
+            ? m_row_subtitle[index->row] : NULL;
+        menu_cell_basic_draw(ctx, cell_layer, m_row_title[index->row], subtitle, icon);
+    } else
+    {
+        MetricsGroup* groups = metrics_groups_get_all();
+        MetricsGroup* group = &groups[index->row];
+        bool member = metrics_group_has_metric(group->id, m_metric->id);
+        GBitmap* icon = member
+            ? (light ? get_check_icon_white() : get_check_icon_black())
+            : NULL;
+        menu_cell_basic_draw(ctx, cell_layer, group->title->value, NULL, icon);
+    }
+}
+
+static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* context)
+{
+    if(index->section == SECTION_METRIC)
+    {
+        metric_row_selected(index->row);
+    } else
+    {
+        toggle_group_membership(index->row);
+    }
+}
+
+static void reload_menu()
+{
+    build_metric_rows();
+    menu_layer_reload_data(m_menu_layer);
+    update_status_bar();
 }
 
 static void dictation_session_callback(
@@ -294,40 +310,8 @@ static void dictation_session_callback(
         {
             metrics_set_option_text(m_metric, (uint8_t)m_dictation_target, transcription);
         }
-        create_menu();
+        reload_menu();
     }
-}
-
-static void create_menu()
-{
-    Layer* window_layer = window_get_root_layer(m_config_window);
-    GRect bounds = layer_get_bounds(window_layer);
-
-    if(m_config_menu_layer != NULL)
-    {
-        simple_menu_layer_destroy(m_config_menu_layer);
-        m_config_menu_layer = NULL;
-    }
-
-    build_metric_rows();
-    build_group_rows();
-
-    m_menu_sections[0] = m_metric_items_section;
-    m_menu_sections[1] = m_metric_group_items_section;
-
-    m_config_menu_layer = simple_menu_layer_create(
-        GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT),
-        m_config_window,
-        m_menu_sections, 2, NULL);
-
-    layer_add_child(window_layer, simple_menu_layer_get_layer(m_config_menu_layer));
-}
-
-static void setup_status_bar(Layer *window_layer, GRect bounds)
-{
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
 }
 
 static void load_main_window(Window *window)
@@ -336,8 +320,29 @@ static void load_main_window(Window *window)
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    setup_status_bar(window_layer, bounds);
-    create_menu();
+    m_status_bar = status_bar_layer_create();
+    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
+    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
+    update_status_bar();
+
+    build_metric_rows();
+
+    m_menu_layer = menu_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT,
+        bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));
+    menu_layer_set_callbacks(m_menu_layer, NULL, (MenuLayerCallbacks) {
+        .get_num_sections = menu_get_num_sections,
+        .get_num_rows = menu_get_num_rows,
+        .get_header_height = menu_get_header_height,
+        .draw_header = menu_draw_header,
+        .draw_row = menu_draw_row,
+        .select_click = menu_select_click,
+    });
+    menu_layer_set_normal_colors(m_menu_layer,
+        config_get_background_color(), config_get_foreground_color());
+    menu_layer_set_highlight_colors(m_menu_layer,
+        config_get_foreground_color(), config_get_background_color());
+    menu_layer_set_click_config_onto_window(m_menu_layer, window);
+    layer_add_child(window_layer, menu_layer_get_layer(m_menu_layer));
 
     m_dictation_session = dictation_session_create(512, dictation_session_callback, NULL);
 }
@@ -345,10 +350,9 @@ static void load_main_window(Window *window)
 static void unload_main_window(Window *window)
 {
     status_bar_layer_destroy(m_status_bar);
-    simple_menu_layer_destroy(m_config_menu_layer);
-    m_config_menu_layer = NULL;
+    menu_layer_destroy(m_menu_layer);
+    m_menu_layer = NULL;
     dictation_session_destroy(m_dictation_session);
-    free_group_rows();
 }
 
 void setup_metrics_config_window(Metrics* metric)
@@ -368,6 +372,5 @@ void setup_metrics_config_window(Metrics* metric)
 
 void tear_down_metrics_config_window()
 {
-    free_group_rows();
     window_destroy(m_config_window);
 }
