@@ -47,12 +47,30 @@ Gemensamt för alla typer:
 - Användaren kan välja en **huvudikon** som visas **stort i mitten** av registrerings-
   skärmen för snabb igenkänning.
 
-Implementationsnotiser:
-- Datamodell: utöka `Metrics` med per-alternativ-konfig (ikon-id + text) och en huvudikon-id.
-- Kräver en ikon-väljare i metric-config + en uppsättning valbara ikoner som resurser
-  (ansiktsikoner för emoji-default behöver läggas till som bitmap-resurser).
-- Registreringsfönstret mappar knappar enligt typ (2→Upp/Ner, 3→Upp/Select/Ner) och ritar
-  huvudikonen centrerat.
+Status:
+- [x] Datamodell (`Metrics`: `main_icon`, `option_icons[3]`, `option_text_ids[3]`).
+- [x] `IconChoice`-register + ikon-väljare i metric-config (huvudikon + per alternativ).
+- [x] Registreringsfönstret mappar knappar per typ (2→Upp/Ner, 3→Upp/Select/Ner) och ritar
+      huvudikonen centrerat.
+- [ ] **Text per alternativ** — redigerbar text per alternativ (fält `option_text_ids` finns).
+      Kräver en "ingen text"-sentinel; sträng-id:n börjar på 0 så 0 går inte att använda rakt
+      av (överväg att reservera id 0 = none, eller lagra id+1).
+- [ ] **Ikon-assets + storlekar** (se nedan).
+
+### Ikoner: fler + passande storlekar
+
+- **Lägg till fler valbara ikoner** (sömn, mat, alkohol, kaffe, sol/utomhus, stress, smärta,
+  hjärta, etc.) så metrics kan få igenkännbara symboler. Default för 3-svar bör vara riktiga
+  emoji-/ansiktsikoner (🙁 / 😐 / 🙂) — finns ej än, placeholders ▲/✓/▼ används nu.
+- **Storlekar per användningsområde.** Pebble har **ingen runtime-skalning** av bitmaps, så
+  varje ikon behöver levereras i rätt storlek(ar):
+  - **Action bar / option-ikoner + settings-rader:** liten (~20–25 px).
+  - **Huvudikon på registreringsskärmen:** stor (~50 px), centrerad.
+  - Mappa varje `IconChoice` till sina storleksvarianter och välj rätt variant beroende på
+    var den ritas. Idag visar settings bara *namnet* för stora ikoner (mood/exercise 50px) för
+    att undvika överflöd; med en liten variant kan vi visa en snygg förhandsvisning även där.
+- Option-ikoner begränsas redan till små ikoner (de stora hoppas över vid cykling) så action
+  baren inte svämmar över.
 
 ---
 
