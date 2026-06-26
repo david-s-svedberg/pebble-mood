@@ -24,6 +24,8 @@ void            metrics_set_title(Metrics* metrics, char* title);
 void            metrics_save();
 
 void            registration_add(Registration* registration);
+bool            metric_registered_today(uint16_t metric_id);
+bool            metrics_group_complete_today(uint16_t group_id);
 Registration*   registrations_get_for_metric(uint16_t metric_id);
 Registration*   registrations_get_all();
 uint32_t        registrations_count();

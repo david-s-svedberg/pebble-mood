@@ -44,7 +44,8 @@ static void collect_metrics()
     for(uint32_t i = 0; i < total; i++)
     {
         Metrics* current = &all_metrics[i];
-        if(metrics_group_has_metric(m_group->id, current->id))
+        // Skip metrics already registered today (e.g. answered spontaneously).
+        if(metrics_group_has_metric(m_group->id, current->id) && !metric_registered_today(current->id))
         {
             m_metrics[m_metric_count++] = current;
         }

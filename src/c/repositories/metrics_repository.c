@@ -338,6 +338,45 @@ uint32_t registrations_count()
     return m_registrations.number_of_items;
 }
 
+static time_t start_of_today()
+{
+    time_t now = time(NULL);
+    struct tm* local = localtime(&now);
+    local->tm_hour = 0;
+    local->tm_min = 0;
+    local->tm_sec = 0;
+    return mktime(local);
+}
+
+bool metric_registered_today(uint16_t metric_id)
+{
+    time_t since = start_of_today();
+    for(int i = 0; i < m_registrations.number_of_items; i++)
+    {
+        Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
+        if(reg->metrics_id == metric_id && reg->time_stamp >= since)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool metrics_group_complete_today(uint16_t group_id)
+{
+    uint32_t total = metrics_count();
+    Metrics* all_metrics = metrics_get_all();
+    for(uint32_t i = 0; i < total; i++)
+    {
+        Metrics* metric = &all_metrics[i];
+        if(metrics_group_has_metric(group_id, metric->id) && !metric_registered_today(metric->id))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 static uint16_t seed_group(const char* name, uint8_t hour, uint8_t minute)
 {
     MetricsGroup* group = metrics_group_new();   // active alarm, default title
