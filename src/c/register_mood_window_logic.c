@@ -9,6 +9,7 @@ static Window* m_window;
 static ActionBarLayer* m_action_bar;
 static TextLayer* m_title_layer;
 static TextLayer* m_value_layer;
+static BitmapLayer* m_icon_layer;
 
 static MetricsGroup* m_group;
 static Metrics** m_metrics = NULL;
@@ -73,6 +74,8 @@ static void save_and_advance(uint8_t value)
     }
 }
 
+// --- Interval (0..max, stepped) ---
+
 static void interval_increase(ClickRecognizerRef recognizer, void* context)
 {
     Metrics* metric = m_metrics[m_current_index];
@@ -97,16 +100,6 @@ static void interval_confirm(ClickRecognizerRef recognizer, void* context)
     save_and_advance(m_current_value);
 }
 
-static void bool_yes(ClickRecognizerRef recognizer, void* context)
-{
-    save_and_advance(1);
-}
-
-static void bool_no(ClickRecognizerRef recognizer, void* context)
-{
-    save_and_advance(0);
-}
-
 static void interval_click_config_provider(void* context)
 {
     window_single_repeating_click_subscribe(BUTTON_ID_UP, 100, interval_increase);
@@ -114,10 +107,48 @@ static void interval_click_config_provider(void* context)
     window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100, interval_decrease);
 }
 
+// --- Discrete options (BOOL = 2, THREE_OPTION = 3), answered directly ---
+
+static void choose_option_0(ClickRecognizerRef recognizer, void* context)
+{
+    save_and_advance(0);
+}
+
+static void choose_option_1(ClickRecognizerRef recognizer, void* context)
+{
+    save_and_advance(1);
+}
+
+static void choose_option_2(ClickRecognizerRef recognizer, void* context)
+{
+    save_and_advance(2);
+}
+
 static void bool_click_config_provider(void* context)
 {
-    window_single_click_subscribe(BUTTON_ID_SELECT, bool_yes);
-    window_single_click_subscribe(BUTTON_ID_DOWN, bool_no);
+    // 2 options: Up = value 1, Down = value 0.
+    window_single_click_subscribe(BUTTON_ID_UP, choose_option_1);
+    window_single_click_subscribe(BUTTON_ID_DOWN, choose_option_0);
+}
+
+static void three_option_click_config_provider(void* context)
+{
+    // 3 options: Up = value 2, Select = value 1, Down = value 0.
+    window_single_click_subscribe(BUTTON_ID_UP, choose_option_2);
+    window_single_click_subscribe(BUTTON_ID_SELECT, choose_option_1);
+    window_single_click_subscribe(BUTTON_ID_DOWN, choose_option_0);
+}
+
+static void set_action_icon(ButtonId button, uint8_t icon_choice)
+{
+    GBitmap* bitmap = get_icon_by_choice(icon_choice);
+    if(bitmap != NULL)
+    {
+        action_bar_layer_set_icon_animated(m_action_bar, button, bitmap, true);
+    } else
+    {
+        action_bar_layer_clear_icon(m_action_bar, button);
+    }
 }
 
 static void show_current_metric()
@@ -126,19 +157,28 @@ static void show_current_metric()
     m_current_value = 0;
 
     text_layer_set_text(m_title_layer, metric->title != NULL ? metric->title->value : "");
+    bitmap_layer_set_bitmap(m_icon_layer, get_icon_by_choice(metric->main_icon));
 
     if(metric->type == MetricsType_INTERVAL)
     {
-        action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_UP, get_up_icon(), true);
-        action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_SELECT, get_check_icon(), true);
-        action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_DOWN, get_down_icon(), true);
+        set_action_icon(BUTTON_ID_UP, IconChoice_UP);
+        set_action_icon(BUTTON_ID_SELECT, IconChoice_CHECK);
+        set_action_icon(BUTTON_ID_DOWN, IconChoice_DOWN);
         action_bar_layer_set_click_config_provider(m_action_bar, interval_click_config_provider);
         update_value_display();
+    } else if(metric->type == MetricsType_THREE_OPTION)
+    {
+        set_action_icon(BUTTON_ID_UP, metric->option_icons[2]);
+        set_action_icon(BUTTON_ID_SELECT, metric->option_icons[1]);
+        set_action_icon(BUTTON_ID_DOWN, metric->option_icons[0]);
+        action_bar_layer_set_click_config_provider(m_action_bar, three_option_click_config_provider);
+        text_layer_set_text(m_value_layer, "");
     } else
     {
-        action_bar_layer_clear_icon(m_action_bar, BUTTON_ID_UP);
-        action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_SELECT, get_check_icon(), true);
-        action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_DOWN, get_cross_icon(), true);
+        // BOOL (2 options)
+        set_action_icon(BUTTON_ID_UP, metric->option_icons[1]);
+        action_bar_layer_clear_icon(m_action_bar, BUTTON_ID_SELECT);
+        set_action_icon(BUTTON_ID_DOWN, metric->option_icons[0]);
         action_bar_layer_set_click_config_provider(m_action_bar, bool_click_config_provider);
         text_layer_set_text(m_value_layer, "");
     }
@@ -170,12 +210,14 @@ void register_mood_set_layers(
     Window* window,
     ActionBarLayer* action_bar,
     TextLayer* title_layer,
-    TextLayer* value_layer)
+    TextLayer* value_layer,
+    BitmapLayer* icon_layer)
 {
     m_window = window;
     m_action_bar = action_bar;
     m_title_layer = title_layer;
     m_value_layer = value_layer;
+    m_icon_layer = icon_layer;
 }
 
 void register_mood_tear_down()

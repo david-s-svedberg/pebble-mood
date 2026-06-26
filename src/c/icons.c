@@ -128,6 +128,21 @@ GBitmap* get_cross_icon()
     return get_icon(RESOURCE_ID_CROSS_ICON, &cross_icon);
 }
 
+GBitmap* get_icon_by_choice(uint8_t choice)
+{
+    switch(choice)
+    {
+        case IconChoice_CHECK:    return get_check_icon();
+        case IconChoice_CROSS:    return get_cross_icon();
+        case IconChoice_UP:       return get_up_icon();
+        case IconChoice_DOWN:     return get_down_icon();
+        case IconChoice_MOOD:     return get_mood_icon();
+        case IconChoice_EXERCISE: return get_exercise_icon();
+        case IconChoice_PILL:     return get_pill_icon();
+        default:                  return NULL;
+    }
+}
+
 void destroy_all_icons()
 {
     destroy_icon(&check_icon);

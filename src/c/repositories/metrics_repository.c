@@ -1,6 +1,7 @@
 #include "metrics_repository.h"
 
 #include "../data.h"
+#include "../icons.h"
 #include "dynamic_repository.h"
 
 static DynamicData m_metrics_groups =
@@ -182,6 +183,9 @@ Metrics* metrics_new()
     {
         .max_value = 1,
         .type = MetricsType_BOOL,
+        .main_icon = IconChoice_NONE,
+        // Default 2-option icons: value 0 = No (cross), value 1 = Yes (check).
+        .option_icons = { IconChoice_CROSS, IconChoice_CHECK, IconChoice_NONE },
     };
     uint16_t new_id = metrics_add(&new);
     Metrics* stored = metrics_get(new_id);

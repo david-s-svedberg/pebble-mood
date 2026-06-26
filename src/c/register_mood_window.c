@@ -10,6 +10,7 @@ static Window* m_mood_window;
 static StatusBarLayer* m_status_bar;
 static TextLayer* m_title_layer;
 static TextLayer* m_value_layer;
+static BitmapLayer* m_icon_layer;
 static ActionBarLayer* m_action_bar;
 
 static void setup_status_bar(Layer *window_layer, GRect bounds)
@@ -29,6 +30,17 @@ static void setup_title_layer(Layer *window_layer, GRect bounds)
     text_layer_set_font(m_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(m_title_layer, GTextAlignmentCenter);
     layer_add_child(window_layer, text_layer_get_layer(m_title_layer));
+}
+
+static void setup_icon_layer(Layer *window_layer, GRect bounds)
+{
+    // Large center icon (when the metric has a main icon) for quick recognition.
+    m_icon_layer = bitmap_layer_create(
+        GRect(0, STATUS_BAR_LAYER_HEIGHT + 40, bounds.size.w - ACTION_BAR_WIDTH, 60));
+    bitmap_layer_set_compositing_mode(m_icon_layer, GCompOpSet);
+    bitmap_layer_set_alignment(m_icon_layer, GAlignCenter);
+    bitmap_layer_set_background_color(m_icon_layer, GColorClear);
+    layer_add_child(window_layer, bitmap_layer_get_layer(m_icon_layer));
 }
 
 static void setup_value_layer(Layer *window_layer, GRect bounds)
@@ -58,10 +70,11 @@ static void load_mood_window(Window *window)
 
     setup_status_bar(window_layer, bounds);
     setup_title_layer(window_layer, bounds);
+    setup_icon_layer(window_layer, bounds);
     setup_value_layer(window_layer, bounds);
     setup_action_bar(window_layer, bounds);
 
-    register_mood_set_layers(m_mood_window, m_action_bar, m_title_layer, m_value_layer);
+    register_mood_set_layers(m_mood_window, m_action_bar, m_title_layer, m_value_layer, m_icon_layer);
     register_mood_start();
 }
 
@@ -71,6 +84,7 @@ static void unload_mood_window(Window *window)
     status_bar_layer_destroy(m_status_bar);
     text_layer_destroy(m_title_layer);
     text_layer_destroy(m_value_layer);
+    bitmap_layer_destroy(m_icon_layer);
     action_bar_layer_remove_from_window(m_action_bar);
     action_bar_layer_destroy(m_action_bar);
 }

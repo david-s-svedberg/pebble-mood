@@ -58,9 +58,14 @@ typedef struct {
 typedef enum
 {
     MetricsType_NONE,
-    MetricsType_BOOL,
-    MetricsType_INTERVAL,
+    MetricsType_BOOL,        // 2 options, answered with Up/Down
+    MetricsType_INTERVAL,    // 0..max_value, stepped with Up/Down
+    MetricsType_THREE_OPTION,// 3 options, answered with Up/Select/Down
 } MetricsType;
+
+// Max discrete answer options (BOOL uses 2, THREE_OPTION uses 3). Options are
+// indexed by the value they store (0..N-1).
+#define MAX_METRIC_OPTIONS (3)
 
 typedef struct {
     uint16_t id;
@@ -85,6 +90,14 @@ typedef struct
     String*         title;
     MetricsType     type;
     uint8_t         max_value;
+    // Large icon shown centered on the registration screen for quick
+    // recognition (IconChoice, 0 = none).
+    uint8_t         main_icon;
+    // Per-option action-bar icon + optional interned text label, indexed by the
+    // option value (BOOL uses [0..1], THREE_OPTION uses [0..2]). icon is an
+    // IconChoice (0 = none); text_id is a String id (0 = none).
+    uint8_t         option_icons[MAX_METRIC_OPTIONS];
+    uint16_t        option_text_ids[MAX_METRIC_OPTIONS];
 } Metrics;
 
 typedef struct

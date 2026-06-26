@@ -90,9 +90,26 @@ static void change_title(int index, void *context)
 
 static void change_type(int index, void *context)
 {
-    m_metric->type =
-        m_metric->type == MetricsType_BOOL ?
-            MetricsType_INTERVAL : MetricsType_BOOL;
+    // Cycle Yes/No -> Interval -> 3 options -> Yes/No, seeding sensible default
+    // option icons for the discrete types.
+    switch(m_metric->type)
+    {
+        case MetricsType_BOOL:
+            m_metric->type = MetricsType_INTERVAL;
+            break;
+        case MetricsType_INTERVAL:
+            m_metric->type = MetricsType_THREE_OPTION;
+            m_metric->option_icons[0] = IconChoice_DOWN;
+            m_metric->option_icons[1] = IconChoice_CHECK;
+            m_metric->option_icons[2] = IconChoice_UP;
+            break;
+        default:
+            m_metric->type = MetricsType_BOOL;
+            m_metric->option_icons[0] = IconChoice_CROSS;
+            m_metric->option_icons[1] = IconChoice_CHECK;
+            m_metric->option_icons[2] = IconChoice_NONE;
+            break;
+    }
     metrics_save();
     update_ui();
 }
@@ -111,7 +128,12 @@ static void change_max_value(int index, void *context)
 static void update_metric_group_items()
 {
     m_title_item.subtitle = m_metric->title->value;
-    m_type_item.subtitle = m_metric->type == MetricsType_BOOL ? "Yes/No" : "Interval";
+    switch(m_metric->type)
+    {
+        case MetricsType_INTERVAL:     m_type_item.subtitle = "Interval"; break;
+        case MetricsType_THREE_OPTION: m_type_item.subtitle = "3 options"; break;
+        default:                       m_type_item.subtitle = "Yes/No"; break;
+    }
     static char max_value[4];
     snprintf(max_value, sizeof(max_value), "%d", m_metric->max_value);
     m_max_value_item.subtitle = max_value;
