@@ -18,28 +18,120 @@ static GBitmap *pill_icon;
 static GBitmap *mood_icon;
 static GBitmap *exercise_icon;
 static GBitmap *cross_icon;
-static GBitmap *face_sad_icon;
-static GBitmap *face_neutral_icon;
-static GBitmap *face_happy_icon;
-static GBitmap *level_low_icon;
-static GBitmap *level_mid_icon;
-static GBitmap *level_high_icon;
-static GBitmap *main_sun_icon;
-static GBitmap *main_moon_icon;
-static GBitmap *main_droplet_icon;
-static GBitmap *main_heart_icon;
-static GBitmap *main_bolt_icon;
-static GBitmap *main_coffee_icon;
-static GBitmap *main_glass_icon;
-static GBitmap *main_thermo_icon;
-static GBitmap *main_phone_icon;
-static GBitmap *main_cloud_icon;
-static GBitmap *main_dumbbell_icon;
-static GBitmap *main_bubble_icon;
-static GBitmap *main_checkbox_icon;
-static GBitmap *main_apple_icon;
-static GBitmap *main_target_icon;
-static GBitmap *main_pulse_icon;
+
+// Per-IconChoice bitmaps, cached lazily. Each choice has a black variant (for a
+// light background) and a white variant (for a dark/highlighted background); a
+// choice that only ships one color points both resource ids at the same asset.
+static GBitmap *choice_black[IconChoice_COUNT];
+static GBitmap *choice_white[IconChoice_COUNT];
+
+static const uint32_t choice_black_res[IconChoice_COUNT] = {
+    [IconChoice_CHECK]        = RESOURCE_ID_CHECK_ICON,
+    [IconChoice_CROSS]        = RESOURCE_ID_CROSS_ICON,
+    [IconChoice_UP]           = RESOURCE_ID_UP_ICON,
+    [IconChoice_DOWN]         = RESOURCE_ID_DOWN_ICON,
+    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_50_ICON,
+    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_50_ICON,
+    [IconChoice_PILL]         = RESOURCE_ID_PILL_ICON,
+    [IconChoice_FACE_SAD]     = RESOURCE_ID_FACE_SAD_ICON,
+    [IconChoice_FACE_NEUTRAL] = RESOURCE_ID_FACE_NEUTRAL_ICON,
+    [IconChoice_FACE_HAPPY]   = RESOURCE_ID_FACE_HAPPY_ICON,
+    [IconChoice_LEVEL_LOW]    = RESOURCE_ID_LEVEL_LOW_ICON,
+    [IconChoice_LEVEL_MID]    = RESOURCE_ID_LEVEL_MID_ICON,
+    [IconChoice_LEVEL_HIGH]   = RESOURCE_ID_LEVEL_HIGH_ICON,
+    [IconChoice_SUN]          = RESOURCE_ID_MAIN_SUN_BLACK_ICON,
+    [IconChoice_MOON]         = RESOURCE_ID_MAIN_MOON_BLACK_ICON,
+    [IconChoice_DROPLET]      = RESOURCE_ID_MAIN_DROPLET_BLACK_ICON,
+    [IconChoice_HEART]        = RESOURCE_ID_MAIN_HEART_BLACK_ICON,
+    [IconChoice_BOLT]         = RESOURCE_ID_MAIN_BOLT_BLACK_ICON,
+    [IconChoice_COFFEE]       = RESOURCE_ID_MAIN_COFFEE_BLACK_ICON,
+    [IconChoice_GLASS]        = RESOURCE_ID_MAIN_GLASS_BLACK_ICON,
+    [IconChoice_THERMO]       = RESOURCE_ID_MAIN_THERMO_BLACK_ICON,
+    [IconChoice_PHONE]        = RESOURCE_ID_MAIN_PHONE_BLACK_ICON,
+    [IconChoice_CLOUD]        = RESOURCE_ID_MAIN_CLOUD_BLACK_ICON,
+    [IconChoice_DUMBBELL]     = RESOURCE_ID_MAIN_DUMBBELL_BLACK_ICON,
+    [IconChoice_BUBBLE]       = RESOURCE_ID_MAIN_BUBBLE_BLACK_ICON,
+    [IconChoice_CHECKBOX]     = RESOURCE_ID_MAIN_CHECKBOX_BLACK_ICON,
+    [IconChoice_APPLE]        = RESOURCE_ID_MAIN_APPLE_BLACK_ICON,
+    [IconChoice_TARGET]       = RESOURCE_ID_MAIN_TARGET_BLACK_ICON,
+    [IconChoice_PULSE]        = RESOURCE_ID_MAIN_PULSE_BLACK_ICON,
+};
+
+static const uint32_t choice_white_res[IconChoice_COUNT] = {
+    [IconChoice_CHECK]        = RESOURCE_ID_CHECK_W20_ICON,
+    [IconChoice_CROSS]        = RESOURCE_ID_CROSS_W20_ICON,
+    [IconChoice_UP]           = RESOURCE_ID_UP_WHITE_ICON,
+    [IconChoice_DOWN]         = RESOURCE_ID_DOWN_WHITE_ICON,
+    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_50_ICON,
+    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_50_ICON,
+    [IconChoice_PILL]         = RESOURCE_ID_PILL_WHITE_ICON,
+    [IconChoice_FACE_SAD]     = RESOURCE_ID_FACE_SAD_WHITE_ICON,
+    [IconChoice_FACE_NEUTRAL] = RESOURCE_ID_FACE_NEUTRAL_WHITE_ICON,
+    [IconChoice_FACE_HAPPY]   = RESOURCE_ID_FACE_HAPPY_WHITE_ICON,
+    [IconChoice_LEVEL_LOW]    = RESOURCE_ID_LEVEL_LOW_WHITE_ICON,
+    [IconChoice_LEVEL_MID]    = RESOURCE_ID_LEVEL_MID_WHITE_ICON,
+    [IconChoice_LEVEL_HIGH]   = RESOURCE_ID_LEVEL_HIGH_WHITE_ICON,
+    [IconChoice_SUN]          = RESOURCE_ID_MAIN_SUN_ICON,
+    [IconChoice_MOON]         = RESOURCE_ID_MAIN_MOON_ICON,
+    [IconChoice_DROPLET]      = RESOURCE_ID_MAIN_DROPLET_ICON,
+    [IconChoice_HEART]        = RESOURCE_ID_MAIN_HEART_ICON,
+    [IconChoice_BOLT]         = RESOURCE_ID_MAIN_BOLT_ICON,
+    [IconChoice_COFFEE]       = RESOURCE_ID_MAIN_COFFEE_ICON,
+    [IconChoice_GLASS]        = RESOURCE_ID_MAIN_GLASS_ICON,
+    [IconChoice_THERMO]       = RESOURCE_ID_MAIN_THERMO_ICON,
+    [IconChoice_PHONE]        = RESOURCE_ID_MAIN_PHONE_ICON,
+    [IconChoice_CLOUD]        = RESOURCE_ID_MAIN_CLOUD_ICON,
+    [IconChoice_DUMBBELL]     = RESOURCE_ID_MAIN_DUMBBELL_ICON,
+    [IconChoice_BUBBLE]       = RESOURCE_ID_MAIN_BUBBLE_ICON,
+    [IconChoice_CHECKBOX]     = RESOURCE_ID_MAIN_CHECKBOX_ICON,
+    [IconChoice_APPLE]        = RESOURCE_ID_MAIN_APPLE_ICON,
+    [IconChoice_TARGET]       = RESOURCE_ID_MAIN_TARGET_ICON,
+    [IconChoice_PULSE]        = RESOURCE_ID_MAIN_PULSE_ICON,
+};
+
+// 20px row-sized variants of the (otherwise 48px) main icons, so they can show a
+// preview in a menu row too. Only the main-icon range is populated; smaller
+// choices already fit a row and fall back to their normal bitmap.
+static GBitmap *choice_row_black[IconChoice_COUNT];
+static GBitmap *choice_row_white[IconChoice_COUNT];
+
+static const uint32_t choice_row_black_res[IconChoice_COUNT] = {
+    [IconChoice_SUN]      = RESOURCE_ID_MAIN_SUN_SM_ICON,
+    [IconChoice_MOON]     = RESOURCE_ID_MAIN_MOON_SM_ICON,
+    [IconChoice_DROPLET]  = RESOURCE_ID_MAIN_DROPLET_SM_ICON,
+    [IconChoice_HEART]    = RESOURCE_ID_MAIN_HEART_SM_ICON,
+    [IconChoice_BOLT]     = RESOURCE_ID_MAIN_BOLT_SM_ICON,
+    [IconChoice_COFFEE]   = RESOURCE_ID_MAIN_COFFEE_SM_ICON,
+    [IconChoice_GLASS]    = RESOURCE_ID_MAIN_GLASS_SM_ICON,
+    [IconChoice_THERMO]   = RESOURCE_ID_MAIN_THERMO_SM_ICON,
+    [IconChoice_PHONE]    = RESOURCE_ID_MAIN_PHONE_SM_ICON,
+    [IconChoice_CLOUD]    = RESOURCE_ID_MAIN_CLOUD_SM_ICON,
+    [IconChoice_DUMBBELL] = RESOURCE_ID_MAIN_DUMBBELL_SM_ICON,
+    [IconChoice_BUBBLE]   = RESOURCE_ID_MAIN_BUBBLE_SM_ICON,
+    [IconChoice_CHECKBOX] = RESOURCE_ID_MAIN_CHECKBOX_SM_ICON,
+    [IconChoice_APPLE]    = RESOURCE_ID_MAIN_APPLE_SM_ICON,
+    [IconChoice_TARGET]   = RESOURCE_ID_MAIN_TARGET_SM_ICON,
+    [IconChoice_PULSE]    = RESOURCE_ID_MAIN_PULSE_SM_ICON,
+};
+
+static const uint32_t choice_row_white_res[IconChoice_COUNT] = {
+    [IconChoice_SUN]      = RESOURCE_ID_MAIN_SUN_SM_WHITE_ICON,
+    [IconChoice_MOON]     = RESOURCE_ID_MAIN_MOON_SM_WHITE_ICON,
+    [IconChoice_DROPLET]  = RESOURCE_ID_MAIN_DROPLET_SM_WHITE_ICON,
+    [IconChoice_HEART]    = RESOURCE_ID_MAIN_HEART_SM_WHITE_ICON,
+    [IconChoice_BOLT]     = RESOURCE_ID_MAIN_BOLT_SM_WHITE_ICON,
+    [IconChoice_COFFEE]   = RESOURCE_ID_MAIN_COFFEE_SM_WHITE_ICON,
+    [IconChoice_GLASS]    = RESOURCE_ID_MAIN_GLASS_SM_WHITE_ICON,
+    [IconChoice_THERMO]   = RESOURCE_ID_MAIN_THERMO_SM_WHITE_ICON,
+    [IconChoice_PHONE]    = RESOURCE_ID_MAIN_PHONE_SM_WHITE_ICON,
+    [IconChoice_CLOUD]    = RESOURCE_ID_MAIN_CLOUD_SM_WHITE_ICON,
+    [IconChoice_DUMBBELL] = RESOURCE_ID_MAIN_DUMBBELL_SM_WHITE_ICON,
+    [IconChoice_BUBBLE]   = RESOURCE_ID_MAIN_BUBBLE_SM_WHITE_ICON,
+    [IconChoice_CHECKBOX] = RESOURCE_ID_MAIN_CHECKBOX_SM_WHITE_ICON,
+    [IconChoice_APPLE]    = RESOURCE_ID_MAIN_APPLE_SM_WHITE_ICON,
+    [IconChoice_TARGET]   = RESOURCE_ID_MAIN_TARGET_SM_WHITE_ICON,
+    [IconChoice_PULSE]    = RESOURCE_ID_MAIN_PULSE_SM_WHITE_ICON,
+};
 
 static GBitmap* get_icon(uint32_t id, GBitmap** icon)
 {
@@ -150,41 +242,86 @@ GBitmap* get_cross_icon()
     return get_icon(RESOURCE_ID_CROSS_ICON, &cross_icon);
 }
 
+GBitmap* get_icon_by_choice_ex(uint8_t choice, bool light)
+{
+    if(choice == IconChoice_NONE || choice >= IconChoice_COUNT)
+    {
+        return NULL;
+    }
+
+    uint32_t res = light ? choice_white_res[choice] : choice_black_res[choice];
+    GBitmap** cache = light ? &choice_white[choice] : &choice_black[choice];
+    return get_icon(res, cache);
+}
+
 GBitmap* get_icon_by_choice(uint8_t choice)
+{
+    return get_icon_by_choice_ex(choice, false);
+}
+
+GBitmap* get_icon_row_by_choice(uint8_t choice, bool light)
+{
+    if(choice == IconChoice_NONE || choice >= IconChoice_COUNT)
+    {
+        return NULL;
+    }
+
+    // Main icons have dedicated 20px row variants; everything else is already
+    // small enough to draw in a row.
+    uint32_t res = light ? choice_row_white_res[choice] : choice_row_black_res[choice];
+    if(res == 0)
+    {
+        return get_icon_by_choice_ex(choice, light);
+    }
+
+    GBitmap** cache = light ? &choice_row_white[choice] : &choice_row_black[choice];
+    return get_icon(res, cache);
+}
+
+const char* icon_choice_name(uint8_t choice)
 {
     switch(choice)
     {
-        case IconChoice_CHECK:    return get_check_icon();
-        case IconChoice_CROSS:    return get_cross_icon();
-        case IconChoice_UP:       return get_up_icon();
-        case IconChoice_DOWN:     return get_down_icon();
-        case IconChoice_MOOD:     return get_mood_icon();
-        case IconChoice_EXERCISE: return get_exercise_icon();
-        case IconChoice_PILL:     return get_pill_icon();
-        case IconChoice_FACE_SAD:     return get_icon(RESOURCE_ID_FACE_SAD_ICON, &face_sad_icon);
-        case IconChoice_FACE_NEUTRAL: return get_icon(RESOURCE_ID_FACE_NEUTRAL_ICON, &face_neutral_icon);
-        case IconChoice_FACE_HAPPY:   return get_icon(RESOURCE_ID_FACE_HAPPY_ICON, &face_happy_icon);
-        case IconChoice_LEVEL_LOW:    return get_icon(RESOURCE_ID_LEVEL_LOW_ICON, &level_low_icon);
-        case IconChoice_LEVEL_MID:    return get_icon(RESOURCE_ID_LEVEL_MID_ICON, &level_mid_icon);
-        case IconChoice_LEVEL_HIGH:   return get_icon(RESOURCE_ID_LEVEL_HIGH_ICON, &level_high_icon);
-        case IconChoice_SUN:      return get_icon(RESOURCE_ID_MAIN_SUN_ICON, &main_sun_icon);
-        case IconChoice_MOON:     return get_icon(RESOURCE_ID_MAIN_MOON_ICON, &main_moon_icon);
-        case IconChoice_DROPLET:  return get_icon(RESOURCE_ID_MAIN_DROPLET_ICON, &main_droplet_icon);
-        case IconChoice_HEART:    return get_icon(RESOURCE_ID_MAIN_HEART_ICON, &main_heart_icon);
-        case IconChoice_BOLT:     return get_icon(RESOURCE_ID_MAIN_BOLT_ICON, &main_bolt_icon);
-        case IconChoice_COFFEE:   return get_icon(RESOURCE_ID_MAIN_COFFEE_ICON, &main_coffee_icon);
-        case IconChoice_GLASS:    return get_icon(RESOURCE_ID_MAIN_GLASS_ICON, &main_glass_icon);
-        case IconChoice_THERMO:   return get_icon(RESOURCE_ID_MAIN_THERMO_ICON, &main_thermo_icon);
-        case IconChoice_PHONE:    return get_icon(RESOURCE_ID_MAIN_PHONE_ICON, &main_phone_icon);
-        case IconChoice_CLOUD:    return get_icon(RESOURCE_ID_MAIN_CLOUD_ICON, &main_cloud_icon);
-        case IconChoice_DUMBBELL: return get_icon(RESOURCE_ID_MAIN_DUMBBELL_ICON, &main_dumbbell_icon);
-        case IconChoice_BUBBLE:   return get_icon(RESOURCE_ID_MAIN_BUBBLE_ICON, &main_bubble_icon);
-        case IconChoice_CHECKBOX: return get_icon(RESOURCE_ID_MAIN_CHECKBOX_ICON, &main_checkbox_icon);
-        case IconChoice_APPLE:    return get_icon(RESOURCE_ID_MAIN_APPLE_ICON, &main_apple_icon);
-        case IconChoice_TARGET:   return get_icon(RESOURCE_ID_MAIN_TARGET_ICON, &main_target_icon);
-        case IconChoice_PULSE:    return get_icon(RESOURCE_ID_MAIN_PULSE_ICON, &main_pulse_icon);
-        default:                  return NULL;
+        case IconChoice_CHECK:    return "Check";
+        case IconChoice_CROSS:    return "Cross";
+        case IconChoice_UP:       return "Up";
+        case IconChoice_DOWN:     return "Down";
+        case IconChoice_MOOD:     return "Mood";
+        case IconChoice_EXERCISE: return "Exercise";
+        case IconChoice_PILL:     return "Pill";
+        case IconChoice_FACE_SAD:     return "Sad face";
+        case IconChoice_FACE_NEUTRAL: return "Neutral face";
+        case IconChoice_FACE_HAPPY:   return "Happy face";
+        case IconChoice_LEVEL_LOW:    return "Level low";
+        case IconChoice_LEVEL_MID:    return "Level mid";
+        case IconChoice_LEVEL_HIGH:   return "Level high";
+        case IconChoice_SUN:      return "Sun";
+        case IconChoice_MOON:     return "Moon";
+        case IconChoice_DROPLET:  return "Droplet";
+        case IconChoice_HEART:    return "Heart";
+        case IconChoice_BOLT:     return "Bolt";
+        case IconChoice_COFFEE:   return "Coffee";
+        case IconChoice_GLASS:    return "Glass";
+        case IconChoice_THERMO:   return "Thermometer";
+        case IconChoice_PHONE:    return "Phone";
+        case IconChoice_CLOUD:    return "Cloud";
+        case IconChoice_DUMBBELL: return "Dumbbell";
+        case IconChoice_BUBBLE:   return "Speech";
+        case IconChoice_CHECKBOX: return "Checkbox";
+        case IconChoice_APPLE:    return "Apple";
+        case IconChoice_TARGET:   return "Target";
+        case IconChoice_PULSE:    return "Pulse";
+        default:                  return "None";
     }
+}
+
+bool icon_choice_is_small(uint8_t choice)
+{
+    if(choice == IconChoice_MOOD || choice == IconChoice_EXERCISE)
+    {
+        return false;
+    }
+    return choice < IconChoice_SUN;
 }
 
 void destroy_all_icons()
@@ -207,26 +344,11 @@ void destroy_all_icons()
     destroy_icon(&mood_icon);
     destroy_icon(&exercise_icon);
     destroy_icon(&cross_icon);
-    destroy_icon(&face_sad_icon);
-    destroy_icon(&face_neutral_icon);
-    destroy_icon(&face_happy_icon);
-    destroy_icon(&level_low_icon);
-    destroy_icon(&level_mid_icon);
-    destroy_icon(&level_high_icon);
-    destroy_icon(&main_sun_icon);
-    destroy_icon(&main_moon_icon);
-    destroy_icon(&main_droplet_icon);
-    destroy_icon(&main_heart_icon);
-    destroy_icon(&main_bolt_icon);
-    destroy_icon(&main_coffee_icon);
-    destroy_icon(&main_glass_icon);
-    destroy_icon(&main_thermo_icon);
-    destroy_icon(&main_phone_icon);
-    destroy_icon(&main_cloud_icon);
-    destroy_icon(&main_dumbbell_icon);
-    destroy_icon(&main_bubble_icon);
-    destroy_icon(&main_checkbox_icon);
-    destroy_icon(&main_apple_icon);
-    destroy_icon(&main_target_icon);
-    destroy_icon(&main_pulse_icon);
+    for(int i = 0; i < IconChoice_COUNT; i++)
+    {
+        destroy_icon(&choice_black[i]);
+        destroy_icon(&choice_white[i]);
+        destroy_icon(&choice_row_black[i]);
+        destroy_icon(&choice_row_white[i]);
+    }
 }

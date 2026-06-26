@@ -55,7 +55,17 @@ Status:
 - [x] **Text per alternativ** — redigerbar via röst i metric-config ("Option N text"-rad),
       lagras i `option_text_ids`. Sträng-id:n börjar nu på 1 så 0 = "ingen text". (Visas ännu
       inte på registreringsskärmen — det görs i ikon-/registrerings-polishen.)
-- [ ] **Ikon-assets + storlekar** (se nedan).
+- [x] **Ikon-väljare istället för cykling.** Huvudikon- och per-alternativ-raderna öppnar nu
+      ett eget `icon_picker_window` (custom `MenuLayer`) med hela ikonlistan, istället för att
+      stega ett steg per Select. Markören står kvar på raden efter val.
+- [x] **Svart + vit variant av alla ikoner.** Varje `IconChoice` har nu både en svart och en
+      vit bitmap; `get_icon_by_choice_ex(choice, light)` väljer rätt. Ikon-väljaren ritar dem
+      highlight-medvetet (vit ikon på markerad/mörk rad, svart på ljus) så de syns i alla
+      tema-/markeringslägen. Huvudikonerna har även en 20px-variant (`get_icon_row_by_choice`)
+      så de visar förhandsvisning i config-raderna.
+      (Kvarstår: config-menyn är en `SimpleMenuLayer` som inte kan byta ikonfärg per rad, så
+      förhandsvisningen försvinner på den *markerade* raden — namnet syns dock alltid. Full
+      highlight-medveten config-meny kräver att den görs om till custom `MenuLayer`.)
 
 ### Ikoner: fler + passande storlekar
 

@@ -6,6 +6,7 @@
 #include "repositories/app_config_repository.h"
 #include "format.h"
 #include "icons.h"
+#include "icon_picker_window.h"
 #include "edit_alarm_window.h"
 
 // Title, Type, Main icon + Max OR per-option (icon + text) rows.
@@ -32,7 +33,6 @@ static SimpleMenuSection m_metric_group_items_section = { .title = "In groups" }
 
 // Dynamic "Metric" section rows.
 static void metric_row_selected(int index, void *context);
-static bool icon_is_small(uint8_t choice);
 static GBitmap* row_icon(uint8_t choice);
 static SimpleMenuItem m_metric_items[MAX_METRIC_ROWS];
 static char m_row_title[MAX_METRIC_ROWS][ROW_TEXT_LEN];
@@ -47,6 +47,8 @@ static uint16_t* m_group_id_index_map = NULL;
 static DictationSession* m_dictation_session;
 static Metrics* m_metric = NULL;
 static int m_dictation_target = -1;  // -1 = title, 0..N = option text
+static uint8_t m_pending_option = 0; // option index awaiting an icon pick
+static int m_icon_row_index = 0;     // row that opened the icon picker
 
 static void create_menu();
 
@@ -59,43 +61,6 @@ static void mark_menu_dirty()
 {
     layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
     update_status_bar();
-}
-
-static const char* icon_name(uint8_t choice)
-{
-    switch(choice)
-    {
-        case IconChoice_CHECK:    return "Check";
-        case IconChoice_CROSS:    return "Cross";
-        case IconChoice_UP:       return "Up";
-        case IconChoice_DOWN:     return "Down";
-        case IconChoice_MOOD:     return "Mood";
-        case IconChoice_EXERCISE: return "Exercise";
-        case IconChoice_PILL:     return "Pill";
-        case IconChoice_FACE_SAD:     return "Sad face";
-        case IconChoice_FACE_NEUTRAL: return "Neutral face";
-        case IconChoice_FACE_HAPPY:   return "Happy face";
-        case IconChoice_LEVEL_LOW:    return "Level low";
-        case IconChoice_LEVEL_MID:    return "Level mid";
-        case IconChoice_LEVEL_HIGH:   return "Level high";
-        case IconChoice_SUN:      return "Sun";
-        case IconChoice_MOON:     return "Moon";
-        case IconChoice_DROPLET:  return "Droplet";
-        case IconChoice_HEART:    return "Heart";
-        case IconChoice_BOLT:     return "Bolt";
-        case IconChoice_COFFEE:   return "Coffee";
-        case IconChoice_GLASS:    return "Glass";
-        case IconChoice_THERMO:   return "Thermometer";
-        case IconChoice_PHONE:    return "Phone";
-        case IconChoice_CLOUD:    return "Cloud";
-        case IconChoice_DUMBBELL: return "Dumbbell";
-        case IconChoice_BUBBLE:   return "Speech";
-        case IconChoice_CHECKBOX: return "Checkbox";
-        case IconChoice_APPLE:    return "Apple";
-        case IconChoice_TARGET:   return "Target";
-        case IconChoice_PULSE:    return "Pulse";
-        default:                  return "None";
-    }
 }
 
 static const char* type_label(MetricsType type)
@@ -133,7 +98,7 @@ static void build_metric_rows()
         m_metric->title != NULL ? m_metric->title->value : "", NULL);
     set_row(r++, RowKind_TYPE, 0, "Type", type_label(m_metric->type), NULL);
     set_row(r++, RowKind_MAIN_ICON, 0, "Main icon",
-        icon_name(m_metric->main_icon), row_icon(m_metric->main_icon));
+        icon_choice_name(m_metric->main_icon), row_icon(m_metric->main_icon));
 
     if(m_metric->type == MetricsType_INTERVAL)
     {
@@ -148,7 +113,7 @@ static void build_metric_rows()
             char title[ROW_TEXT_LEN];
             snprintf(title, sizeof(title), "Option %d icon", option + 1);
             set_row(r++, RowKind_OPTION_ICON, option, title,
-                icon_name(m_metric->option_icons[option]),
+                icon_choice_name(m_metric->option_icons[option]),
                 row_icon(m_metric->option_icons[option]));
 
             const char* text = metrics_get_option_text(m_metric, option);
@@ -215,38 +180,37 @@ static void build_group_rows()
     m_metric_group_items_section.num_items = count;
 }
 
-static bool icon_is_small(uint8_t choice)
-{
-    // Large display icons (mood/exercise + the main-icon set from IconChoice_SUN
-    // onward) don't fit a menu row or the narrow action bar — they're main-icon
-    // only. The rest (check/cross/up/down/pill/faces/levels) are small.
-    if(choice == IconChoice_MOOD || choice == IconChoice_EXERCISE)
-    {
-        return false;
-    }
-    return choice < IconChoice_SUN;
-}
-
-// Icon to show on a config row: only small icons (large ones would overflow the
-// row and cover the text), otherwise just the name in the subtitle.
+// Preview icon for a config row, sized to fit (main icons use their 20px row
+// variant). SimpleMenuLayer draws unselected rows on a white background, so we
+// use the black variant; it does vanish on the one selected (black) row, but the
+// name in the subtitle still identifies it, and selecting opens the picker.
 static GBitmap* row_icon(uint8_t choice)
 {
-    return icon_is_small(choice) ? get_icon_by_choice(choice) : NULL;
+    return get_icon_row_by_choice(choice, false);
 }
 
-static void cycle_main_icon(uint8_t* field)
+// Refresh just the row that opened the picker, so the cursor stays put (a full
+// create_menu() would reset it to the top — and the row count doesn't change).
+static void refresh_icon_row(uint8_t choice)
 {
-    *field = (*field + 1) % IconChoice_COUNT;
+    int r = m_icon_row_index;
+    m_metric_items[r].icon = row_icon(choice);
+    snprintf(m_row_subtitle[r], ROW_TEXT_LEN, "%s", icon_choice_name(choice));
+    mark_menu_dirty();
 }
 
-static void cycle_option_icon(uint8_t* field)
+static void main_icon_picked(uint8_t choice, void* context)
 {
-    // Option icons render in the narrow action bar, so skip the oversized
-    // display icons.
-    do
-    {
-        *field = (*field + 1) % IconChoice_COUNT;
-    } while(!icon_is_small(*field));
+    m_metric->main_icon = choice;
+    metrics_save();
+    refresh_icon_row(choice);
+}
+
+static void option_icon_picked(uint8_t choice, void* context)
+{
+    m_metric->option_icons[m_pending_option] = choice;
+    metrics_save();
+    refresh_icon_row(choice);
 }
 
 static void change_type()
@@ -287,11 +251,8 @@ static void metric_row_selected(int index, void *context)
             create_menu();          // row count changes with type
             break;
         case RowKind_MAIN_ICON:
-            cycle_main_icon(&m_metric->main_icon);
-            metrics_save();
-            m_metric_items[index].icon = row_icon(m_metric->main_icon);
-            snprintf(m_row_subtitle[index], ROW_TEXT_LEN, "%s", icon_name(m_metric->main_icon));
-            mark_menu_dirty();
+            m_icon_row_index = index;
+            setup_icon_picker_window(false, m_metric->main_icon, main_icon_picked, NULL);
             break;
         case RowKind_MAX:
             m_metric->max_value++;
@@ -305,12 +266,10 @@ static void metric_row_selected(int index, void *context)
             break;
         case RowKind_OPTION_ICON:
         {
-            uint8_t option = m_row_option[index];
-            cycle_option_icon(&m_metric->option_icons[option]);
-            metrics_save();
-            m_metric_items[index].icon = row_icon(m_metric->option_icons[option]);
-            snprintf(m_row_subtitle[index], ROW_TEXT_LEN, "%s", icon_name(m_metric->option_icons[option]));
-            mark_menu_dirty();
+            m_pending_option = m_row_option[index];
+            m_icon_row_index = index;
+            setup_icon_picker_window(true, m_metric->option_icons[m_pending_option],
+                option_icon_picked, NULL);
             break;
         }
         case RowKind_OPTION_TEXT:

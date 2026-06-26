@@ -60,6 +60,23 @@ typedef enum
 } IconChoice;
 
 // Returns the bitmap for an IconChoice, or NULL for IconChoice_NONE / unknown.
+// `light` picks the white variant (for drawing on a dark/highlighted background);
+// otherwise the black variant (for a light background) is returned.
+GBitmap* get_icon_by_choice_ex(uint8_t choice, bool light);
+
+// Convenience: the black (light-background) variant.
 GBitmap* get_icon_by_choice(uint8_t choice);
+
+// A menu-row-sized (20px) bitmap for an IconChoice. Main icons use a dedicated
+// small variant; smaller choices fall back to their normal bitmap. `light`
+// picks the white variant. NULL for IconChoice_NONE / unknown.
+GBitmap* get_icon_row_by_choice(uint8_t choice, bool light);
+
+// Human-readable name for an IconChoice (e.g. "Happy face"), "None" for unknown.
+const char* icon_choice_name(uint8_t choice);
+
+// True for icons small enough to sit in a menu row / the narrow action bar.
+// Large display icons (mood/exercise + the main-icon set) are main-icon only.
+bool icon_choice_is_small(uint8_t choice);
 
 void destroy_all_icons();
