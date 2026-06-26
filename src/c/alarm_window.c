@@ -110,12 +110,15 @@ void setup_alarm_window(int32_t alarm_index)
 {
     setup_alarm_state(alarm_index);
 
-    alarm_window = window_create();
-    set_alarm_window(alarm_window);
-    window_set_window_handlers(alarm_window, (WindowHandlers) {
-        .load = load_alarm_window,
-        .unload = unload_alarm_window
-    });
+    if(alarm_window == NULL)
+    {
+        alarm_window = window_create();
+        set_alarm_window(alarm_window);
+        window_set_window_handlers(alarm_window, (WindowHandlers) {
+            .load = load_alarm_window,
+            .unload = unload_alarm_window
+        });
+    }
 
     window_stack_push(alarm_window, true);
 }

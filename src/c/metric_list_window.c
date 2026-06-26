@@ -141,12 +141,15 @@ static void unload_window(Window* window)
 void setup_metric_list_window(MetricListMode mode)
 {
     m_mode = mode;
-    m_window = window_create();
-    window_set_window_handlers(m_window, (WindowHandlers) {
-        .load = load_window,
-        .unload = unload_window,
-        .appear = appear_window,
-    });
+    if(m_window == NULL)
+    {
+        m_window = window_create();
+        window_set_window_handlers(m_window, (WindowHandlers) {
+            .load = load_window,
+            .unload = unload_window,
+            .appear = appear_window,
+        });
+    }
     window_stack_push(m_window, true);
 }
 

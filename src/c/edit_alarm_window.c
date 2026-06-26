@@ -138,13 +138,15 @@ void setup_edit_alarm_window(MetricsGroup* metrics_group)
 {
     set_metrics_group(metrics_group);
 
-    edit_alarm_window = window_create();
-
-    window_set_window_handlers(edit_alarm_window, (WindowHandlers) {
-        .load = load_edit_alarm_window,
-        .unload = unload_edit_alarm_window,
-        .appear = update_edit_alarm_window
-    });
+    if(edit_alarm_window == NULL)
+    {
+        edit_alarm_window = window_create();
+        window_set_window_handlers(edit_alarm_window, (WindowHandlers) {
+            .load = load_edit_alarm_window,
+            .unload = unload_edit_alarm_window,
+            .appear = update_edit_alarm_window
+        });
+    }
 
     window_stack_push(edit_alarm_window, true);
 }

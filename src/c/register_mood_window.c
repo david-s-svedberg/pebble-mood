@@ -91,11 +91,14 @@ static void unload_mood_window(Window *window)
 
 static void push_mood_window()
 {
-    m_mood_window = window_create();
-    window_set_window_handlers(m_mood_window, (WindowHandlers) {
-        .load = load_mood_window,
-        .unload = unload_mood_window
-    });
+    if(m_mood_window == NULL)
+    {
+        m_mood_window = window_create();
+        window_set_window_handlers(m_mood_window, (WindowHandlers) {
+            .load = load_mood_window,
+            .unload = unload_mood_window
+        });
+    }
     window_stack_push(m_mood_window, true);
 }
 

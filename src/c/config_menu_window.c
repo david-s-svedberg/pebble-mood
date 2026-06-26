@@ -242,13 +242,15 @@ static void appear_config_windows(Window *window)
 
 void setup_config_window()
 {
-    m_config_window = window_create();
-
-    window_set_window_handlers(m_config_window, (WindowHandlers) {
-        .load = load_config_window,
-        .unload = unload_config_window,
-        .appear = appear_config_windows,
-    });
+    if(m_config_window == NULL)
+    {
+        m_config_window = window_create();
+        window_set_window_handlers(m_config_window, (WindowHandlers) {
+            .load = load_config_window,
+            .unload = unload_config_window,
+            .appear = appear_config_windows,
+        });
+    }
 
     window_stack_push(m_config_window, true);
 }

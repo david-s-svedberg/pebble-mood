@@ -190,13 +190,15 @@ static void appear_metric_group_window(Window *window)
 void setup_metric_group_config_window(MetricsGroup* metrics_group)
 {
     m_metric_group = metrics_group;
-    m_config_window = window_create();
-
-    window_set_window_handlers(m_config_window, (WindowHandlers) {
-        .load = load_metric_group_window,
-        .unload = unload_metric_group_window,
-        .appear = appear_metric_group_window,
-    });
+    if(m_config_window == NULL)
+    {
+        m_config_window = window_create();
+        window_set_window_handlers(m_config_window, (WindowHandlers) {
+            .load = load_metric_group_window,
+            .unload = unload_metric_group_window,
+            .appear = appear_metric_group_window,
+        });
+    }
 
     window_stack_push(m_config_window, true);
 }

@@ -368,12 +368,14 @@ static void unload_main_window(Window *window)
 void setup_metrics_config_window(Metrics* metric)
 {
     m_metric = metric;
-    m_config_window = window_create();
-
-    window_set_window_handlers(m_config_window, (WindowHandlers) {
-        .load = load_main_window,
-        .unload = unload_main_window,
-    });
+    if(m_config_window == NULL)
+    {
+        m_config_window = window_create();
+        window_set_window_handlers(m_config_window, (WindowHandlers) {
+            .load = load_main_window,
+            .unload = unload_main_window,
+        });
+    }
 
     window_stack_push(m_config_window, true);
 }
