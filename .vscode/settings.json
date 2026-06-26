@@ -3,6 +3,8 @@
     [
         "/root/.pebble-sdk/SDKs/4.3/sdk-core/pebble/**"
     ],
+    "_comment_cmake": "Pebble builds with waf (wscript), not CMake — silence the CMake Tools prompt.",
+    "cmake.configureOnOpen": false,
     "files.associations": {
         "pebble.h": "c",
         "message_keys.auto.h": "c",
