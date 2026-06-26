@@ -2,103 +2,44 @@
 
 #include <pebble.h>
 
-#include "main_window_logic.h"
 #include "config_menu_window.h"
-#include "repositories/metrics_repository.h"
+#include "metric_list_window.h"
+#include "scheduler.h"
+#include "icons.h"
 #include "repositories/app_config_repository.h"
-
-#define SUBTITLE_LEN (24)
 
 static Window* m_main_window;
 static StatusBarLayer* m_status_bar;
-static SimpleMenuLayer* m_menu_layer = NULL;
+static TextLayer* m_title_layer;
+static TextLayer* m_next_layer;
+static ActionBarLayer* m_action_bar;
+static char m_next_buffer[24];
 
-static SimpleMenuSection m_sections[2];
-static SimpleMenuSection m_metrics_section = {0};
-static SimpleMenuSection m_actions_section = {0};
-
-static SimpleMenuItem* m_metric_items = NULL;       // one per metric (or a placeholder)
-static char (*m_subtitles)[SUBTITLE_LEN] = NULL;    // backing store for the subtitles
-static SimpleMenuItem m_settings_item = {0};
-
-static void open_settings(int index, void* context)
+static void open_settings(ClickRecognizerRef recognizer, void* context)
 {
     setup_config_window();
 }
 
-static void free_dynamic()
+static void open_register(ClickRecognizerRef recognizer, void* context)
 {
-    if(m_metric_items != NULL)
-    {
-        free(m_metric_items);
-        m_metric_items = NULL;
-    }
-    if(m_subtitles != NULL)
-    {
-        free(m_subtitles);
-        m_subtitles = NULL;
-    }
+    // Spontaneous registration: pick a metric and register it now.
+    setup_metric_list_window();
 }
 
-static void build_metrics_section()
+static void click_config_provider(void* context)
 {
-    free_dynamic();
-
-    uint32_t count = metrics_count();
-    uint32_t item_count = (count == 0) ? 1 : count;
-
-    m_metric_items = (SimpleMenuItem*)malloc(item_count * sizeof(SimpleMenuItem));
-    memset(m_metric_items, 0, item_count * sizeof(SimpleMenuItem));
-    m_subtitles = malloc(item_count * SUBTITLE_LEN);
-
-    if(count == 0)
-    {
-        m_metric_items[0].title = "No metrics yet";
-        m_metric_items[0].subtitle = "Add one in Settings";
-    } else
-    {
-        Metrics* metrics = metrics_get_all();
-        for(uint32_t i = 0; i < count; i++)
-        {
-            Metrics* metric = &metrics[i];
-            main_window_format_average(metric, m_subtitles[i], SUBTITLE_LEN);
-            m_metric_items[i].title = (metric->title != NULL) ? metric->title->value : "";
-            m_metric_items[i].subtitle = m_subtitles[i];
-            m_metric_items[i].callback = NULL;
-        }
-    }
-
-    m_metrics_section.title = "Last 7 days";
-    m_metrics_section.items = m_metric_items;
-    m_metrics_section.num_items = item_count;
+    // Up: today/overview, Select: register, Down: settings. (Up and Select
+    // currently open the same metric list; a distinct "Today" view with
+    // answered-status is a planned refinement — see ROADMAP.md.)
+    window_single_click_subscribe(BUTTON_ID_UP, open_register);
+    window_single_click_subscribe(BUTTON_ID_SELECT, open_register);
+    window_single_click_subscribe(BUTTON_ID_DOWN, open_settings);
 }
 
-static void create_menu(Window* window)
+static void update_next_time()
 {
-    Layer* window_layer = window_get_root_layer(window);
-    GRect bounds = layer_get_bounds(window_layer);
-
-    if(m_menu_layer != NULL)
-    {
-        simple_menu_layer_destroy(m_menu_layer);
-        m_menu_layer = NULL;
-    }
-
-    build_metrics_section();
-
-    m_settings_item.title = "Settings";
-    m_settings_item.callback = open_settings;
-    m_actions_section.items = &m_settings_item;
-    m_actions_section.num_items = 1;
-
-    m_sections[0] = m_metrics_section;
-    m_sections[1] = m_actions_section;
-
-    m_menu_layer = simple_menu_layer_create(
-        GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT),
-        window, m_sections, 2, NULL);
-
-    layer_add_child(window_layer, simple_menu_layer_get_layer(m_menu_layer));
+    snprintf(m_next_buffer, sizeof(m_next_buffer), "Next: %s", get_next_alarm_time_string());
+    text_layer_set_text(m_next_layer, m_next_buffer);
 }
 
 static void setup_status_bar(Layer* window_layer)
@@ -109,29 +50,64 @@ static void setup_status_bar(Layer* window_layer)
     layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
 }
 
+static void setup_title_layer(Layer* window_layer, GRect bounds)
+{
+    m_title_layer = text_layer_create(
+        GRect(0, STATUS_BAR_LAYER_HEIGHT + 20, bounds.size.w - ACTION_BAR_WIDTH, 44));
+    text_layer_set_background_color(m_title_layer, config_get_background_color());
+    text_layer_set_text_color(m_title_layer, config_get_foreground_color());
+    text_layer_set_font(m_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+    text_layer_set_text_alignment(m_title_layer, GTextAlignmentCenter);
+    text_layer_set_text(m_title_layer, "Mood");
+    layer_add_child(window_layer, text_layer_get_layer(m_title_layer));
+}
+
+static void setup_next_layer(Layer* window_layer, GRect bounds)
+{
+    m_next_layer = text_layer_create(
+        GRect(0, bounds.size.h / 2, bounds.size.w - ACTION_BAR_WIDTH, 30));
+    text_layer_set_background_color(m_next_layer, config_get_background_color());
+    text_layer_set_text_color(m_next_layer, config_get_foreground_color());
+    text_layer_set_font(m_next_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(m_next_layer, GTextAlignmentCenter);
+    layer_add_child(window_layer, text_layer_get_layer(m_next_layer));
+}
+
+static void setup_action_bar()
+{
+    m_action_bar = action_bar_layer_create();
+    action_bar_layer_set_background_color(m_action_bar, config_get_foreground_color());
+    action_bar_layer_add_to_window(m_action_bar, m_main_window);
+    action_bar_layer_set_click_config_provider(m_action_bar, click_config_provider);
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_UP, get_check_icon(), true);
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_SELECT, get_edit_icon(), true);
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_DOWN, get_config_icon(), true);
+}
+
 static void load_main_window(Window* window)
 {
     window_set_background_color(window, config_get_background_color());
-    setup_status_bar(window_get_root_layer(window));
-    create_menu(window);
+    Layer* window_layer = window_get_root_layer(window);
+    GRect bounds = layer_get_bounds(window_layer);
+
+    setup_status_bar(window_layer);
+    setup_title_layer(window_layer, bounds);
+    setup_next_layer(window_layer, bounds);
+    setup_action_bar();
 }
 
 static void appear_main_window(Window* window)
 {
-    // Rebuild so newly added/removed metrics and fresh averages are reflected
-    // when returning from Settings.
-    create_menu(window);
+    update_next_time();
 }
 
 static void unload_main_window(Window* window)
 {
-    if(m_menu_layer != NULL)
-    {
-        simple_menu_layer_destroy(m_menu_layer);
-        m_menu_layer = NULL;
-    }
     status_bar_layer_destroy(m_status_bar);
-    free_dynamic();
+    text_layer_destroy(m_title_layer);
+    text_layer_destroy(m_next_layer);
+    action_bar_layer_remove_from_window(m_action_bar);
+    action_bar_layer_destroy(m_action_bar);
 }
 
 void setup_main_window()

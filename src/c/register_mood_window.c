@@ -89,17 +89,26 @@ static void unload_mood_window(Window *window)
     action_bar_layer_destroy(m_action_bar);
 }
 
-void setup_register_mood_window(MetricsGroup* group)
+static void push_mood_window()
 {
-    register_mood_set_group(group);
-
     m_mood_window = window_create();
     window_set_window_handlers(m_mood_window, (WindowHandlers) {
         .load = load_mood_window,
         .unload = unload_mood_window
     });
-
     window_stack_push(m_mood_window, true);
+}
+
+void setup_register_mood_window(MetricsGroup* group)
+{
+    register_mood_set_group(group);
+    push_mood_window();
+}
+
+void setup_register_mood_window_for_metric(Metrics* metric)
+{
+    register_mood_set_metric(metric);
+    push_mood_window();
 }
 
 void tear_down_register_mood_window()

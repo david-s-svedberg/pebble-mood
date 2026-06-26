@@ -12,6 +12,7 @@ static TextLayer* m_value_layer;
 static BitmapLayer* m_icon_layer;
 
 static MetricsGroup* m_group;
+static Metrics* m_single_metric;
 static Metrics** m_metrics = NULL;
 static uint16_t m_metric_count = 0;
 static uint16_t m_current_index = 0;
@@ -21,10 +22,20 @@ static char m_value_buffer[4];
 
 static void show_current_metric();
 
-static void collect_group_metrics()
+static void collect_metrics()
 {
     register_mood_tear_down();
 
+    // Spontaneous single-metric registration.
+    if(m_single_metric != NULL)
+    {
+        m_metrics = (Metrics**)malloc(sizeof(Metrics*));
+        m_metrics[0] = m_single_metric;
+        m_metric_count = 1;
+        return;
+    }
+
+    // A group alarm: register every metric that belongs to the group.
     uint32_t total = metrics_count();
     m_metrics = (Metrics**)malloc(total * sizeof(Metrics*));
     m_metric_count = 0;
@@ -186,11 +197,10 @@ static void show_current_metric()
 
 void register_mood_start()
 {
-    collect_group_metrics();
+    collect_metrics();
     m_current_index = 0;
 
-    APP_LOG(APP_LOG_LEVEL_INFO, "Registration started for group %d with %d metrics",
-        m_group != NULL ? m_group->id : -1, (int)m_metric_count);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Registration started (%d metrics)", (int)m_metric_count);
 
     if(m_metric_count == 0)
     {
@@ -204,6 +214,13 @@ void register_mood_start()
 void register_mood_set_group(MetricsGroup* group)
 {
     m_group = group;
+    m_single_metric = NULL;
+}
+
+void register_mood_set_metric(Metrics* metric)
+{
+    m_single_metric = metric;
+    m_group = NULL;
 }
 
 void register_mood_set_layers(

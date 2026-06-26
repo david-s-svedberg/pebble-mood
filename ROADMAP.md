@@ -110,6 +110,13 @@ membership-poster (ta bort dagens implicita `group_id = 0`).
 
 ## 6. Ny huvudskärm (custom UI istället för lista)
 
+Status:
+- [x] Custom hemskärm (titel + nästa tid + action bar) istället för lista.
+- [x] **Select** → spontanregistrera (metric-lista → välj → registrera en metric). Avsnitt 3.
+- [x] **Ner** → Settings.
+- [ ] **Upp** öppnar idag bara samma metric-lista som Select. Bygg den riktiga **"Idag"-vyn**
+      (nedan) med besvarat-status; kräver "registrerad idag"-kollen (delas med avsnitt 4).
+
 Eget UI istället för dagens lista:
 - **Ner** → Settings (config-menyn).
 - **Select (mitten)** → spontanregistrera en metric (avsnitt 3).
@@ -139,6 +146,10 @@ Eget UI istället för dagens lista:
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. erbjuda ett textfritt/förvalt alternativ.
 - [ ] **edit-alarm-layout för emery** (200×228) — hårdkodade Y-koordinater tunade för 144×168.
+- [ ] **Wakeup-id persisteras inte.** `scheduler.c` sätter `alarm.wakeup_id` i minnet men sparar
+      aldrig gruppen, så efter omstart kan appen inte fråga sina egna wakeups (hemskärmen visar
+      "Next: None" trots schemalagda alarm; själva alarmet bör ändå avfyras via systemet eftersom
+      grupp-id ligger i wakeup-cookien). Spara gruppen efter schemaläggning.
 
 ---
 
