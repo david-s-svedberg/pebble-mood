@@ -337,3 +337,57 @@ uint32_t registrations_count()
 {
     return m_registrations.number_of_items;
 }
+
+static uint16_t seed_group(const char* name, uint8_t hour, uint8_t minute)
+{
+    MetricsGroup* group = metrics_group_new();   // active alarm, default title
+    uint16_t id = group->id;
+    metrics_groups_set_title(group, (char*)name);
+    group->alarm.time.hour = hour;
+    group->alarm.time.minute = minute;
+    metrics_groups_save();
+    return id;
+}
+
+static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_icon)
+{
+    Metrics* metric = metrics_new();             // BOOL default (cross/check)
+    uint16_t id = metric->id;
+    metrics_set_title(metric, (char*)name);
+    metric = metrics_get(id);
+    metric->type = type;
+    metric->main_icon = main_icon;
+    if(type == MetricsType_THREE_OPTION)
+    {
+        metric->option_icons[0] = IconChoice_DOWN;
+        metric->option_icons[1] = IconChoice_CHECK;
+        metric->option_icons[2] = IconChoice_UP;
+    }
+    metrics_save();
+    return id;
+}
+
+void metrics_seed_defaults()
+{
+    uint16_t morning = seed_group("Morning", 7, 30);
+    uint16_t evening = seed_group("Evening", 21, 30);
+
+    // Mood is shared by both groups (many-to-many).
+    uint16_t mood = seed_metric("Mood", MetricsType_THREE_OPTION, IconChoice_MOOD);
+    uint16_t sleep = seed_metric("Sleep quality", MetricsType_THREE_OPTION, IconChoice_NONE);
+    uint16_t rested = seed_metric("Rested", MetricsType_BOOL, IconChoice_NONE);
+    uint16_t exercised = seed_metric("Exercised", MetricsType_BOOL, IconChoice_EXERCISE);
+    uint16_t stress = seed_metric("Stress", MetricsType_THREE_OPTION, IconChoice_NONE);
+
+    // Unscheduled metrics (no group) — registered on demand.
+    seed_metric("Sick", MetricsType_BOOL, IconChoice_NONE);
+    seed_metric("Medication", MetricsType_BOOL, IconChoice_PILL);
+
+    metrics_group_toggle_metric(morning, mood);
+    metrics_group_toggle_metric(morning, sleep);
+    metrics_group_toggle_metric(morning, rested);
+
+    metrics_group_toggle_metric(evening, mood);
+    metrics_group_toggle_metric(evening, exercised);
+    metrics_group_toggle_metric(evening, stress);
+}

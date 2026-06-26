@@ -20,7 +20,8 @@ static void wakeup_handler(WakeupId id, int32_t alarm_index)
 
 void init()
 {
-    if(config_first_start())
+    bool first_start = config_first_start();
+    if(first_start)
     {
         APP_LOG(APP_LOG_LEVEL_INFO, "Removing old wake ups");
         // Mostly for development
@@ -31,6 +32,13 @@ void init()
     config_init();
     strings_init();
     metrics_init();
+
+    if(first_start)
+    {
+        // Seed a usable default set and schedule its group alarms.
+        metrics_seed_defaults();
+        ensure_all_alarms_scheduled();
+    }
 
     if(launch_reason() == APP_LAUNCH_WAKEUP)
     {

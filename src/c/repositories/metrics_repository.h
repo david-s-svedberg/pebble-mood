@@ -10,6 +10,10 @@
 void            metrics_init();
 void            metrics_tear_down();
 
+// Seeds a useful default set (Morning/Evening groups sharing a Mood metric, plus
+// a few unscheduled metrics). Call once on first start, after metrics_init().
+void            metrics_seed_defaults();
+
 Metrics*        metrics_get(const uint16_t id);
 Metrics*        metrics_get_all();
 uint16_t        metrics_add(Metrics* metrics);
