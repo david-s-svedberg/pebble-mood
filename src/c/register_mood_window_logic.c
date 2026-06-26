@@ -33,7 +33,7 @@ static void collect_group_metrics()
     for(uint32_t i = 0; i < total; i++)
     {
         Metrics* current = &all_metrics[i];
-        if(current->group_id == m_group->id)
+        if(metrics_group_has_metric(m_group->id, current->id))
         {
             m_metrics[m_metric_count++] = current;
         }

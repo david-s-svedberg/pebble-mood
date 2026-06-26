@@ -25,6 +25,8 @@ typedef enum {
     DataKeys_REGISTRATIONS_DATA,
     DataKeys_APP_CONFIG,
     DataKeys_FIRST_START,
+    DataKeys_GROUP_METRICS_META_DATA,
+    DataKeys_GROUP_METRICS_DATA,
 } DataKeys;
 
 typedef struct {
@@ -84,8 +86,6 @@ typedef struct
 typedef struct
 {
     uint16_t        id;
-    uint16_t        group_id;
-    MetricsGroup*   group;
     uint16_t        title_id;
     String*         title;
     MetricsType     type;
@@ -108,3 +108,12 @@ typedef struct
     uint8_t     value;
     time_t      time_stamp;
 } Registration;
+
+// Join row: a metric belongs to a group. A metric can have several of these
+// (member of several groups) or none (unscheduled — registered only on demand).
+typedef struct
+{
+    uint16_t    id;
+    uint16_t    group_id;
+    uint16_t    metric_id;
+} GroupMetric;

@@ -34,6 +34,33 @@ static DynamicData m_registrations =
     .items = NULL,
 };
 
+// Many-to-many membership between groups and metrics (a metric may be in
+// several groups, or none).
+static DynamicData m_group_metrics =
+{
+    .meta_data_storage_key = DataKeys_GROUP_METRICS_META_DATA,
+    .items_storage_key = DataKeys_GROUP_METRICS_DATA,
+    .item_size = sizeof(GroupMetric),
+    .number_of_items = 0,
+    .next_id = 0,
+    .items = NULL,
+};
+
+static void set_group_metric_id(uint16_t id, byte* item)
+{
+    ((GroupMetric*)item)->id = id;
+}
+
+static uint16_t get_group_metric_id(byte* item)
+{
+    return ((GroupMetric*)item)->id;
+}
+
+static GroupMetric* group_metric_at(int i)
+{
+    return (GroupMetric*)&m_group_metrics.items[i * m_group_metrics.item_size];
+}
+
 static void set_group_id(uint16_t id, byte* item)
 {
     MetricsGroup* metrics_group = (MetricsGroup*)item;
@@ -82,6 +109,7 @@ void metrics_init()
     dynamic_init(&m_metrics_groups);
     dynamic_init(&m_metrics);
     dynamic_init(&m_registrations);
+    dynamic_init(&m_group_metrics);
 
     for(int i = 0; i < m_metrics_groups.number_of_items; i++)
     {
@@ -93,7 +121,6 @@ void metrics_init()
     {
         Metrics* current_metrics = (Metrics*)&m_metrics.items[i * m_metrics.item_size];
         current_metrics->title = string_get(current_metrics->title_id);
-        current_metrics->group = metrics_group_get(current_metrics->group_id);
     }
 
     for(int i = 0; i < m_registrations.number_of_items; i++)
@@ -108,6 +135,59 @@ void metrics_tear_down()
     free(m_metrics_groups.items);
     free(m_metrics.items);
     free(m_registrations.items);
+    free(m_group_metrics.items);
+}
+
+bool metrics_group_has_metric(uint16_t group_id, uint16_t metric_id)
+{
+    for(int i = 0; i < m_group_metrics.number_of_items; i++)
+    {
+        GroupMetric* gm = group_metric_at(i);
+        if(gm->group_id == group_id && gm->metric_id == metric_id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void metrics_group_toggle_metric(uint16_t group_id, uint16_t metric_id)
+{
+    for(int i = 0; i < m_group_metrics.number_of_items; i++)
+    {
+        GroupMetric* gm = group_metric_at(i);
+        if(gm->group_id == group_id && gm->metric_id == metric_id)
+        {
+            dynamic_delete(gm->id, &m_group_metrics, get_group_metric_id);
+            return;
+        }
+    }
+    GroupMetric new_membership =
+    {
+        .group_id = group_id,
+        .metric_id = metric_id,
+    };
+    dynamic_add(&m_group_metrics, (byte*)&new_membership, set_group_metric_id);
+}
+
+// Drops every membership row matching the predicate (group or metric removed).
+static void remove_memberships(bool by_group, uint16_t id)
+{
+    bool removed = true;
+    while(removed)
+    {
+        removed = false;
+        for(int i = 0; i < m_group_metrics.number_of_items; i++)
+        {
+            GroupMetric* gm = group_metric_at(i);
+            if((by_group && gm->group_id == id) || (!by_group && gm->metric_id == id))
+            {
+                dynamic_delete(gm->id, &m_group_metrics, get_group_metric_id);
+                removed = true;
+                break;
+            }
+        }
+    }
 }
 
 MetricsGroup* metrics_group_get(const uint16_t id)
@@ -128,6 +208,7 @@ uint16_t metrics_group_add(MetricsGroup* metrics_group)
 
 void metrics_group_delete(const uint16_t delete_id)
 {
+    remove_memberships(true, delete_id);
     dynamic_delete(delete_id, &m_metrics_groups, get_group_id);
 }
 
@@ -216,6 +297,7 @@ MetricsGroup* metrics_group_new()
 
 void metrics_delete(const uint16_t delete_id)
 {
+    remove_memberships(false, delete_id);
     dynamic_delete(delete_id, &m_metrics, get_metrics_id);
 }
 

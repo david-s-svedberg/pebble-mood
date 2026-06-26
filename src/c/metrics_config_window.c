@@ -148,10 +148,7 @@ static void free_group_rows()
 
 static void toggle_connected_to_metrics_group(int index, void *context)
 {
-    MetricsGroup* group = metrics_group_get(m_group_id_index_map[index]);
-    m_metric->group_id = group->id;
-    m_metric->group = group;
-    metrics_save();
+    metrics_group_toggle_metric(m_group_id_index_map[index], m_metric->id);
     create_menu();
 }
 
@@ -170,7 +167,7 @@ static void build_group_rows()
     {
         MetricsGroup* group = &groups[i];
         m_group_id_index_map[i] = group->id;
-        if(group->id == m_metric->group_id)
+        if(metrics_group_has_metric(group->id, m_metric->id))
         {
             m_group_items[i].icon = config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black();
         }

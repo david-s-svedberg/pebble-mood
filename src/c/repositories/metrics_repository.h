@@ -24,6 +24,9 @@ Registration*   registrations_get_for_metric(uint16_t metric_id);
 Registration*   registrations_get_all();
 uint32_t        registrations_count();
 
+bool            metrics_group_has_metric(uint16_t group_id, uint16_t metric_id);
+void            metrics_group_toggle_metric(uint16_t group_id, uint16_t metric_id);
+
 MetricsGroup*   metrics_group_get(const uint16_t id);
 MetricsGroup*   metrics_groups_get_all();
 uint16_t        metrics_group_add(MetricsGroup* metrics_group);
