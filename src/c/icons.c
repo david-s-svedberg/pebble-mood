@@ -24,6 +24,22 @@ static GBitmap *face_happy_icon;
 static GBitmap *level_low_icon;
 static GBitmap *level_mid_icon;
 static GBitmap *level_high_icon;
+static GBitmap *main_sun_icon;
+static GBitmap *main_moon_icon;
+static GBitmap *main_droplet_icon;
+static GBitmap *main_heart_icon;
+static GBitmap *main_bolt_icon;
+static GBitmap *main_coffee_icon;
+static GBitmap *main_glass_icon;
+static GBitmap *main_thermo_icon;
+static GBitmap *main_phone_icon;
+static GBitmap *main_cloud_icon;
+static GBitmap *main_dumbbell_icon;
+static GBitmap *main_bubble_icon;
+static GBitmap *main_checkbox_icon;
+static GBitmap *main_apple_icon;
+static GBitmap *main_target_icon;
+static GBitmap *main_pulse_icon;
 
 static GBitmap* get_icon(uint32_t id, GBitmap** icon)
 {
@@ -151,6 +167,22 @@ GBitmap* get_icon_by_choice(uint8_t choice)
         case IconChoice_LEVEL_LOW:    return get_icon(RESOURCE_ID_LEVEL_LOW_ICON, &level_low_icon);
         case IconChoice_LEVEL_MID:    return get_icon(RESOURCE_ID_LEVEL_MID_ICON, &level_mid_icon);
         case IconChoice_LEVEL_HIGH:   return get_icon(RESOURCE_ID_LEVEL_HIGH_ICON, &level_high_icon);
+        case IconChoice_SUN:      return get_icon(RESOURCE_ID_MAIN_SUN_ICON, &main_sun_icon);
+        case IconChoice_MOON:     return get_icon(RESOURCE_ID_MAIN_MOON_ICON, &main_moon_icon);
+        case IconChoice_DROPLET:  return get_icon(RESOURCE_ID_MAIN_DROPLET_ICON, &main_droplet_icon);
+        case IconChoice_HEART:    return get_icon(RESOURCE_ID_MAIN_HEART_ICON, &main_heart_icon);
+        case IconChoice_BOLT:     return get_icon(RESOURCE_ID_MAIN_BOLT_ICON, &main_bolt_icon);
+        case IconChoice_COFFEE:   return get_icon(RESOURCE_ID_MAIN_COFFEE_ICON, &main_coffee_icon);
+        case IconChoice_GLASS:    return get_icon(RESOURCE_ID_MAIN_GLASS_ICON, &main_glass_icon);
+        case IconChoice_THERMO:   return get_icon(RESOURCE_ID_MAIN_THERMO_ICON, &main_thermo_icon);
+        case IconChoice_PHONE:    return get_icon(RESOURCE_ID_MAIN_PHONE_ICON, &main_phone_icon);
+        case IconChoice_CLOUD:    return get_icon(RESOURCE_ID_MAIN_CLOUD_ICON, &main_cloud_icon);
+        case IconChoice_DUMBBELL: return get_icon(RESOURCE_ID_MAIN_DUMBBELL_ICON, &main_dumbbell_icon);
+        case IconChoice_BUBBLE:   return get_icon(RESOURCE_ID_MAIN_BUBBLE_ICON, &main_bubble_icon);
+        case IconChoice_CHECKBOX: return get_icon(RESOURCE_ID_MAIN_CHECKBOX_ICON, &main_checkbox_icon);
+        case IconChoice_APPLE:    return get_icon(RESOURCE_ID_MAIN_APPLE_ICON, &main_apple_icon);
+        case IconChoice_TARGET:   return get_icon(RESOURCE_ID_MAIN_TARGET_ICON, &main_target_icon);
+        case IconChoice_PULSE:    return get_icon(RESOURCE_ID_MAIN_PULSE_ICON, &main_pulse_icon);
         default:                  return NULL;
     }
 }
@@ -181,4 +213,20 @@ void destroy_all_icons()
     destroy_icon(&level_low_icon);
     destroy_icon(&level_mid_icon);
     destroy_icon(&level_high_icon);
+    destroy_icon(&main_sun_icon);
+    destroy_icon(&main_moon_icon);
+    destroy_icon(&main_droplet_icon);
+    destroy_icon(&main_heart_icon);
+    destroy_icon(&main_bolt_icon);
+    destroy_icon(&main_coffee_icon);
+    destroy_icon(&main_glass_icon);
+    destroy_icon(&main_thermo_icon);
+    destroy_icon(&main_phone_icon);
+    destroy_icon(&main_cloud_icon);
+    destroy_icon(&main_dumbbell_icon);
+    destroy_icon(&main_bubble_icon);
+    destroy_icon(&main_checkbox_icon);
+    destroy_icon(&main_apple_icon);
+    destroy_icon(&main_target_icon);
+    destroy_icon(&main_pulse_icon);
 }

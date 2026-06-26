@@ -78,6 +78,22 @@ static const char* icon_name(uint8_t choice)
         case IconChoice_LEVEL_LOW:    return "Level low";
         case IconChoice_LEVEL_MID:    return "Level mid";
         case IconChoice_LEVEL_HIGH:   return "Level high";
+        case IconChoice_SUN:      return "Sun";
+        case IconChoice_MOON:     return "Moon";
+        case IconChoice_DROPLET:  return "Droplet";
+        case IconChoice_HEART:    return "Heart";
+        case IconChoice_BOLT:     return "Bolt";
+        case IconChoice_COFFEE:   return "Coffee";
+        case IconChoice_GLASS:    return "Glass";
+        case IconChoice_THERMO:   return "Thermometer";
+        case IconChoice_PHONE:    return "Phone";
+        case IconChoice_CLOUD:    return "Cloud";
+        case IconChoice_DUMBBELL: return "Dumbbell";
+        case IconChoice_BUBBLE:   return "Speech";
+        case IconChoice_CHECKBOX: return "Checkbox";
+        case IconChoice_APPLE:    return "Apple";
+        case IconChoice_TARGET:   return "Target";
+        case IconChoice_PULSE:    return "Pulse";
         default:                  return "None";
     }
 }
@@ -201,9 +217,14 @@ static void build_group_rows()
 
 static bool icon_is_small(uint8_t choice)
 {
-    // mood/exercise are 50x50 display icons; everything else fits a menu row
-    // and the action bar.
-    return choice != IconChoice_MOOD && choice != IconChoice_EXERCISE;
+    // Large display icons (mood/exercise + the main-icon set from IconChoice_SUN
+    // onward) don't fit a menu row or the narrow action bar — they're main-icon
+    // only. The rest (check/cross/up/down/pill/faces/levels) are small.
+    if(choice == IconChoice_MOOD || choice == IconChoice_EXERCISE)
+    {
+        return false;
+    }
+    return choice < IconChoice_SUN;
 }
 
 // Icon to show on a config row: only small icons (large ones would overflow the

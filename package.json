@@ -276,7 +276,23 @@
                     "spaceOptimization": "memory",
                     "targetPlatforms": ["diorite","basalt","aplite","emery"],
                     "type": "bitmap"
-                }
+                },
+                { "file": "images/main_sun.png", "name": "MAIN_SUN_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_moon.png", "name": "MAIN_MOON_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_droplet.png", "name": "MAIN_DROPLET_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_heart.png", "name": "MAIN_HEART_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_bolt.png", "name": "MAIN_BOLT_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_coffee.png", "name": "MAIN_COFFEE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_glass.png", "name": "MAIN_GLASS_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_thermo.png", "name": "MAIN_THERMO_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_phone.png", "name": "MAIN_PHONE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_cloud.png", "name": "MAIN_CLOUD_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_dumbbell.png", "name": "MAIN_DUMBBELL_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_bubble.png", "name": "MAIN_BUBBLE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_checkbox.png", "name": "MAIN_CHECKBOX_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_apple.png", "name": "MAIN_APPLE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_target.png", "name": "MAIN_TARGET_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/main_pulse.png", "name": "MAIN_PULSE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" }
             ]
         },
         "enableMultiJS": true,

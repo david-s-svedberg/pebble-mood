@@ -137,6 +137,15 @@ Eget UI istället för dagens lista:
 
 ---
 
+## Hälsodata-källa för metrics (idé)
+
+Pebbles **HealthService** kan ge steg, sömn (total + vilsam), aktiva minuter, puls,
+distans/kalorier. Vissa metrics skulle därför kunna **auto-hämtas** istället för manuell
+inmatning: t.ex. Steg, Sömntimmar, Tränat/aktiva minuter, Puls. Förslag: ge `Metrics` en
+"källa" (manual vs health-steps/health-sleep/health-hr/...); health-källade metrics fylls i
+automatiskt (och behöver kanske inte visas i registreringsflödet, bara i Idag/snitt). Minskar
+manuellt klick och gör datan rikare för companion-korrelationen. Eget spår, efter ikonerna.
+
 ## Öppna trådar / polish (från kodgenomgången)
 
 - [ ] **"App Config" → Theme**: visar Dark/Light men callbacken är `NULL` — temaväxling ej
