@@ -30,8 +30,8 @@ static const uint32_t choice_black_res[IconChoice_COUNT] = {
     [IconChoice_CROSS]        = RESOURCE_ID_CROSS_ICON,
     [IconChoice_UP]           = RESOURCE_ID_UP_ICON,
     [IconChoice_DOWN]         = RESOURCE_ID_DOWN_ICON,
-    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_50_ICON,
-    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_50_ICON,
+    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_48_ICON,
+    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_48_ICON,
     [IconChoice_PILL]         = RESOURCE_ID_PILL_ICON,
     [IconChoice_FACE_SAD]     = RESOURCE_ID_FACE_SAD_ICON,
     [IconChoice_FACE_NEUTRAL] = RESOURCE_ID_FACE_NEUTRAL_ICON,
@@ -62,8 +62,8 @@ static const uint32_t choice_white_res[IconChoice_COUNT] = {
     [IconChoice_CROSS]        = RESOURCE_ID_CROSS_W20_ICON,
     [IconChoice_UP]           = RESOURCE_ID_UP_WHITE_ICON,
     [IconChoice_DOWN]         = RESOURCE_ID_DOWN_WHITE_ICON,
-    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_50_ICON,
-    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_50_ICON,
+    [IconChoice_MOOD]         = RESOURCE_ID_MOOD_48_WHITE_ICON,
+    [IconChoice_EXERCISE]     = RESOURCE_ID_EXERCISE_48_WHITE_ICON,
     [IconChoice_PILL]         = RESOURCE_ID_PILL_WHITE_ICON,
     [IconChoice_FACE_SAD]     = RESOURCE_ID_FACE_SAD_WHITE_ICON,
     [IconChoice_FACE_NEUTRAL] = RESOURCE_ID_FACE_NEUTRAL_WHITE_ICON,
@@ -96,6 +96,8 @@ static GBitmap *choice_row_black[IconChoice_COUNT];
 static GBitmap *choice_row_white[IconChoice_COUNT];
 
 static const uint32_t choice_row_black_res[IconChoice_COUNT] = {
+    [IconChoice_MOOD]     = RESOURCE_ID_MOOD_SM_ICON,
+    [IconChoice_EXERCISE] = RESOURCE_ID_EXERCISE_SM_ICON,
     [IconChoice_SUN]      = RESOURCE_ID_MAIN_SUN_SM_ICON,
     [IconChoice_MOON]     = RESOURCE_ID_MAIN_MOON_SM_ICON,
     [IconChoice_DROPLET]  = RESOURCE_ID_MAIN_DROPLET_SM_ICON,
@@ -115,6 +117,8 @@ static const uint32_t choice_row_black_res[IconChoice_COUNT] = {
 };
 
 static const uint32_t choice_row_white_res[IconChoice_COUNT] = {
+    [IconChoice_MOOD]     = RESOURCE_ID_MOOD_SM_WHITE_ICON,
+    [IconChoice_EXERCISE] = RESOURCE_ID_EXERCISE_SM_WHITE_ICON,
     [IconChoice_SUN]      = RESOURCE_ID_MAIN_SUN_SM_WHITE_ICON,
     [IconChoice_MOON]     = RESOURCE_ID_MAIN_MOON_SM_WHITE_ICON,
     [IconChoice_DROPLET]  = RESOURCE_ID_MAIN_DROPLET_SM_WHITE_ICON,

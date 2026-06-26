@@ -1,4 +1,4 @@
-#include "metrics_config_window.h"
+#include "config_menu_window.h"
 
 #include <pebble.h>
 
@@ -6,216 +6,141 @@
 #include "repositories/app_config_repository.h"
 #include "format.h"
 #include "icons.h"
+#include "menu_theme.h"
 #include "edit_alarm_window.h"
 #include "metric_group_config_window.h"
 #include "metrics_config_window.h"
-#include "metric_group_config_window.h"
+
+#define SECTION_GROUPS (0)
+#define SECTION_METRICS (1)
+#define SECTION_APP (2)
 
 static Window *m_config_window;
 static StatusBarLayer* m_status_bar;
-static SimpleMenuLayer* m_config_menu_layer = NULL;
-
-static SimpleMenuSection m_menu_sections[3];
-static SimpleMenuSection m_metrics_section = {0};
-static SimpleMenuSection m_metrics_groups_section = {0};
-static SimpleMenuSection m_app_config_section = {0};
-
-static SimpleMenuItem m_app_config_items[2];
-static SimpleMenuItem m_alarm_timeout_item = {0};
-static SimpleMenuItem m_theme_item = {0};
-
-static SimpleMenuItem* m_metric_items = NULL;
-static SimpleMenuItem* m_metrics_group_items = NULL;
-
-static uint16_t* m_metric_ids_index_map = NULL;
-static uint16_t* m_metrics_group_id_index_map = NULL;
+static MenuLayer* m_config_menu_layer = NULL;
 
 static void update_status_bar()
 {
     status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
 }
 
-static void config_metrics_group(int index, void *context)
+// --- MenuLayer callbacks ---------------------------------------------------
+
+static uint16_t menu_get_num_sections(MenuLayer* menu_layer, void* context)
 {
-    MetricsGroup* metrics_group = metrics_group_get(m_metrics_group_id_index_map[index]);
-    setup_metric_group_config_window(metrics_group);
+    return 3;
 }
 
-static void config_metrics(int index, void *context)
+static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void* context)
 {
-    Metrics* metrics = metrics_get(m_metric_ids_index_map[index]);
-    setup_metrics_config_window(metrics);
-}
-
-static void add_metrics(int index, void *context)
-{
-    setup_metrics_config_window(metrics_new());
-}
-
-static void add_metrics_group(int index, void *context)
-{
-    setup_metric_group_config_window(metrics_group_new());
-}
-
-static void tick_alarm_timeout(int index, void *context)
-{
-    // static uint16_t timeouts[] = {SECONDS_PER_MINUTE, 2 * SECONDS_PER_MINUTE, 3 * SECONDS_PER_MINUTE};
-    // setup_metric_group_config_window(metrics_group_new());
-}
-
-static void free_dynamic_metric_data()
-{
-    if(m_metric_items != NULL)
+    switch(section)
     {
-        free(m_metric_items);
-        m_metric_items = NULL;
-    }
-    if(m_metric_ids_index_map != NULL)
-    {
-        free(m_metric_ids_index_map);
-        m_metric_ids_index_map = NULL;
+        case SECTION_GROUPS:  return (uint16_t)metrics_groups_count() + 1;  // +1 for "+"
+        case SECTION_METRICS: return (uint16_t)metrics_count() + 1;
+        default:              return 2;  // Alarm timeout, Theme
     }
 }
 
-static char* get_current_theme()
+static int16_t menu_get_header_height(MenuLayer* menu_layer, uint16_t section, void* context)
 {
-    static char theme_buffer[6];
-
-    char* theme = config_is_dark_theme() ? "Dark" : "Light";
-    strncpy(theme_buffer, theme, 6);
-
-    return theme_buffer;
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
 }
 
-static void update_app_config_items()
+static void menu_draw_header(GContext* ctx, const Layer* cell_layer, uint16_t section, void* context)
 {
-    static char timeout_buffer[4];
-    snprintf(timeout_buffer, sizeof(timeout_buffer), "%d", config_get_alarm_timeout() / 60);
-    m_alarm_timeout_item.subtitle = timeout_buffer;
-
-    m_theme_item.subtitle = get_current_theme();
+    const char* title = (section == SECTION_GROUPS) ? "Metric Groups"
+                      : (section == SECTION_METRICS) ? "Metrics" : "App Config";
+    menu_cell_basic_header_draw(ctx, cell_layer, title);
 }
 
-static void update_metric_items()
+static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* index, void* context)
 {
-    free_dynamic_metric_data();
-
-    size_t number_of_metrics = metrics_count();
-    size_t metric_items_size = (number_of_metrics + 1) * sizeof(SimpleMenuItem);
-    m_metric_items = (SimpleMenuItem*)malloc(metric_items_size);
-    memset(m_metric_items, 0, metric_items_size);
-    m_metric_ids_index_map = (uint16_t*)malloc(number_of_metrics * sizeof(uint16_t));
-
-    Metrics* metrics = metrics_get_all();
-
-    for(uint16_t i = 0; i < number_of_metrics; i++)
+    if(index->section == SECTION_GROUPS)
     {
-        Metrics* current_metrics = &metrics[i];
-        SimpleMenuItem* metric_menu_item = &m_metric_items[i];
-        m_metric_ids_index_map[i] = current_metrics->id;
-        metric_menu_item->title = current_metrics->title->value;
-        metric_menu_item->callback = config_metrics;
-    }
-    SimpleMenuItem* add_item = &m_metric_items[number_of_metrics];
-    add_item->title = "+";
-    add_item->callback = add_metrics;
-    m_metrics_section.items = m_metric_items;
-    m_metrics_section.num_items = number_of_metrics + 1;
-}
-
-static void free_dynamic_metric_group_data()
-{
-    if(m_metrics_group_items != NULL)
+        size_t count = metrics_groups_count();
+        if(index->row < count)
+        {
+            MetricsGroup* groups = metrics_groups_get_all();
+            menu_cell_basic_draw(ctx, cell_layer, groups[index->row].title->value, NULL, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer, "+", NULL, NULL);
+        }
+    } else if(index->section == SECTION_METRICS)
     {
-        free(m_metrics_group_items);
-        m_metrics_group_items = NULL;
-    }
-    if(m_metrics_group_id_index_map != NULL)
+        size_t count = metrics_count();
+        if(index->row < count)
+        {
+            Metrics* metrics = metrics_get_all();
+            menu_cell_basic_draw(ctx, cell_layer, metrics[index->row].title->value, NULL, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer, "+", NULL, NULL);
+        }
+    } else
     {
-        free(m_metrics_group_id_index_map);
-        m_metrics_group_id_index_map = NULL;
+        if(index->row == 0)
+        {
+            static char timeout_buffer[4];
+            snprintf(timeout_buffer, sizeof(timeout_buffer), "%d", config_get_alarm_timeout() / 60);
+            menu_cell_basic_draw(ctx, cell_layer, "Alarm timeout", timeout_buffer, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer, "Theme",
+                config_is_dark_theme() ? "Dark" : "Light", NULL);
+        }
     }
 }
 
-static void free_dynamically_allocated_data()
+static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* context)
 {
-    free_dynamic_metric_data();
-    free_dynamic_metric_group_data();
-}
-
-static void update_metric_groups_items()
-{
-    free_dynamic_metric_group_data();
-
-    size_t number_of_metrics_groups = metrics_groups_count();
-    size_t metric_group_items_size = (number_of_metrics_groups + 1) * sizeof(SimpleMenuItem);
-    m_metrics_group_items = (SimpleMenuItem*)malloc(metric_group_items_size);
-    memset(m_metrics_group_items, 0, metric_group_items_size);
-    m_metrics_group_id_index_map = (uint16_t*)malloc(number_of_metrics_groups * sizeof(uint16_t));
-
-    MetricsGroup* metrics_groups = metrics_groups_get_all();
-    for(uint16_t i = 0; i < number_of_metrics_groups; i++)
+    if(index->section == SECTION_GROUPS)
     {
-        MetricsGroup* current_metrics_group = &metrics_groups[i];
-        SimpleMenuItem* metrics_group_menu_item = &m_metrics_group_items[i];
-        m_metrics_group_id_index_map[i] = current_metrics_group->id;
-        metrics_group_menu_item->title = current_metrics_group->title->value;
-        metrics_group_menu_item->callback = config_metrics_group;
+        size_t count = metrics_groups_count();
+        if(index->row < count)
+        {
+            MetricsGroup* groups = metrics_groups_get_all();
+            setup_metric_group_config_window(metrics_group_get(groups[index->row].id));
+        } else
+        {
+            setup_metric_group_config_window(metrics_group_new());
+        }
+    } else if(index->section == SECTION_METRICS)
+    {
+        size_t count = metrics_count();
+        if(index->row < count)
+        {
+            Metrics* metrics = metrics_get_all();
+            setup_metrics_config_window(metrics_get(metrics[index->row].id));
+        } else
+        {
+            setup_metrics_config_window(metrics_new());
+        }
     }
-    SimpleMenuItem* add_item = &m_metrics_group_items[number_of_metrics_groups];
-    add_item->title = "+";
-    add_item->callback = add_metrics_group;
-
-    m_metrics_groups_section.num_items = number_of_metrics_groups + 1;
-    m_metrics_groups_section.items = m_metrics_group_items;
+    // App Config rows: Alarm timeout / Theme are not yet wired (see ROADMAP).
 }
 
-static void update_ui()
+static void create_menu(Layer* window_layer, GRect bounds)
 {
-    update_status_bar();
-    layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
+    m_config_menu_layer = menu_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT,
+        bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));
+    menu_layer_set_callbacks(m_config_menu_layer, NULL, (MenuLayerCallbacks) {
+        .get_num_sections = menu_get_num_sections,
+        .get_num_rows = menu_get_num_rows,
+        .get_header_height = menu_get_header_height,
+        .draw_header = menu_draw_header,
+        .draw_row = menu_draw_row,
+        .select_click = menu_select_click,
+    });
+    menu_theme_apply_colors(m_config_menu_layer);
+    menu_layer_set_click_config_onto_window(m_config_menu_layer, m_config_window);
+    layer_add_child(window_layer, menu_layer_get_layer(m_config_menu_layer));
 }
 
-static void setup_config_menu(Layer *window_layer, GRect bounds)
-{
-    m_alarm_timeout_item.title = "Alarm timeout";
-    m_alarm_timeout_item.callback = tick_alarm_timeout;
-
-    m_theme_item.title = "Theme";
-    m_theme_item.callback = NULL;
-
-    m_app_config_items[0] = m_alarm_timeout_item;
-    m_app_config_items[1] = m_theme_item;
-
-    m_app_config_section.items = m_app_config_items;
-    m_app_config_section.num_items = 2;
-    m_app_config_section.title = "App Config";
-
-    m_metrics_section.title = "Metrics";
-    m_metrics_groups_section.title = "Metric Groups";
-
-    update_metric_groups_items();
-    update_metric_items();
-    update_app_config_items();
-
-    m_menu_sections[0] = m_metrics_groups_section;
-    m_menu_sections[1] = m_metrics_section;
-    m_menu_sections[2] = m_app_config_section;
-
-    m_config_menu_layer = simple_menu_layer_create(
-        GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT),
-        m_config_window,
-        m_menu_sections, 3, NULL);
-
-    layer_add_child(window_layer, simple_menu_layer_get_layer(m_config_menu_layer));
-}
-
-static void setup_status_bar(Layer *window_layer, GRect bounds)
+static void setup_status_bar(Layer *window_layer)
 {
     m_status_bar = status_bar_layer_create();
-
     status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-
     layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
 }
 
@@ -225,23 +150,26 @@ static void load_config_window(Window *window)
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    setup_status_bar(window_layer, bounds);
-    setup_config_menu(window_layer, bounds);
+    setup_status_bar(window_layer);
+    create_menu(window_layer, bounds);
+    update_status_bar();
 }
 
 static void unload_config_window(Window *window)
 {
     status_bar_layer_destroy(m_status_bar);
-    simple_menu_layer_destroy(m_config_menu_layer);
-    free_dynamically_allocated_data();
+    menu_layer_destroy(m_config_menu_layer);
+    m_config_menu_layer = NULL;
 }
 
 static void appear_config_windows(Window *window)
 {
-    update_metric_groups_items();
-    update_metric_items();
-    update_app_config_items();
-    update_ui();
+    // Groups/metrics may have been added or edited; repaint with fresh data.
+    if(m_config_menu_layer != NULL)
+    {
+        menu_layer_reload_data(m_config_menu_layer);
+        update_status_bar();
+    }
 }
 
 void setup_config_window()
@@ -261,9 +189,5 @@ void setup_config_window()
 
 void tear_down_config_window()
 {
-    if(m_metric_items != NULL)
-    {
-        free(m_metric_items);
-    }
     window_destroy(m_config_window);
 }

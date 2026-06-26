@@ -8,6 +8,7 @@
 #include "icons.h"
 #include "icon_picker_window.h"
 #include "edit_alarm_window.h"
+#include "menu_theme.h"
 
 // Title, Type, Main icon + Max OR per-option (icon + text) rows.
 #define MAX_METRIC_ROWS (3 + 2 * MAX_METRIC_OPTIONS)
@@ -255,8 +256,7 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
     // its normal/highlight colours before calling us; we only have to hand
     // menu_cell_basic_draw an icon whose colour matches that background. On the
     // highlighted (or dark-theme) cell that's the white variant, else black.
-    bool highlighted = menu_cell_layer_is_highlighted(cell_layer);
-    bool light = highlighted ? !config_is_dark_theme() : config_is_dark_theme();
+    bool light = menu_theme_icon_light(cell_layer);
 
     if(index->section == SECTION_METRIC)
     {
@@ -337,10 +337,7 @@ static void load_main_window(Window *window)
         .draw_row = menu_draw_row,
         .select_click = menu_select_click,
     });
-    menu_layer_set_normal_colors(m_menu_layer,
-        config_get_background_color(), config_get_foreground_color());
-    menu_layer_set_highlight_colors(m_menu_layer,
-        config_get_foreground_color(), config_get_background_color());
+    menu_theme_apply_colors(m_menu_layer);
     menu_layer_set_click_config_onto_window(m_menu_layer, window);
     layer_add_child(window_layer, menu_layer_get_layer(m_menu_layer));
 

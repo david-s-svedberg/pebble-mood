@@ -6,55 +6,29 @@
 #include "repositories/app_config_repository.h"
 #include "format.h"
 #include "icons.h"
+#include "menu_theme.h"
 #include "edit_alarm_window.h"
+
+#define SECTION_GROUP (0)
+#define SECTION_METRICS (1)
 
 static Window *m_config_window;
 static StatusBarLayer* m_status_bar;
-static SimpleMenuLayer* m_config_menu_layer = NULL;
+static MenuLayer* m_config_menu_layer = NULL;
 
-static SimpleMenuSection m_menu_sections[2];
-static SimpleMenuSection m_group_section = { .title = "Metric group" };
-static SimpleMenuSection m_metrics_section = { .title = "Metrics in group" };
-
-static SimpleMenuItem m_group_items[2];
 static char m_alarm_text_buffer[6];
-
-static SimpleMenuItem* m_metric_items = NULL;     // one per metric (toggle membership)
-static uint16_t* m_metric_ids_index_map = NULL;
 
 static DictationSession* m_dictation_session;
 static MetricsGroup* m_metric_group;
-
-static void create_menu();
 
 static void update_status_bar()
 {
     status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
 }
 
-static GBitmap* member_check_icon()
+static void refresh_alarm_text()
 {
-    return config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black();
-}
-
-static void change_title(int index, void *context)
-{
-    dictation_session_start(m_dictation_session);
-}
-
-static void change_alarm(int index, void *context)
-{
-    setup_edit_alarm_window(m_metric_group);
-}
-
-static void toggle_metric_in_group(int index, void *context)
-{
-    uint16_t metric_id = m_metric_ids_index_map[index];
-    metrics_group_toggle_metric(m_metric_group->id, metric_id);
-    // Update just this row's checkmark so the cursor stays put.
-    bool member = metrics_group_has_metric(m_metric_group->id, metric_id);
-    m_metric_items[index].icon = member ? member_check_icon() : NULL;
-    layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
+    fill_time_string(m_alarm_text_buffer, m_metric_group->alarm.time.hour, m_metric_group->alarm.time.minute);
 }
 
 static void dictation_session_callback(
@@ -66,68 +40,77 @@ static void dictation_session_callback(
     if(status == DictationSessionStatusSuccess)
     {
         metrics_groups_set_title(m_metric_group, transcription);
-        create_menu();
+        menu_layer_reload_data(m_config_menu_layer);
     }
 }
 
-static void free_metric_items()
+// --- MenuLayer callbacks ---------------------------------------------------
+
+static uint16_t menu_get_num_sections(MenuLayer* menu_layer, void* context)
 {
-    if(m_metric_items != NULL)
-    {
-        free(m_metric_items);
-        m_metric_items = NULL;
-    }
-    if(m_metric_ids_index_map != NULL)
-    {
-        free(m_metric_ids_index_map);
-        m_metric_ids_index_map = NULL;
-    }
+    return 2;
 }
 
-static void build_group_section()
+static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void* context)
 {
-    m_group_items[0] = (SimpleMenuItem){ .title = "Title", .callback = change_title };
-    if(m_metric_group->title != NULL)
-    {
-        m_group_items[0].subtitle = m_metric_group->title->value;
-    }
-
-    fill_time_string(m_alarm_text_buffer, m_metric_group->alarm.time.hour, m_metric_group->alarm.time.minute);
-    m_group_items[1] = (SimpleMenuItem){
-        .title = "Registration time",
-        .subtitle = m_alarm_text_buffer,
-        .callback = change_alarm,
-    };
-
-    m_group_section.items = m_group_items;
-    m_group_section.num_items = 2;
+    return (section == SECTION_GROUP) ? 2 : (uint16_t)metrics_count();
 }
 
-static void build_metrics_section()
+static int16_t menu_get_header_height(MenuLayer* menu_layer, uint16_t section, void* context)
 {
-    free_metric_items();
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
 
-    size_t count = metrics_count();
-    size_t items_size = count * sizeof(SimpleMenuItem);
-    m_metric_items = (SimpleMenuItem*)malloc(items_size);
-    memset(m_metric_items, 0, items_size);
-    m_metric_ids_index_map = (uint16_t*)malloc(count * sizeof(uint16_t));
+static void menu_draw_header(GContext* ctx, const Layer* cell_layer, uint16_t section, void* context)
+{
+    menu_cell_basic_header_draw(ctx, cell_layer,
+        section == SECTION_GROUP ? "Metric group" : "Metrics in group");
+}
 
-    Metrics* metrics = metrics_get_all();
-    for(uint16_t i = 0; i < count; i++)
+static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* index, void* context)
+{
+    if(index->section == SECTION_GROUP)
     {
-        Metrics* metric = &metrics[i];
-        m_metric_ids_index_map[i] = metric->id;
-        m_metric_items[i].title = metric->title != NULL ? metric->title->value : "";
-        m_metric_items[i].callback = toggle_metric_in_group;
-        if(metrics_group_has_metric(m_metric_group->id, metric->id))
+        if(index->row == 0)
         {
-            m_metric_items[i].icon = member_check_icon();
+            const char* title = (m_metric_group->title != NULL) ? m_metric_group->title->value : NULL;
+            menu_cell_basic_draw(ctx, cell_layer, "Title", title, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer, "Registration time", m_alarm_text_buffer, NULL);
         }
+    } else
+    {
+        Metrics* metrics = metrics_get_all();
+        Metrics* metric = &metrics[index->row];
+        bool member = metrics_group_has_metric(m_metric_group->id, metric->id);
+        GBitmap* icon = NULL;
+        if(member)
+        {
+            icon = menu_theme_icon_light(cell_layer) ? get_check_icon_white() : get_check_icon_black();
+        }
+        const char* title = metric->title != NULL ? metric->title->value : "";
+        menu_cell_basic_draw(ctx, cell_layer, title, NULL, icon);
     }
+}
 
-    m_metrics_section.items = m_metric_items;
-    m_metrics_section.num_items = count;
+static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* context)
+{
+    if(index->section == SECTION_GROUP)
+    {
+        if(index->row == 0)
+        {
+            dictation_session_start(m_dictation_session);
+        } else
+        {
+            setup_edit_alarm_window(m_metric_group);
+        }
+    } else
+    {
+        Metrics* metrics = metrics_get_all();
+        metrics_group_toggle_metric(m_metric_group->id, metrics[index->row].id);
+        layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
+    }
 }
 
 static void create_menu()
@@ -135,24 +118,27 @@ static void create_menu()
     Layer* window_layer = window_get_root_layer(m_config_window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    if(m_config_menu_layer != NULL)
+    refresh_alarm_text();
+
+    if(m_config_menu_layer == NULL)
     {
-        simple_menu_layer_destroy(m_config_menu_layer);
-        m_config_menu_layer = NULL;
+        m_config_menu_layer = menu_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT,
+            bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));
+        menu_layer_set_callbacks(m_config_menu_layer, NULL, (MenuLayerCallbacks) {
+            .get_num_sections = menu_get_num_sections,
+            .get_num_rows = menu_get_num_rows,
+            .get_header_height = menu_get_header_height,
+            .draw_header = menu_draw_header,
+            .draw_row = menu_draw_row,
+            .select_click = menu_select_click,
+        });
+        menu_theme_apply_colors(m_config_menu_layer);
+        menu_layer_set_click_config_onto_window(m_config_menu_layer, m_config_window);
+        layer_add_child(window_layer, menu_layer_get_layer(m_config_menu_layer));
+    } else
+    {
+        menu_layer_reload_data(m_config_menu_layer);
     }
-
-    build_group_section();
-    build_metrics_section();
-
-    m_menu_sections[0] = m_group_section;
-    m_menu_sections[1] = m_metrics_section;
-
-    m_config_menu_layer = simple_menu_layer_create(
-        GRect(0, STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT),
-        m_config_window,
-        m_menu_sections, 2, NULL);
-
-    layer_add_child(window_layer, simple_menu_layer_get_layer(m_config_menu_layer));
     update_status_bar();
 }
 
@@ -175,16 +161,18 @@ static void load_metric_group_window(Window *window)
 static void unload_metric_group_window(Window *window)
 {
     status_bar_layer_destroy(m_status_bar);
-    simple_menu_layer_destroy(m_config_menu_layer);
+    menu_layer_destroy(m_config_menu_layer);
     m_config_menu_layer = NULL;
     dictation_session_destroy(m_dictation_session);
-    free_metric_items();
 }
 
 static void appear_metric_group_window(Window *window)
 {
     // Refresh after returning from the alarm editor (time may have changed).
-    create_menu();
+    if(m_config_menu_layer != NULL)
+    {
+        create_menu();
+    }
 }
 
 void setup_metric_group_config_window(MetricsGroup* metrics_group)
@@ -205,6 +193,5 @@ void setup_metric_group_config_window(MetricsGroup* metrics_group)
 
 void tear_down_metric_group_config_window()
 {
-    free_metric_items();
     window_destroy(m_config_window);
 }

@@ -351,7 +351,15 @@
                 { "file": "images/main_target_sm.png", "name": "MAIN_TARGET_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
                 { "file": "images/main_target_sm_white.png", "name": "MAIN_TARGET_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
                 { "file": "images/main_pulse_sm.png", "name": "MAIN_PULSE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
-                { "file": "images/main_pulse_sm_white.png", "name": "MAIN_PULSE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" }
+                { "file": "images/main_pulse_sm_white.png", "name": "MAIN_PULSE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/mood_48.png", "name": "MOOD_48_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/mood_48_white.png", "name": "MOOD_48_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/exercise_48.png", "name": "EXERCISE_48_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/exercise_48_white.png", "name": "EXERCISE_48_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/mood_sm.png", "name": "MOOD_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/mood_sm_white.png", "name": "MOOD_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/exercise_sm.png", "name": "EXERCISE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" },
+                { "file": "images/exercise_sm_white.png", "name": "EXERCISE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","aplite","emery"], "type": "bitmap" }
             ]
         },
         "enableMultiJS": true,
