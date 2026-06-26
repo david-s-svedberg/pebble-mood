@@ -22,16 +22,19 @@ static void open_settings(ClickRecognizerRef recognizer, void* context)
 
 static void open_register(ClickRecognizerRef recognizer, void* context)
 {
-    // Spontaneous registration: pick a metric and register it now.
-    setup_metric_list_window();
+    // Spontaneous registration: pick any metric and register it now.
+    setup_metric_list_window(MetricList_ALL);
+}
+
+static void open_today(ClickRecognizerRef recognizer, void* context)
+{
+    // Today: scheduled + spontaneously-registered metrics with answered status.
+    setup_metric_list_window(MetricList_TODAY);
 }
 
 static void click_config_provider(void* context)
 {
-    // Up: today/overview, Select: register, Down: settings. (Up and Select
-    // currently open the same metric list; a distinct "Today" view with
-    // answered-status is a planned refinement — see ROADMAP.md.)
-    window_single_click_subscribe(BUTTON_ID_UP, open_register);
+    window_single_click_subscribe(BUTTON_ID_UP, open_today);
     window_single_click_subscribe(BUTTON_ID_SELECT, open_register);
     window_single_click_subscribe(BUTTON_ID_DOWN, open_settings);
 }

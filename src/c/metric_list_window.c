@@ -3,6 +3,7 @@
 #include <pebble.h>
 
 #include "main_window_logic.h"   // main_window_format_average
+#include "icons.h"
 #include "register_mood_window.h"
 #include "repositories/metrics_repository.h"
 #include "repositories/app_config_repository.h"
@@ -12,8 +13,9 @@
 static Window* m_window;
 static StatusBarLayer* m_status_bar;
 static SimpleMenuLayer* m_menu_layer = NULL;
+static MetricListMode m_mode;
 
-static SimpleMenuSection m_section = { .title = "Register" };
+static SimpleMenuSection m_section;
 static SimpleMenuItem* m_items = NULL;
 static char (*m_subtitles)[SUBTITLE_LEN] = NULL;
 static uint16_t* m_id_map = NULL;
@@ -38,34 +40,50 @@ static void build_items()
 {
     free_dynamic();
 
-    uint32_t count = metrics_count();
-    uint32_t item_count = (count == 0) ? 1 : count;
+    uint32_t total = metrics_count();
+    uint32_t cap = (total == 0) ? 1 : total;
+    m_items = (SimpleMenuItem*)malloc(cap * sizeof(SimpleMenuItem));
+    memset(m_items, 0, cap * sizeof(SimpleMenuItem));
+    m_subtitles = malloc(cap * SUBTITLE_LEN);
+    m_id_map = (uint16_t*)malloc(cap * sizeof(uint16_t));
 
-    m_items = (SimpleMenuItem*)malloc(item_count * sizeof(SimpleMenuItem));
-    memset(m_items, 0, item_count * sizeof(SimpleMenuItem));
-    m_subtitles = malloc(item_count * SUBTITLE_LEN);
-    m_id_map = (uint16_t*)malloc(item_count * sizeof(uint16_t));
+    Metrics* metrics = metrics_get_all();
+    uint32_t n = 0;
+    for(uint32_t i = 0; i < total; i++)
+    {
+        Metrics* metric = &metrics[i];
+        bool done_today = metric_registered_today(metric->id);
 
-    if(count == 0)
-    {
-        m_items[0].title = "No metrics yet";
-        m_items[0].subtitle = "Add one in Settings";
-    } else
-    {
-        Metrics* metrics = metrics_get_all();
-        for(uint32_t i = 0; i < count; i++)
+        // Today view: only metrics that are scheduled (in a group) or were
+        // registered spontaneously today.
+        if(m_mode == MetricList_TODAY && !metric_in_any_group(metric->id) && !done_today)
         {
-            Metrics* metric = &metrics[i];
-            m_id_map[i] = metric->id;
-            main_window_format_average(metric, m_subtitles[i], SUBTITLE_LEN);
-            m_items[i].title = metric->title != NULL ? metric->title->value : "";
-            m_items[i].subtitle = m_subtitles[i];
-            m_items[i].callback = register_selected;
+            continue;
         }
+
+        m_id_map[n] = metric->id;
+        main_window_format_average(metric, m_subtitles[n], SUBTITLE_LEN);
+        m_items[n].title = metric->title != NULL ? metric->title->value : "";
+        m_items[n].subtitle = m_subtitles[n];
+        m_items[n].callback = register_selected;
+        if(m_mode == MetricList_TODAY && done_today)
+        {
+            m_items[n].icon = config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black();
+        }
+        n++;
     }
 
+    if(n == 0)
+    {
+        m_items[0].title = (m_mode == MetricList_TODAY) ? "Nothing scheduled" : "No metrics yet";
+        m_items[0].subtitle = (m_mode == MetricList_TODAY) ? "" : "Add one in Settings";
+        m_items[0].callback = NULL;
+        n = 1;
+    }
+
+    m_section.title = (m_mode == MetricList_TODAY) ? "Today" : "Register";
     m_section.items = m_items;
-    m_section.num_items = item_count;
+    m_section.num_items = n;
 }
 
 static void create_menu()
@@ -105,7 +123,7 @@ static void load_window(Window* window)
 
 static void appear_window(Window* window)
 {
-    // Refresh averages after returning from a registration.
+    // Refresh averages and today-status after returning from a registration.
     create_menu();
 }
 
@@ -120,8 +138,9 @@ static void unload_window(Window* window)
     free_dynamic();
 }
 
-void setup_metric_list_window()
+void setup_metric_list_window(MetricListMode mode)
 {
+    m_mode = mode;
     m_window = window_create();
     window_set_window_handlers(m_window, (WindowHandlers) {
         .load = load_window,

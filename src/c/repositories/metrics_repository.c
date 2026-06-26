@@ -362,6 +362,18 @@ bool metric_registered_today(uint16_t metric_id)
     return false;
 }
 
+bool metric_in_any_group(uint16_t metric_id)
+{
+    for(int i = 0; i < m_group_metrics.number_of_items; i++)
+    {
+        if(group_metric_at(i)->metric_id == metric_id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool metrics_group_complete_today(uint16_t group_id)
 {
     uint32_t total = metrics_count();

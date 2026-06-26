@@ -116,12 +116,12 @@ membership-poster (ta bort dagens implicita `group_id = 0`).
 
 ## 6. Ny huvudskärm (custom UI istället för lista)
 
-Status:
+Status: KLART.
 - [x] Custom hemskärm (titel + nästa tid + action bar) istället för lista.
 - [x] **Select** → spontanregistrera (metric-lista → välj → registrera en metric). Avsnitt 3.
 - [x] **Ner** → Settings.
-- [ ] **Upp** öppnar idag bara samma metric-lista som Select. Bygg den riktiga **"Idag"-vyn**
-      (nedan) med besvarat-status; kräver "registrerad idag"-kollen (delas med avsnitt 4).
+- [x] **Upp** → "Idag"-vyn: schemalagda metrics + spontant registrerade, med bock för de som
+      besvarats idag; Select registrerar/ändrar svaret. 7-dagars­snittet visas som undertext.
 
 Eget UI istället för dagens lista:
 - **Ner** → Settings (config-menyn).
