@@ -435,9 +435,9 @@ static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_ico
     metric->main_icon = main_icon;
     if(type == MetricsType_THREE_OPTION)
     {
-        metric->option_icons[0] = IconChoice_DOWN;
-        metric->option_icons[1] = IconChoice_CHECK;
-        metric->option_icons[2] = IconChoice_UP;
+        metric->option_icons[0] = IconChoice_FACE_SAD;
+        metric->option_icons[1] = IconChoice_FACE_NEUTRAL;
+        metric->option_icons[2] = IconChoice_FACE_HAPPY;
     }
     metrics_save();
     return id;

@@ -72,6 +72,12 @@ static const char* icon_name(uint8_t choice)
         case IconChoice_MOOD:     return "Mood";
         case IconChoice_EXERCISE: return "Exercise";
         case IconChoice_PILL:     return "Pill";
+        case IconChoice_FACE_SAD:     return "Sad face";
+        case IconChoice_FACE_NEUTRAL: return "Neutral face";
+        case IconChoice_FACE_HAPPY:   return "Happy face";
+        case IconChoice_LEVEL_LOW:    return "Level low";
+        case IconChoice_LEVEL_MID:    return "Level mid";
+        case IconChoice_LEVEL_HIGH:   return "Level high";
         default:                  return "None";
     }
 }
@@ -233,9 +239,9 @@ static void change_type()
             break;
         case MetricsType_INTERVAL:
             m_metric->type = MetricsType_THREE_OPTION;
-            m_metric->option_icons[0] = IconChoice_DOWN;
-            m_metric->option_icons[1] = IconChoice_CHECK;
-            m_metric->option_icons[2] = IconChoice_UP;
+            m_metric->option_icons[0] = IconChoice_FACE_SAD;
+            m_metric->option_icons[1] = IconChoice_FACE_NEUTRAL;
+            m_metric->option_icons[2] = IconChoice_FACE_HAPPY;
             break;
         default:
             m_metric->type = MetricsType_BOOL;

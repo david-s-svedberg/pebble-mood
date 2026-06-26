@@ -234,6 +234,48 @@
                         "emery"
                     ],
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/face_sad.png",
+                    "name": "FACE_SAD_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/face_neutral.png",
+                    "name": "FACE_NEUTRAL_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/face_happy.png",
+                    "name": "FACE_HAPPY_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_low.png",
+                    "name": "LEVEL_LOW_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_mid.png",
+                    "name": "LEVEL_MID_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_high.png",
+                    "name": "LEVEL_HIGH_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
                 }
             ]
         },

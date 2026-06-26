@@ -34,6 +34,12 @@ typedef enum
     IconChoice_MOOD,
     IconChoice_EXERCISE,
     IconChoice_PILL,
+    IconChoice_FACE_SAD,
+    IconChoice_FACE_NEUTRAL,
+    IconChoice_FACE_HAPPY,
+    IconChoice_LEVEL_LOW,
+    IconChoice_LEVEL_MID,
+    IconChoice_LEVEL_HIGH,
     IconChoice_COUNT,
 } IconChoice;
 

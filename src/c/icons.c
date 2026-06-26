@@ -18,6 +18,12 @@ static GBitmap *pill_icon;
 static GBitmap *mood_icon;
 static GBitmap *exercise_icon;
 static GBitmap *cross_icon;
+static GBitmap *face_sad_icon;
+static GBitmap *face_neutral_icon;
+static GBitmap *face_happy_icon;
+static GBitmap *level_low_icon;
+static GBitmap *level_mid_icon;
+static GBitmap *level_high_icon;
 
 static GBitmap* get_icon(uint32_t id, GBitmap** icon)
 {
@@ -139,6 +145,12 @@ GBitmap* get_icon_by_choice(uint8_t choice)
         case IconChoice_MOOD:     return get_mood_icon();
         case IconChoice_EXERCISE: return get_exercise_icon();
         case IconChoice_PILL:     return get_pill_icon();
+        case IconChoice_FACE_SAD:     return get_icon(RESOURCE_ID_FACE_SAD_ICON, &face_sad_icon);
+        case IconChoice_FACE_NEUTRAL: return get_icon(RESOURCE_ID_FACE_NEUTRAL_ICON, &face_neutral_icon);
+        case IconChoice_FACE_HAPPY:   return get_icon(RESOURCE_ID_FACE_HAPPY_ICON, &face_happy_icon);
+        case IconChoice_LEVEL_LOW:    return get_icon(RESOURCE_ID_LEVEL_LOW_ICON, &level_low_icon);
+        case IconChoice_LEVEL_MID:    return get_icon(RESOURCE_ID_LEVEL_MID_ICON, &level_mid_icon);
+        case IconChoice_LEVEL_HIGH:   return get_icon(RESOURCE_ID_LEVEL_HIGH_ICON, &level_high_icon);
         default:                  return NULL;
     }
 }
@@ -163,4 +175,10 @@ void destroy_all_icons()
     destroy_icon(&mood_icon);
     destroy_icon(&exercise_icon);
     destroy_icon(&cross_icon);
+    destroy_icon(&face_sad_icon);
+    destroy_icon(&face_neutral_icon);
+    destroy_icon(&face_happy_icon);
+    destroy_icon(&level_low_icon);
+    destroy_icon(&level_mid_icon);
+    destroy_icon(&level_high_icon);
 }
