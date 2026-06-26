@@ -148,8 +148,14 @@ static void free_group_rows()
 
 static void toggle_connected_to_metrics_group(int index, void *context)
 {
-    metrics_group_toggle_metric(m_group_id_index_map[index], m_metric->id);
-    create_menu();
+    uint16_t group_id = m_group_id_index_map[index];
+    metrics_group_toggle_metric(group_id, m_metric->id);
+    // Update just this row's checkmark so the cursor stays put.
+    bool member = metrics_group_has_metric(group_id, m_metric->id);
+    m_group_items[index].icon = member
+        ? (config_is_dark_theme() ? get_check_icon_white() : get_check_icon_black())
+        : NULL;
+    layer_mark_dirty(simple_menu_layer_get_layer(m_config_menu_layer));
 }
 
 static void build_group_rows()
