@@ -15,6 +15,13 @@
             ],
             "media": [
                 {
+                    "file": "images/mood_menu.png",
+                    "name": "MENU_ICON",
+                    "menuIcon": true,
+                    "targetPlatforms": ["diorite","basalt","aplite","emery"],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/steps.png",
                     "name": "STEP_ICON",
                     "spaceOptimization": "memory",
