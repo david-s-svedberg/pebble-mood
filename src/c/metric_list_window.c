@@ -10,6 +10,10 @@
 
 #define SUBTITLE_LEN (16)
 
+// Sentinel stored in m_section_group for the "Misc" section (spontaneous
+// registrations made today). Its rows carry group_id 0.
+#define MISC_SECTION (0xFFFF)
+
 typedef struct
 {
     uint16_t group_id;    // 0 = spontaneous / placeholder
@@ -56,8 +60,9 @@ static void build_today()
 {
     size_t groups = metrics_groups_count();
     size_t metrics_n = metrics_count();
-    size_t max_rows = (groups * metrics_n) + 1;
-    size_t max_sections = groups + 1;
+    // group sections (groups * metrics_n) + a Misc section (metrics_n) + placeholder
+    size_t max_rows = (groups * metrics_n) + metrics_n + 1;
+    size_t max_sections = groups + 2;
 
     m_rows = malloc(max_rows * sizeof(ListRow));
     m_section_group = malloc(max_sections * sizeof(uint16_t));
@@ -88,6 +93,25 @@ static void build_today()
             m_section_start[m_section_count] = start;
             m_section_count++;
         }
+    }
+
+    // Misc: metrics registered spontaneously (group 0) today.
+    uint16_t misc_start = m_row_count;
+    uint16_t misc_count = 0;
+    for(size_t m = 0; m < metrics_n; m++)
+    {
+        if(metric_registered_today_in_group(0, all_metrics[m].id))
+        {
+            m_rows[m_row_count++] = (ListRow){ .group_id = 0, .metric_id = all_metrics[m].id };
+            misc_count++;
+        }
+    }
+    if(misc_count > 0)
+    {
+        m_section_group[m_section_count] = MISC_SECTION;
+        m_section_rows[m_section_count] = misc_count;
+        m_section_start[m_section_count] = misc_start;
+        m_section_count++;
     }
 
     if(m_section_count == 0)
@@ -160,8 +184,14 @@ static void menu_draw_header(GContext* ctx, const Layer* cell_layer, uint16_t se
     const char* title;
     if(m_mode == MetricList_TODAY)
     {
-        MetricsGroup* group = metrics_group_get(m_section_group[section]);
-        title = (group != NULL && group->title != NULL) ? group->title->value : "Today";
+        if(m_section_group[section] == MISC_SECTION)
+        {
+            title = "Misc";
+        } else
+        {
+            MetricsGroup* group = metrics_group_get(m_section_group[section]);
+            title = (group != NULL && group->title != NULL) ? group->title->value : "Today";
+        }
     } else
     {
         title = "Register";

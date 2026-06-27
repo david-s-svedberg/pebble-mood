@@ -404,16 +404,22 @@ bool metric_registered_today_in_group(uint16_t group_id, uint16_t metric_id)
 
 Registration* registration_today_for_group_metric(uint16_t group_id, uint16_t metric_id)
 {
+    // A group slot has at most one registration per day (answers update in
+    // place), but spontaneous (group 0) can have several — return the latest.
     time_t since = start_of_today();
+    Registration* latest = NULL;
     for(int i = 0; i < m_registrations.number_of_items; i++)
     {
         Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
         if(reg->metrics_id == metric_id && reg->group_id == group_id && reg->time_stamp >= since)
         {
-            return reg;
+            if(latest == NULL || reg->time_stamp >= latest->time_stamp)
+            {
+                latest = reg;
+            }
         }
     }
-    return NULL;
+    return latest;
 }
 
 bool registrations_last_value(uint16_t metric_id, uint8_t* out_value)
