@@ -12,6 +12,7 @@ static Window* m_main_window;
 static StatusBarLayer* m_status_bar;
 static TextLayer* m_title_layer;
 static TextLayer* m_next_layer;
+static BitmapLayer* m_icon_layer;
 static ActionBarLayer* m_action_bar;
 static char m_next_buffer[24];
 
@@ -65,14 +66,33 @@ static void setup_title_layer(Layer* window_layer, GRect bounds)
     layer_add_child(window_layer, text_layer_get_layer(m_title_layer));
 }
 
+static void setup_icon_layer(Layer* window_layer, GRect bounds)
+{
+    int content_w = bounds.size.w - ACTION_BAR_WIDTH;
+    // Centered horizontally; vertically centered between the title and the
+    // bottom-left "Next" line so it never overlaps the title on short screens.
+    int title_bottom = STATUS_BAR_LAYER_HEIGHT + 20 + 44;
+    int next_top = bounds.size.h - 28;
+    int icon_y = (title_bottom + next_top) / 2 - 24;
+    GRect icon_rect = GRect((content_w - 48) / 2, icon_y, 48, 48);
+    m_icon_layer = bitmap_layer_create(icon_rect);
+    bitmap_layer_set_background_color(m_icon_layer, GColorClear);
+    bitmap_layer_set_compositing_mode(m_icon_layer, GCompOpSet);
+    // White on the dark theme background, black on the light one.
+    bitmap_layer_set_bitmap(m_icon_layer,
+        get_icon_by_choice_ex(IconChoice_MOOD, config_is_dark_theme()));
+    layer_add_child(window_layer, bitmap_layer_get_layer(m_icon_layer));
+}
+
 static void setup_next_layer(Layer* window_layer, GRect bounds)
 {
+    // Bottom-left corner, left aligned.
     m_next_layer = text_layer_create(
-        GRect(0, bounds.size.h / 2, bounds.size.w - ACTION_BAR_WIDTH, 30));
+        GRect(4, bounds.size.h - 28, bounds.size.w - ACTION_BAR_WIDTH - 4, 24));
     text_layer_set_background_color(m_next_layer, config_get_background_color());
     text_layer_set_text_color(m_next_layer, config_get_foreground_color());
-    text_layer_set_font(m_next_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-    text_layer_set_text_alignment(m_next_layer, GTextAlignmentCenter);
+    text_layer_set_font(m_next_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(m_next_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(m_next_layer));
 }
 
@@ -95,6 +115,7 @@ static void load_main_window(Window* window)
 
     setup_status_bar(window_layer);
     setup_title_layer(window_layer, bounds);
+    setup_icon_layer(window_layer, bounds);
     setup_next_layer(window_layer, bounds);
     setup_action_bar();
 }
@@ -109,6 +130,7 @@ static void unload_main_window(Window* window)
     status_bar_layer_destroy(m_status_bar);
     text_layer_destroy(m_title_layer);
     text_layer_destroy(m_next_layer);
+    bitmap_layer_destroy(m_icon_layer);
     action_bar_layer_remove_from_window(m_action_bar);
     action_bar_layer_destroy(m_action_bar);
 }

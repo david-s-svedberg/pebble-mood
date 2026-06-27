@@ -4,13 +4,16 @@
 #include "../icons.h"
 #include "dynamic_repository.h"
 
+// next_id starts at 1 across these stores so that id 0 is a reserved sentinel
+// ("no group / spontaneous", "no metric / placeholder row"), the same convention
+// string_repository uses for "no string".
 static DynamicData m_metrics_groups =
 {
     .meta_data_storage_key = DataKeys_METRICS_GROUP_META_DATA,
     .items_storage_key = DataKeys_METRICS_GROUP_DATA,
     .item_size = sizeof(MetricsGroup),
     .number_of_items = 0,
-    .next_id = 0,
+    .next_id = 1,
     .items = NULL,
 };
 
@@ -20,7 +23,7 @@ static DynamicData m_metrics =
     .items_storage_key = DataKeys_METRICS_DATA,
     .item_size = sizeof(Metrics),
     .number_of_items = 0,
-    .next_id = 0,
+    .next_id = 1,
     .items = NULL,
 };
 
@@ -30,7 +33,7 @@ static DynamicData m_registrations =
     .items_storage_key = DataKeys_REGISTRATIONS_DATA,
     .item_size = sizeof(Registration),
     .number_of_items = 0,
-    .next_id = 0,
+    .next_id = 1,
     .items = NULL,
 };
 
@@ -42,7 +45,7 @@ static DynamicData m_group_metrics =
     .items_storage_key = DataKeys_GROUP_METRICS_DATA,
     .item_size = sizeof(GroupMetric),
     .number_of_items = 0,
-    .next_id = 0,
+    .next_id = 1,
     .items = NULL,
 };
 
@@ -348,6 +351,13 @@ void registration_add(Registration* registration)
         registration->metrics_id, registration->value, (int)m_registrations.number_of_items);
 }
 
+void registration_update(Registration* registration, uint8_t value)
+{
+    registration->value = value;
+    registration->time_stamp = time(NULL);
+    dynamic_save(&m_registrations);
+}
+
 Registration* registrations_get_for_metric(uint16_t metric_id)
 {
     return (Registration*)dynamic_get(metric_id, &m_registrations, registration_is_same_metric_id);
@@ -387,6 +397,42 @@ bool metric_registered_today(uint16_t metric_id)
     return false;
 }
 
+bool metric_registered_today_in_group(uint16_t group_id, uint16_t metric_id)
+{
+    return registration_today_for_group_metric(group_id, metric_id) != NULL;
+}
+
+Registration* registration_today_for_group_metric(uint16_t group_id, uint16_t metric_id)
+{
+    time_t since = start_of_today();
+    for(int i = 0; i < m_registrations.number_of_items; i++)
+    {
+        Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
+        if(reg->metrics_id == metric_id && reg->group_id == group_id && reg->time_stamp >= since)
+        {
+            return reg;
+        }
+    }
+    return NULL;
+}
+
+bool registrations_last_value(uint16_t metric_id, uint8_t* out_value)
+{
+    bool found = false;
+    time_t latest = 0;
+    for(int i = 0; i < m_registrations.number_of_items; i++)
+    {
+        Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
+        if(reg->metrics_id == metric_id && (!found || reg->time_stamp >= latest))
+        {
+            latest = reg->time_stamp;
+            *out_value = reg->value;
+            found = true;
+        }
+    }
+    return found;
+}
+
 bool metric_in_any_group(uint16_t metric_id)
 {
     for(int i = 0; i < m_group_metrics.number_of_items; i++)
@@ -406,7 +452,7 @@ bool metrics_group_complete_today(uint16_t group_id)
     for(uint32_t i = 0; i < total; i++)
     {
         Metrics* metric = &all_metrics[i];
-        if(metrics_group_has_metric(group_id, metric->id) && !metric_registered_today(metric->id))
+        if(metrics_group_has_metric(group_id, metric->id) && !metric_registered_today_in_group(group_id, metric->id))
         {
             return false;
         }
@@ -425,7 +471,7 @@ static uint16_t seed_group(const char* name, uint8_t hour, uint8_t minute)
     return id;
 }
 
-static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_icon)
+static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_icon, uint8_t max_value)
 {
     Metrics* metric = metrics_new();             // BOOL default (cross/check)
     uint16_t id = metric->id;
@@ -433,7 +479,10 @@ static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_ico
     metric = metrics_get(id);
     metric->type = type;
     metric->main_icon = main_icon;
-    if(type == MetricsType_THREE_OPTION)
+    if(type == MetricsType_INTERVAL)
+    {
+        metric->max_value = max_value;
+    } else if(type == MetricsType_THREE_OPTION)
     {
         metric->option_icons[0] = IconChoice_FACE_SAD;
         metric->option_icons[1] = IconChoice_FACE_NEUTRAL;
@@ -448,16 +497,16 @@ void metrics_seed_defaults()
     uint16_t morning = seed_group("Morning", 7, 30);
     uint16_t evening = seed_group("Evening", 21, 30);
 
-    // Mood is shared by both groups (many-to-many).
-    uint16_t mood = seed_metric("Mood", MetricsType_THREE_OPTION, IconChoice_MOOD);
-    uint16_t sleep = seed_metric("Sleep quality", MetricsType_THREE_OPTION, IconChoice_NONE);
-    uint16_t rested = seed_metric("Rested", MetricsType_BOOL, IconChoice_NONE);
-    uint16_t exercised = seed_metric("Exercised", MetricsType_BOOL, IconChoice_EXERCISE);
-    uint16_t stress = seed_metric("Stress", MetricsType_THREE_OPTION, IconChoice_NONE);
+    // Mood is shared by both groups (many-to-many). A 1..5 interval.
+    uint16_t mood = seed_metric("Mood", MetricsType_INTERVAL, IconChoice_MOOD, 5);
+    uint16_t sleep = seed_metric("Sleep quality", MetricsType_THREE_OPTION, IconChoice_NONE, 0);
+    uint16_t rested = seed_metric("Rested", MetricsType_BOOL, IconChoice_NONE, 0);
+    uint16_t exercised = seed_metric("Exercised", MetricsType_BOOL, IconChoice_EXERCISE, 0);
+    uint16_t stress = seed_metric("Stress", MetricsType_THREE_OPTION, IconChoice_NONE, 0);
 
     // Unscheduled metrics (no group) — registered on demand.
-    seed_metric("Sick", MetricsType_BOOL, IconChoice_NONE);
-    seed_metric("Medication", MetricsType_BOOL, IconChoice_PILL);
+    seed_metric("Sick", MetricsType_BOOL, IconChoice_NONE, 0);
+    seed_metric("Medication", MetricsType_BOOL, IconChoice_PILL, 0);
 
     metrics_group_toggle_metric(morning, mood);
     metrics_group_toggle_metric(morning, sleep);

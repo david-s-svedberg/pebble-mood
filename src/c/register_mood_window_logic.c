@@ -4,6 +4,7 @@
 
 #include "icons.h"
 #include "repositories/metrics_repository.h"
+#include "repositories/app_config_repository.h"
 
 static Window* m_window;
 static ActionBarLayer* m_action_bar;
@@ -13,6 +14,8 @@ static BitmapLayer* m_icon_layer;
 
 static MetricsGroup* m_group;
 static Metrics* m_single_metric;
+static uint16_t m_context_group_id = 0;   // group slot a registration belongs to (0 = spontaneous)
+static bool m_update_existing = false;     // Today flow: update today's slot instead of adding
 static Metrics** m_metrics = NULL;
 static uint16_t m_metric_count = 0;
 static uint16_t m_current_index = 0;
@@ -44,8 +47,9 @@ static void collect_metrics()
     for(uint32_t i = 0; i < total; i++)
     {
         Metrics* current = &all_metrics[i];
-        // Skip metrics already registered today (e.g. answered spontaneously).
-        if(metrics_group_has_metric(m_group->id, current->id) && !metric_registered_today(current->id))
+        // Skip metrics already registered today for THIS group's slot.
+        if(metrics_group_has_metric(m_group->id, current->id)
+            && !metric_registered_today_in_group(m_group->id, current->id))
         {
             m_metrics[m_metric_count++] = current;
         }
@@ -68,13 +72,24 @@ static void update_value_display()
 static void save_and_advance(uint8_t value)
 {
     Metrics* metric = m_metrics[m_current_index];
-    Registration registration =
+
+    Registration* existing = m_update_existing
+        ? registration_today_for_group_metric(m_context_group_id, metric->id)
+        : NULL;
+    if(existing != NULL)
     {
-        .metrics_id = metric->id,
-        .value = value,
-        .time_stamp = time(NULL),
-    };
-    registration_add(&registration);
+        registration_update(existing, value);
+    } else
+    {
+        Registration registration =
+        {
+            .metrics_id = metric->id,
+            .value = value,
+            .time_stamp = time(NULL),
+            .group_id = m_context_group_id,
+        };
+        registration_add(&registration);
+    }
 
     m_current_index++;
     if(m_current_index >= m_metric_count)
@@ -100,7 +115,7 @@ static void interval_increase(ClickRecognizerRef recognizer, void* context)
 
 static void interval_decrease(ClickRecognizerRef recognizer, void* context)
 {
-    if(m_current_value > 0)
+    if(m_current_value > 1)   // intervals are 1..max
     {
         m_current_value--;
         update_value_display();
@@ -163,16 +178,40 @@ static void set_action_icon(ButtonId button, uint8_t icon_choice)
     }
 }
 
+// Starting value for an interval metric: the current Today answer if we're
+// updating one, else the last answer when the scale is large enough (>3) that
+// re-entering from the bottom each time would be tedious, else the minimum (1).
+static uint8_t interval_start_value(Metrics* metric)
+{
+    uint8_t value = 1;
+    Registration* existing = m_update_existing
+        ? registration_today_for_group_metric(m_context_group_id, metric->id)
+        : NULL;
+    if(existing != NULL)
+    {
+        value = existing->value;
+    } else if(metric->max_value > 3)
+    {
+        registrations_last_value(metric->id, &value);
+    }
+    if(value < 1) { value = 1; }
+    if(value > metric->max_value) { value = metric->max_value; }
+    return value;
+}
+
 static void show_current_metric()
 {
     Metrics* metric = m_metrics[m_current_index];
     m_current_value = 0;
 
     text_layer_set_text(m_title_layer, metric->title != NULL ? metric->title->value : "");
-    bitmap_layer_set_bitmap(m_icon_layer, get_icon_by_choice(metric->main_icon));
+    // Themed: white icon on the dark background, black on the light one.
+    bitmap_layer_set_bitmap(m_icon_layer,
+        get_icon_by_choice_ex(metric->main_icon, config_is_dark_theme()));
 
     if(metric->type == MetricsType_INTERVAL)
     {
+        m_current_value = interval_start_value(metric);
         set_action_icon(BUTTON_ID_UP, IconChoice_UP);
         set_action_icon(BUTTON_ID_SELECT, IconChoice_CHECK);
         set_action_icon(BUTTON_ID_DOWN, IconChoice_DOWN);
@@ -216,12 +255,24 @@ void register_mood_set_group(MetricsGroup* group)
 {
     m_group = group;
     m_single_metric = NULL;
+    m_context_group_id = group->id;
+    m_update_existing = false;   // collect_metrics already filters answered slots
 }
 
 void register_mood_set_metric(Metrics* metric)
 {
     m_single_metric = metric;
     m_group = NULL;
+    m_context_group_id = 0;      // spontaneous
+    m_update_existing = false;   // always add a new registration
+}
+
+void register_mood_set_metric_in_group(Metrics* metric, uint16_t group_id)
+{
+    m_single_metric = metric;
+    m_group = NULL;
+    m_context_group_id = group_id;
+    m_update_existing = true;    // Today: update this group's slot if already answered
 }
 
 void register_mood_set_layers(

@@ -114,6 +114,12 @@ void setup_register_mood_window_for_metric(Metrics* metric)
     push_mood_window();
 }
 
+void setup_register_mood_window_for_metric_in_group(Metrics* metric, uint16_t group_id)
+{
+    register_mood_set_metric_in_group(metric, group_id);
+    push_mood_window();
+}
+
 void tear_down_register_mood_window()
 {
     window_destroy(m_mood_window);

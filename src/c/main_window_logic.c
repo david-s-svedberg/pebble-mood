@@ -35,3 +35,24 @@ void main_window_format_average(Metrics* metric, char* buffer, size_t size)
         snprintf(buffer, size, "%d.%d avg (%d)", (int)(tenths / 10), (int)(tenths % 10), (int)count);
     }
 }
+
+void main_window_format_value(Metrics* metric, uint8_t value, char* buffer, size_t size)
+{
+    if(metric->type == MetricsType_BOOL)
+    {
+        snprintf(buffer, size, "%s", value ? "Yes" : "No");
+    } else if(metric->type == MetricsType_THREE_OPTION)
+    {
+        const char* text = metrics_get_option_text(metric, value);
+        if(text[0] != '\0')
+        {
+            snprintf(buffer, size, "%s", text);
+        } else
+        {
+            snprintf(buffer, size, "%d", value + 1);
+        }
+    } else
+    {
+        snprintf(buffer, size, "%d", value);
+    }
+}
