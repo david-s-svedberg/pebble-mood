@@ -291,6 +291,7 @@ Metrics* metrics_new()
     Metrics new =
     {
         .max_value = 1,
+        .min_value = 1,     // intervals default to 1..max (toggle to 0 in config)
         .type = MetricsType_BOOL,
         .main_icon = IconChoice_NONE,
         // Default 2-option icons: value 0 = No (cross), value 1 = Yes (check).
@@ -477,7 +478,8 @@ static uint16_t seed_group(const char* name, uint8_t hour, uint8_t minute)
     return id;
 }
 
-static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_icon, uint8_t max_value)
+static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_icon,
+    uint8_t min_value, uint8_t max_value)
 {
     Metrics* metric = metrics_new();             // BOOL default (cross/check)
     uint16_t id = metric->id;
@@ -487,6 +489,7 @@ static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_ico
     metric->main_icon = main_icon;
     if(type == MetricsType_INTERVAL)
     {
+        metric->min_value = min_value;
         metric->max_value = max_value;
     } else if(type == MetricsType_THREE_OPTION)
     {
@@ -501,24 +504,39 @@ static uint16_t seed_metric(const char* name, MetricsType type, uint8_t main_ico
 void metrics_seed_defaults()
 {
     uint16_t morning = seed_group("Morning", 7, 30);
+    uint16_t lunch = seed_group("Lunch", 12, 30);
     uint16_t evening = seed_group("Evening", 21, 30);
 
-    // Mood is shared by both groups (many-to-many). A 1..5 interval.
-    uint16_t mood = seed_metric("Mood", MetricsType_INTERVAL, IconChoice_MOOD, 5);
-    uint16_t sleep = seed_metric("Sleep quality", MetricsType_THREE_OPTION, IconChoice_NONE, 0);
-    uint16_t rested = seed_metric("Rested", MetricsType_BOOL, IconChoice_NONE, 0);
-    uint16_t exercised = seed_metric("Exercised", MetricsType_BOOL, IconChoice_EXERCISE, 0);
-    uint16_t stress = seed_metric("Stress", MetricsType_THREE_OPTION, IconChoice_NONE, 0);
+    // Concrete emotion metrics (replacing the old vague "Mood").
+    uint16_t joy = seed_metric("Joy", MetricsType_INTERVAL, IconChoice_MOOD, 1, 5);
+    uint16_t anxiety = seed_metric("Anxiety", MetricsType_INTERVAL, IconChoice_CLOUD, 0, 5);
+    uint16_t irritation = seed_metric("Irritation", MetricsType_INTERVAL, IconChoice_BOLT, 0, 5);
+    uint16_t stress = seed_metric("Stress", MetricsType_INTERVAL, IconChoice_THERMO, 0, 5);
+    uint16_t love = seed_metric("Love", MetricsType_BOOL, IconChoice_HEART, 0, 0);
+    uint16_t sleep = seed_metric("Sleep quality", MetricsType_THREE_OPTION, IconChoice_NONE, 0, 0);
+    uint16_t rested = seed_metric("Rested", MetricsType_BOOL, IconChoice_NONE, 0, 0);
+    uint16_t exercised = seed_metric("Exercised", MetricsType_BOOL, IconChoice_EXERCISE, 0, 0);
 
     // Unscheduled metrics (no group) — registered on demand.
-    seed_metric("Sick", MetricsType_BOOL, IconChoice_NONE, 0);
-    seed_metric("Medication", MetricsType_BOOL, IconChoice_PILL, 0);
+    seed_metric("Sick", MetricsType_BOOL, IconChoice_NONE, 0, 0);
+    seed_metric("Medication", MetricsType_BOOL, IconChoice_PILL, 0, 0);
 
-    metrics_group_toggle_metric(morning, mood);
+    // Morning: joy, sleep, rested, love, irritation.
+    metrics_group_toggle_metric(morning, joy);
     metrics_group_toggle_metric(morning, sleep);
     metrics_group_toggle_metric(morning, rested);
+    metrics_group_toggle_metric(morning, love);
+    metrics_group_toggle_metric(morning, irritation);
 
-    metrics_group_toggle_metric(evening, mood);
+    // Lunch: joy, irritation, stress.
+    metrics_group_toggle_metric(lunch, joy);
+    metrics_group_toggle_metric(lunch, irritation);
+    metrics_group_toggle_metric(lunch, stress);
+
+    // Evening: joy, exercised, stress, anxiety, irritation.
+    metrics_group_toggle_metric(evening, joy);
     metrics_group_toggle_metric(evening, exercised);
     metrics_group_toggle_metric(evening, stress);
+    metrics_group_toggle_metric(evening, anxiety);
+    metrics_group_toggle_metric(evening, irritation);
 }

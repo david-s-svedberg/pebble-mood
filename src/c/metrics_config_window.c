@@ -23,6 +23,7 @@ typedef enum
     RowKind_TITLE,
     RowKind_TYPE,
     RowKind_MAIN_ICON,
+    RowKind_MIN,
     RowKind_MAX,
     RowKind_OPTION_ICON,
     RowKind_OPTION_TEXT,
@@ -100,6 +101,10 @@ static void build_metric_rows()
 
     if(m_metric->type == MetricsType_INTERVAL)
     {
+        char min_buffer[ROW_TEXT_LEN];
+        snprintf(min_buffer, sizeof(min_buffer), "%d", m_metric->min_value);
+        set_row(r++, RowKind_MIN, 0, "Min", min_buffer, NO_ICON);
+
         char buffer[ROW_TEXT_LEN];
         snprintf(buffer, sizeof(buffer), "%d", m_metric->max_value);
         set_row(r++, RowKind_MAX, 0, "Max", buffer, NO_ICON);
@@ -190,6 +195,13 @@ static void metric_row_selected(int index)
         case RowKind_MAIN_ICON:
             m_icon_row_index = index;
             setup_icon_picker_window(false, m_metric->main_icon, main_icon_picked, NULL);
+            break;
+        case RowKind_MIN:
+            // Toggle the interval floor between 0 and 1.
+            m_metric->min_value = (m_metric->min_value == 0) ? 1 : 0;
+            metrics_save();
+            snprintf(m_row_subtitle[index], ROW_TEXT_LEN, "%d", m_metric->min_value);
+            mark_menu_dirty();
             break;
         case RowKind_MAX:
             m_metric->max_value++;

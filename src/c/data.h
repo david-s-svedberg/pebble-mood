@@ -7,7 +7,7 @@
 // Bump this whenever the AppConfig layout changes (and only append new fields
 // to the end of AppConfig). config_init() re-seeds when the stored version or
 // size no longer matches, so existing installs can't read a stale layout.
-#define CURRENT_DATA_VERSION (3)
+#define CURRENT_DATA_VERSION (4)
 
 // Reserved Alarm.index values for the non-group alarms. They live in a uint8_t
 // (Alarm.index) and are also used as the wakeup cookie (compared as int in
@@ -102,6 +102,9 @@ typedef struct
     // IconChoice (0 = none); text_id is a String id (0 = none).
     uint8_t         option_icons[MAX_METRIC_OPTIONS];
     uint16_t        option_text_ids[MAX_METRIC_OPTIONS];
+    // Lower bound for INTERVAL metrics (range [min_value, max_value]); typically
+    // 0 or 1. Appended last for storage compatibility.
+    uint8_t         min_value;
 } Metrics;
 
 typedef struct

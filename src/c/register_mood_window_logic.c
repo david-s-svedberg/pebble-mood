@@ -115,7 +115,8 @@ static void interval_increase(ClickRecognizerRef recognizer, void* context)
 
 static void interval_decrease(ClickRecognizerRef recognizer, void* context)
 {
-    if(m_current_value > 1)   // intervals are 1..max
+    Metrics* metric = m_metrics[m_current_index];
+    if(m_current_value > metric->min_value)   // intervals are min..max
     {
         m_current_value--;
         update_value_display();
@@ -183,7 +184,7 @@ static void set_action_icon(ButtonId button, uint8_t icon_choice)
 // re-entering from the bottom each time would be tedious, else the minimum (1).
 static uint8_t interval_start_value(Metrics* metric)
 {
-    uint8_t value = 1;
+    uint8_t value = metric->min_value;
     Registration* existing = m_update_existing
         ? registration_today_for_group_metric(m_context_group_id, metric->id)
         : NULL;
@@ -194,7 +195,7 @@ static uint8_t interval_start_value(Metrics* metric)
     {
         registrations_last_value(metric->id, &value);
     }
-    if(value < 1) { value = 1; }
+    if(value < metric->min_value) { value = metric->min_value; }
     if(value > metric->max_value) { value = metric->max_value; }
     return value;
 }
