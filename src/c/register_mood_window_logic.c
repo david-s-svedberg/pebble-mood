@@ -11,6 +11,7 @@ static ActionBarLayer* m_action_bar;
 static TextLayer* m_title_layer;
 static TextLayer* m_value_layer;
 static BitmapLayer* m_icon_layer;
+static TextLayer** m_option_labels;   // [0]=Up, [1]=Select, [2]=Down
 
 static MetricsGroup* m_group;
 static Metrics* m_single_metric;
@@ -169,7 +170,10 @@ static void three_option_click_config_provider(void* context)
 
 static void set_action_icon(ButtonId button, uint8_t icon_choice)
 {
-    GBitmap* bitmap = get_icon_by_choice(icon_choice);
+    // The bar is foreground-coloured, so pick the icon variant that contrasts
+    // with it: black on the dark theme's white bar, white on the light theme's
+    // black bar.
+    GBitmap* bitmap = get_icon_by_choice_ex(icon_choice, !config_is_dark_theme());
     if(bitmap != NULL)
     {
         action_bar_layer_set_icon_animated(m_action_bar, button, bitmap, true);
@@ -200,6 +204,19 @@ static uint8_t interval_start_value(Metrics* metric)
     return value;
 }
 
+// Shows each option's text next to the button that answers it (empty when the
+// option has no text). up/select/down are option values, or -1 for "no option
+// on this button".
+static void set_option_labels(Metrics* metric, int up, int select, int down)
+{
+    int values[3] = { up, select, down };
+    for(int i = 0; i < 3; i++)
+    {
+        text_layer_set_text(m_option_labels[i],
+            values[i] >= 0 ? metrics_get_option_text(metric, (uint8_t)values[i]) : "");
+    }
+}
+
 static void show_current_metric()
 {
     Metrics* metric = m_metrics[m_current_index];
@@ -216,6 +233,7 @@ static void show_current_metric()
         set_action_icon(BUTTON_ID_UP, IconChoice_UP);
         set_action_icon(BUTTON_ID_SELECT, IconChoice_CHECK);
         set_action_icon(BUTTON_ID_DOWN, IconChoice_DOWN);
+        set_option_labels(metric, -1, -1, -1);
         action_bar_layer_set_click_config_provider(m_action_bar, interval_click_config_provider);
         update_value_display();
     } else if(metric->type == MetricsType_THREE_OPTION)
@@ -223,6 +241,7 @@ static void show_current_metric()
         set_action_icon(BUTTON_ID_UP, metric->option_icons[2]);
         set_action_icon(BUTTON_ID_SELECT, metric->option_icons[1]);
         set_action_icon(BUTTON_ID_DOWN, metric->option_icons[0]);
+        set_option_labels(metric, 2, 1, 0);
         action_bar_layer_set_click_config_provider(m_action_bar, three_option_click_config_provider);
         text_layer_set_text(m_value_layer, "");
     } else
@@ -231,6 +250,7 @@ static void show_current_metric()
         set_action_icon(BUTTON_ID_UP, metric->option_icons[1]);
         action_bar_layer_clear_icon(m_action_bar, BUTTON_ID_SELECT);
         set_action_icon(BUTTON_ID_DOWN, metric->option_icons[0]);
+        set_option_labels(metric, 1, -1, 0);
         action_bar_layer_set_click_config_provider(m_action_bar, bool_click_config_provider);
         text_layer_set_text(m_value_layer, "");
     }
@@ -281,13 +301,15 @@ void register_mood_set_layers(
     ActionBarLayer* action_bar,
     TextLayer* title_layer,
     TextLayer* value_layer,
-    BitmapLayer* icon_layer)
+    BitmapLayer* icon_layer,
+    TextLayer** option_labels)
 {
     m_window = window;
     m_action_bar = action_bar;
     m_title_layer = title_layer;
     m_value_layer = value_layer;
     m_icon_layer = icon_layer;
+    m_option_labels = option_labels;
 }
 
 void register_mood_tear_down()

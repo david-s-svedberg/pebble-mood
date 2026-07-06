@@ -99,17 +99,34 @@ static void setup_next_layer(Layer* window_layer, GRect bounds)
 static void setup_action_bar()
 {
     m_action_bar = action_bar_layer_create();
-    action_bar_layer_set_background_color(m_action_bar, config_get_foreground_color());
     action_bar_layer_add_to_window(m_action_bar, m_main_window);
     action_bar_layer_set_click_config_provider(m_action_bar, click_config_provider);
-    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_UP, get_check_icon(), true);
-    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_SELECT, get_edit_icon(), true);
-    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_DOWN, get_config_icon(), true);
+}
+
+// Re-applies every theme-dependent colour/bitmap. The main window stays alive
+// under Settings on the window stack, so a theme toggle there must re-theme
+// this window on appear (all other windows re-read the theme on load).
+static void apply_theme()
+{
+    window_set_background_color(m_main_window, config_get_background_color());
+    status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
+
+    text_layer_set_background_color(m_title_layer, config_get_background_color());
+    text_layer_set_text_color(m_title_layer, config_get_foreground_color());
+    text_layer_set_background_color(m_next_layer, config_get_background_color());
+    text_layer_set_text_color(m_next_layer, config_get_foreground_color());
+
+    bitmap_layer_set_bitmap(m_icon_layer,
+        get_icon_by_choice_ex(IconChoice_MOOD, config_is_dark_theme()));
+
+    action_bar_layer_set_background_color(m_action_bar, config_get_foreground_color());
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_UP, get_bar_icon(BarIcon_CHECK), true);
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_SELECT, get_bar_icon(BarIcon_EDIT), true);
+    action_bar_layer_set_icon_animated(m_action_bar, BUTTON_ID_DOWN, get_bar_icon(BarIcon_CONFIG), true);
 }
 
 static void load_main_window(Window* window)
 {
-    window_set_background_color(window, config_get_background_color());
     Layer* window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
@@ -118,10 +135,12 @@ static void load_main_window(Window* window)
     setup_icon_layer(window_layer, bounds);
     setup_next_layer(window_layer, bounds);
     setup_action_bar();
+    apply_theme();
 }
 
 static void appear_main_window(Window* window)
 {
+    apply_theme();
     update_next_time();
 }
 

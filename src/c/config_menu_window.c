@@ -81,8 +81,8 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
     {
         if(index->row == 0)
         {
-            static char timeout_buffer[4];
-            snprintf(timeout_buffer, sizeof(timeout_buffer), "%d", config_get_alarm_timeout() / 60);
+            static char timeout_buffer[8];
+            snprintf(timeout_buffer, sizeof(timeout_buffer), "%d min", config_get_alarm_timeout() / 60);
             menu_cell_basic_draw(ctx, cell_layer, "Alarm timeout", timeout_buffer, NULL);
         } else
         {
@@ -90,6 +90,28 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
                 config_is_dark_theme() ? "Dark" : "Light", NULL);
         }
     }
+}
+
+// Re-applies the (possibly toggled) theme to this window in place. Windows
+// deeper in the stack re-read the theme on load; the main window re-themes in
+// its appear handler.
+static void apply_theme()
+{
+    window_set_background_color(m_config_window, config_get_background_color());
+    update_status_bar();
+    menu_theme_apply_colors(m_config_menu_layer);
+    layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
+}
+
+static void cycle_alarm_timeout()
+{
+    // 1..4 minutes (alarm_timeout_sec is a uint8_t, so 4 min is the ceiling).
+    uint16_t next = config_get_alarm_timeout() + SECONDS_PER_MINUTE;
+    if(next > 4 * SECONDS_PER_MINUTE)
+    {
+        next = SECONDS_PER_MINUTE;
+    }
+    config_set_alarm_timeout(next);
 }
 
 static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* context)
@@ -116,8 +138,18 @@ static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* con
         {
             setup_metrics_config_window(metrics_new());
         }
+    } else
+    {
+        if(index->row == 0)
+        {
+            cycle_alarm_timeout();
+            layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
+        } else
+        {
+            config_toggle_theme();
+            apply_theme();
+        }
     }
-    // App Config rows: Alarm timeout / Theme are not yet wired (see ROADMAP).
 }
 
 static void create_menu(Layer* window_layer, GRect bounds)

@@ -155,9 +155,9 @@ static void edit_time_action_bar_click_config_provider(void* context)
 static void edit_time(ClickRecognizerRef recognizer, void* context)
 {
     action_bar_layer_set_click_config_provider(m_edit_alarm_action_bar_layer, edit_time_action_bar_click_config_provider);
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, get_up_icon(), true);
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_play_icon(), true);
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_down_icon(), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, get_bar_icon(BarIcon_UP), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_bar_icon(BarIcon_PLAY), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_bar_icon(BarIcon_DOWN), true);
     m_current_edit_step = 0;
 
     highlight_hours();
@@ -167,9 +167,9 @@ void change_to_init_edit_alarm_actions()
 {
     action_bar_layer_set_click_config_provider(m_edit_alarm_action_bar_layer, edit_alarm_action_bar_click_config_provider);
 
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, m_metrics_group->alarm.active ? get_alarm_icon() : get_no_alarm_icon(), true);
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_edit_icon(), true);
-    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_check_icon(), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_UP, get_bar_icon(m_metrics_group->alarm.active ? BarIcon_ALARM : BarIcon_NO_ALARM), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_bar_icon(BarIcon_EDIT), true);
+    action_bar_layer_set_icon_animated(m_edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_bar_icon(BarIcon_CHECK), true);
 }
 
 

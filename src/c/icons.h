@@ -79,4 +79,25 @@ const char* icon_choice_name(uint8_t choice);
 // Large display icons (mood/exercise + the main-icon set) are main-icon only.
 bool icon_choice_is_small(uint8_t choice);
 
+// Fixed action-bar icons. The bar is painted with the theme's foreground
+// colour, so get_bar_icon returns the variant that contrasts with it: the
+// normal (dark-on-light) bitmap in the dark theme (white bar), the inverted /
+// white bitmap in the light theme (black bar).
+typedef enum
+{
+    BarIcon_CHECK,
+    BarIcon_EDIT,
+    BarIcon_CONFIG,
+    BarIcon_PLAY,
+    BarIcon_SNOOZE,
+    BarIcon_SILENCE,
+    BarIcon_ALARM,
+    BarIcon_NO_ALARM,
+    BarIcon_UP,
+    BarIcon_DOWN,
+    BarIcon_COUNT,
+} BarIcon;
+
+GBitmap* get_bar_icon(BarIcon icon);
+
 void destroy_all_icons();

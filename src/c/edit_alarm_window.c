@@ -24,9 +24,9 @@ static void setup_edit_alarm_action_bar_layer(Layer *window_layer, GRect bounds)
     action_bar_layer_add_to_window(edit_alarm_action_bar_layer, edit_alarm_window);
     action_bar_layer_set_click_config_provider(edit_alarm_action_bar_layer, edit_alarm_action_bar_click_config_provider);
 
-    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_UP, get_edit_alarm()->active ? get_alarm_icon() : get_no_alarm_icon(), true);
-    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_edit_icon(), true);
-    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_check_icon(), true);
+    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_UP, get_bar_icon(get_edit_alarm()->active ? BarIcon_ALARM : BarIcon_NO_ALARM), true);
+    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_SELECT, get_bar_icon(BarIcon_EDIT), true);
+    action_bar_layer_set_icon_animated(edit_alarm_action_bar_layer, BUTTON_ID_DOWN, get_bar_icon(BarIcon_CHECK), true);
 }
 
 static void setup_edit_alarm_active_layer(Layer *window_layer, GRect bounds)

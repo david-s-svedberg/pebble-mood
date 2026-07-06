@@ -23,9 +23,9 @@ static void setup_alarm_window_action_bar_layer(Layer *window_layer, GRect bound
     action_bar_layer_add_to_window(alarm_window_action_bar_layer, alarm_window);
     action_bar_layer_set_click_config_provider(alarm_window_action_bar_layer, alarm_window_click_config_provider);
 
-    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_UP, get_silence_icon(), true);
-    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_SELECT, get_check_icon(), true);
-    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_DOWN, get_snooze_icon(), true);
+    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_UP, get_bar_icon(BarIcon_SILENCE), true);
+    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_SELECT, get_bar_icon(BarIcon_CHECK), true);
+    action_bar_layer_set_icon_animated(alarm_window_action_bar_layer, BUTTON_ID_DOWN, get_bar_icon(BarIcon_SNOOZE), true);
 }
 
 static void setup_alarm_title_layer(Layer *window_layer, GRect bounds)

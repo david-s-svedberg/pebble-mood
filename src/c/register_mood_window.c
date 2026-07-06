@@ -12,6 +12,9 @@ static TextLayer* m_title_layer;
 static TextLayer* m_value_layer;
 static BitmapLayer* m_icon_layer;
 static ActionBarLayer* m_action_bar;
+// Per-option text labels, right-aligned next to the action bar at the Up /
+// Select / Down button heights (index 0 = Up, 1 = Select, 2 = Down).
+static TextLayer* m_option_labels[3];
 
 static void setup_status_bar(Layer *window_layer, GRect bounds)
 {
@@ -54,6 +57,28 @@ static void setup_value_layer(Layer *window_layer, GRect bounds)
     layer_add_child(window_layer, text_layer_get_layer(m_value_layer));
 }
 
+static void setup_option_labels(Layer *window_layer, GRect bounds)
+{
+    int content_w = bounds.size.w - ACTION_BAR_WIDTH;
+    int content_h = bounds.size.h - STATUS_BAR_LAYER_HEIGHT;
+    // Vertical centres of the three action-bar buttons.
+    int centers[3] = {
+        STATUS_BAR_LAYER_HEIGHT + content_h / 4,
+        STATUS_BAR_LAYER_HEIGHT + content_h / 2,
+        STATUS_BAR_LAYER_HEIGHT + (3 * content_h) / 4,
+    };
+    for(int i = 0; i < 3; i++)
+    {
+        m_option_labels[i] = text_layer_create(
+            GRect(4, centers[i] - 11, content_w - 8, 22));
+        text_layer_set_background_color(m_option_labels[i], GColorClear);
+        text_layer_set_text_color(m_option_labels[i], config_get_foreground_color());
+        text_layer_set_font(m_option_labels[i], fonts_get_system_font(FONT_KEY_GOTHIC_18));
+        text_layer_set_text_alignment(m_option_labels[i], GTextAlignmentRight);
+        layer_add_child(window_layer, text_layer_get_layer(m_option_labels[i]));
+    }
+}
+
 static void setup_action_bar(Layer *window_layer, GRect bounds)
 {
     m_action_bar = action_bar_layer_create();
@@ -72,9 +97,10 @@ static void load_mood_window(Window *window)
     setup_title_layer(window_layer, bounds);
     setup_icon_layer(window_layer, bounds);
     setup_value_layer(window_layer, bounds);
+    setup_option_labels(window_layer, bounds);
     setup_action_bar(window_layer, bounds);
 
-    register_mood_set_layers(m_mood_window, m_action_bar, m_title_layer, m_value_layer, m_icon_layer);
+    register_mood_set_layers(m_mood_window, m_action_bar, m_title_layer, m_value_layer, m_icon_layer, m_option_labels);
     register_mood_start();
 }
 
@@ -85,6 +111,10 @@ static void unload_mood_window(Window *window)
     text_layer_destroy(m_title_layer);
     text_layer_destroy(m_value_layer);
     bitmap_layer_destroy(m_icon_layer);
+    for(int i = 0; i < 3; i++)
+    {
+        text_layer_destroy(m_option_labels[i]);
+    }
     action_bar_layer_remove_from_window(m_action_bar);
     action_bar_layer_destroy(m_action_bar);
 }

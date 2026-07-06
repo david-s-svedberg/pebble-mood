@@ -1,5 +1,7 @@
 #include "icons.h"
 
+#include "repositories/app_config_repository.h"
+
 static GBitmap *check_icon;
 static GBitmap *check_icon_black;
 static GBitmap *check_icon_white;
@@ -328,6 +330,47 @@ bool icon_choice_is_small(uint8_t choice)
     return choice < IconChoice_SUN;
 }
 
+static GBitmap *bar_dark[BarIcon_COUNT];
+static GBitmap *bar_light[BarIcon_COUNT];
+
+static const uint32_t bar_dark_res[BarIcon_COUNT] = {
+    [BarIcon_CHECK]    = RESOURCE_ID_CHECK_ICON,
+    [BarIcon_EDIT]     = RESOURCE_ID_EDIT_ICON,
+    [BarIcon_CONFIG]   = RESOURCE_ID_CONFIG_ICON,
+    [BarIcon_PLAY]     = RESOURCE_ID_PLAY_ICON,
+    [BarIcon_SNOOZE]   = RESOURCE_ID_SNOOZE_ICON,
+    [BarIcon_SILENCE]  = RESOURCE_ID_SILENCE_ICON,
+    [BarIcon_ALARM]    = RESOURCE_ID_ALARM_ICON,
+    [BarIcon_NO_ALARM] = RESOURCE_ID_NO_ALARM_ICON,
+    [BarIcon_UP]       = RESOURCE_ID_UP_ICON,
+    [BarIcon_DOWN]     = RESOURCE_ID_DOWN_ICON,
+};
+
+static const uint32_t bar_light_res[BarIcon_COUNT] = {
+    [BarIcon_CHECK]    = RESOURCE_ID_CHECK_W20_ICON,
+    [BarIcon_EDIT]     = RESOURCE_ID_EDIT_INV_ICON,
+    [BarIcon_CONFIG]   = RESOURCE_ID_CONFIG_INV_ICON,
+    [BarIcon_PLAY]     = RESOURCE_ID_PLAY_INV_ICON,
+    [BarIcon_SNOOZE]   = RESOURCE_ID_SNOOZE_INV_ICON,
+    [BarIcon_SILENCE]  = RESOURCE_ID_SILENCE_INV_ICON,
+    [BarIcon_ALARM]    = RESOURCE_ID_ALARM_INV_ICON,
+    [BarIcon_NO_ALARM] = RESOURCE_ID_NO_ALARM_INV_ICON,
+    [BarIcon_UP]       = RESOURCE_ID_UP_WHITE_ICON,
+    [BarIcon_DOWN]     = RESOURCE_ID_DOWN_WHITE_ICON,
+};
+
+GBitmap* get_bar_icon(BarIcon icon)
+{
+    if(icon >= BarIcon_COUNT)
+    {
+        return NULL;
+    }
+    bool light = !config_is_dark_theme();   // light theme -> black bar -> light icon
+    uint32_t res = light ? bar_light_res[icon] : bar_dark_res[icon];
+    GBitmap** cache = light ? &bar_light[icon] : &bar_dark[icon];
+    return get_icon(res, cache);
+}
+
 void destroy_all_icons()
 {
     destroy_icon(&check_icon);
@@ -354,5 +397,10 @@ void destroy_all_icons()
         destroy_icon(&choice_white[i]);
         destroy_icon(&choice_row_black[i]);
         destroy_icon(&choice_row_white[i]);
+    }
+    for(int i = 0; i < BarIcon_COUNT; i++)
+    {
+        destroy_icon(&bar_dark[i]);
+        destroy_icon(&bar_light[i]);
     }
 }
