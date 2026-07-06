@@ -107,13 +107,12 @@ static bool registration_is_same_metric_id(uint16_t id, byte* item)
     return ((Registration*)item)->metrics_id == id;
 }
 
-void metrics_init()
+// Re-points every cached title at the string store. Must run after ANY string
+// mutation: string_add/string_delete realloc the String array (dynamic_add/
+// dynamic_delete free the old one), so every String* handed out before the
+// mutation dangles — including the titles cached on all OTHER metrics/groups.
+static void reconnect_titles()
 {
-    dynamic_init(&m_metrics_groups);
-    dynamic_init(&m_metrics);
-    dynamic_init(&m_registrations);
-    dynamic_init(&m_group_metrics);
-
     for(int i = 0; i < m_metrics_groups.number_of_items; i++)
     {
         MetricsGroup* current_group = (MetricsGroup*)&m_metrics_groups.items[i * m_metrics_groups.item_size];
@@ -125,12 +124,16 @@ void metrics_init()
         Metrics* current_metrics = (Metrics*)&m_metrics.items[i * m_metrics.item_size];
         current_metrics->title = string_get(current_metrics->title_id);
     }
+}
 
-    for(int i = 0; i < m_registrations.number_of_items; i++)
-    {
-        Registration* current_registration = (Registration*)&m_registrations.items[i * m_registrations.item_size];
-        current_registration->metric = metrics_get(current_registration->metrics_id);
-    }
+void metrics_init()
+{
+    dynamic_init(&m_metrics_groups);
+    dynamic_init(&m_metrics);
+    dynamic_init(&m_registrations);
+    dynamic_init(&m_group_metrics);
+
+    reconnect_titles();
 }
 
 void metrics_tear_down()
@@ -211,6 +214,14 @@ uint16_t metrics_group_add(MetricsGroup* metrics_group)
 
 void metrics_group_delete(const uint16_t delete_id)
 {
+    // Cancel the group's scheduled wakeup first, or it fires later with a group
+    // id that no longer resolves (crash in the wakeup launch path). Raw wakeup
+    // call rather than scheduler.h to keep the layering repo <- scheduler.
+    MetricsGroup* group = metrics_group_get(delete_id);
+    if(group != NULL && group->alarm.wakeup_id > 0)
+    {
+        wakeup_cancel(group->alarm.wakeup_id);
+    }
     remove_memberships(true, delete_id);
     dynamic_delete(delete_id, &m_metrics_groups, get_group_id);
 }
@@ -230,6 +241,7 @@ void metrics_set_title(Metrics* metrics, char* title)
     String* new_string = string_add(title);
     metrics->title_id = new_string->id;
     metrics->title = new_string;
+    reconnect_titles();
     metrics_save();
 }
 
@@ -245,6 +257,7 @@ void metrics_set_option_text(Metrics* metrics, uint8_t option, char* text)
     }
     String* new_string = string_add(text);
     metrics->option_text_ids[option] = new_string->id;
+    reconnect_titles();
     metrics_save();
 }
 
@@ -267,6 +280,7 @@ void metrics_groups_set_title(MetricsGroup* metrics_group, char* title)
     String* new_string = string_add(title);
     metrics_group->title_id = new_string->id;
     metrics_group->title = new_string;
+    reconnect_titles();
     metrics_groups_save();
 }
 

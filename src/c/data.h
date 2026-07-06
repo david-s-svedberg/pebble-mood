@@ -7,7 +7,7 @@
 // Bump this whenever the AppConfig layout changes (and only append new fields
 // to the end of AppConfig). config_init() re-seeds when the stored version or
 // size no longer matches, so existing installs can't read a stale layout.
-#define CURRENT_DATA_VERSION (4)
+#define CURRENT_DATA_VERSION (5)
 
 // Reserved Alarm.index values for the non-group alarms. They live in a uint8_t
 // (Alarm.index) and are also used as the wakeup cookie (compared as int in
@@ -111,7 +111,6 @@ typedef struct
 {
     uint16_t    id;
     uint16_t    metrics_id;
-    Metrics*    metric;
     uint8_t     value;
     time_t      time_stamp;
     // The group whose scheduled slot this answers (0 = spontaneous / no group).

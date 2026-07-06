@@ -13,7 +13,7 @@ static TextLayer *m_edit_alarm_time_minute_layer;
 
 static ActionBarLayer* m_edit_alarm_action_bar_layer;
 
-MetricsGroup* m_metrics_group;
+static MetricsGroup* m_metrics_group;
 
 static short m_current_edit_step = 0;
 

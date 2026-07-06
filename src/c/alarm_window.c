@@ -108,7 +108,10 @@ static void unload_alarm_window(Window *window)
 
 void setup_alarm_window(int32_t alarm_index)
 {
-    setup_alarm_state(alarm_index);
+    if(!setup_alarm_state(alarm_index))
+    {
+        return;   // group gone — no window pushed, app exits quietly
+    }
 
     if(alarm_window == NULL)
     {

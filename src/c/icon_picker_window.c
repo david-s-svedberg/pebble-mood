@@ -10,6 +10,7 @@ static MenuLayer* m_menu_layer = NULL;
 static uint8_t m_choices[IconChoice_COUNT];
 static uint16_t m_choice_count = 0;
 static bool m_small_only = false;
+static uint8_t m_current_choice = 0;   // pre-selected row, applied in .load
 static IconPickerCallback m_callback = NULL;
 static void* m_context = NULL;
 
@@ -127,6 +128,10 @@ static void window_load(Window* window)
         config_get_foreground_color(), config_get_background_color());
     menu_layer_set_click_config_onto_window(m_menu_layer, window);
     layer_add_child(window_layer, menu_layer_get_layer(m_menu_layer));
+
+    menu_layer_set_selected_index(m_menu_layer,
+        (MenuIndex) { .section = 0, .row = row_for_choice(m_current_choice) },
+        MenuRowAlignCenter, false);
 }
 
 static void window_unload(Window* window)
@@ -141,6 +146,7 @@ void setup_icon_picker_window(bool small_only, uint8_t current,
     IconPickerCallback cb, void* context)
 {
     m_small_only = small_only;
+    m_current_choice = current;
     m_callback = cb;
     m_context = context;
     build_choices(current);
@@ -155,9 +161,6 @@ void setup_icon_picker_window(bool small_only, uint8_t current,
     }
 
     window_stack_push(m_window, true);
-    menu_layer_set_selected_index(m_menu_layer,
-        (MenuIndex) { .section = 0, .row = row_for_choice(current) },
-        MenuRowAlignCenter, false);
 }
 
 void tear_down_icon_picker_window()

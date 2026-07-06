@@ -60,8 +60,9 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
         size_t count = metrics_groups_count();
         if(index->row < count)
         {
-            MetricsGroup* groups = metrics_groups_get_all();
-            menu_cell_basic_draw(ctx, cell_layer, groups[index->row].title->value, NULL, NULL);
+            MetricsGroup* group = &metrics_groups_get_all()[index->row];
+            menu_cell_basic_draw(ctx, cell_layer,
+                group->title != NULL ? group->title->value : "", NULL, NULL);
         } else
         {
             menu_cell_basic_draw(ctx, cell_layer, "+", NULL, NULL);
@@ -71,8 +72,9 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
         size_t count = metrics_count();
         if(index->row < count)
         {
-            Metrics* metrics = metrics_get_all();
-            menu_cell_basic_draw(ctx, cell_layer, metrics[index->row].title->value, NULL, NULL);
+            Metrics* metric = &metrics_get_all()[index->row];
+            menu_cell_basic_draw(ctx, cell_layer,
+                metric->title != NULL ? metric->title->value : "", NULL, NULL);
         } else
         {
             menu_cell_basic_draw(ctx, cell_layer, "+", NULL, NULL);
