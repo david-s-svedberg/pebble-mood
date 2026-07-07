@@ -20,7 +20,9 @@ static void send_registration(uint32_t index)
     AppMessageResult result = app_message_outbox_begin(&iter);
     if(result != APP_MSG_OK)
     {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "export: outbox_begin failed: %d", result);
+        // Unblock future export requests instead of wedging in "sending".
+        APP_LOG(APP_LOG_LEVEL_ERROR, "export: outbox_begin failed: %d, aborting export", result);
+        m_sending = false;
         return;
     }
 
@@ -30,14 +32,25 @@ static void send_registration(uint32_t index)
     Metrics* metric = metrics_get(reg->metrics_id);
     const char* name = (metric != NULL && metric->title != NULL) ? metric->title->value : "";
     uint8_t type = (metric != NULL) ? (uint8_t)metric->type : 0;
+    uint8_t min_value = (metric != NULL) ? metric->min_value : 0;
+    uint8_t max_value = (metric != NULL) ? metric->max_value : 0;
+
+    // Group slot the answer belongs to (0 = spontaneous). The name only lives
+    // on the watch, so ship it along to keep the export self-describing.
+    MetricsGroup* group = (reg->group_id != 0) ? metrics_group_get(reg->group_id) : NULL;
+    const char* group_name = (group != NULL && group->title != NULL) ? group->title->value : "";
 
     dict_write_uint16(iter, MESSAGE_KEY_REG_INDEX, (uint16_t)index);
     dict_write_uint16(iter, MESSAGE_KEY_REG_TOTAL, (uint16_t)m_total);
     dict_write_uint16(iter, MESSAGE_KEY_REG_METRIC_ID, reg->metrics_id);
     dict_write_cstring(iter, MESSAGE_KEY_REG_METRIC_NAME, name);
     dict_write_uint8(iter, MESSAGE_KEY_REG_METRIC_TYPE, type);
+    dict_write_uint8(iter, MESSAGE_KEY_REG_METRIC_MIN, min_value);
+    dict_write_uint8(iter, MESSAGE_KEY_REG_METRIC_MAX, max_value);
     dict_write_uint8(iter, MESSAGE_KEY_REG_VALUE, reg->value);
     dict_write_uint32(iter, MESSAGE_KEY_REG_TIMESTAMP, (uint32_t)reg->time_stamp);
+    dict_write_uint16(iter, MESSAGE_KEY_REG_GROUP_ID, reg->group_id);
+    dict_write_cstring(iter, MESSAGE_KEY_REG_GROUP_NAME, group_name);
 
     app_message_outbox_send();
 }

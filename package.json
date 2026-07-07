@@ -366,8 +366,12 @@
             "REG_METRIC_ID",
             "REG_METRIC_NAME",
             "REG_METRIC_TYPE",
+            "REG_METRIC_MIN",
+            "REG_METRIC_MAX",
             "REG_VALUE",
-            "REG_TIMESTAMP"
+            "REG_TIMESTAMP",
+            "REG_GROUP_ID",
+            "REG_GROUP_NAME"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [
