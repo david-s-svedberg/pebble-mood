@@ -1,5 +1,6 @@
 #include "string_repository.h"
 #include "dynamic_repository.h"
+#include "persist_blob.h"
 #include "../data.h"
 
 static DynamicData strings =
@@ -43,14 +44,11 @@ void strings_init()
 {
     dynamic_init(&strings);
 
-    if(persist_exists(DataKeys_STRING_CHAR_DATA))
+    m_total_string_char_length = persist_blob_size(DataKeys_STRING_CHAR_DATA);
+    if(m_total_string_char_length > 0)
     {
-        m_total_string_char_length = persist_get_size(DataKeys_STRING_CHAR_DATA);
         m_string_values_data = (char*) malloc(m_total_string_char_length);
-        if(m_total_string_char_length > 0)
-        {
-            persist_read_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
-        }
+        persist_blob_read(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
     }
 
     connect_string_values();
@@ -99,7 +97,7 @@ String* string_add(char* value)
     }
     free(m_string_values_data);
     m_string_values_data = new_string_values_data;
-    persist_write_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
+    persist_blob_write(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
     return string_get(new_string.id);
 }
 
@@ -139,12 +137,12 @@ void string_delete(const uint16_t delete_id)
 
         m_string_values_data = new_string_values_data;
 
-        if(m_string_values_data == NULL)
+        if(m_string_values_data == NULL || m_total_string_char_length == 0)
         {
-            persist_delete(DataKeys_STRING_CHAR_DATA);
+            persist_blob_delete(DataKeys_STRING_CHAR_DATA);
         } else
         {
-            persist_write_data(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
+            persist_blob_write(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
         }
     }
 }

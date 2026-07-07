@@ -1,17 +1,65 @@
 #include "dynamic_repository.h"
 
+#include "persist_blob.h"
+
+// Persists the meta record (small, fits one key) and the items blob (chunked —
+// a single persist key silently truncates at PERSIST_DATA_MAX_LENGTH).
+static void save_all(DynamicData* data)
+{
+    int written = persist_write_data(data->meta_data_storage_key, data, sizeof(DynamicData));
+    if(written != (int)sizeof(DynamicData))
+    {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "store %d: meta write %d of %d B",
+            (int)data->meta_data_storage_key, written, (int)sizeof(DynamicData));
+    }
+
+    size_t items_size = data->number_of_items * data->item_size;
+    if(items_size == 0)
+    {
+        persist_blob_delete(data->items_storage_key);
+    } else
+    {
+        persist_blob_write(data->items_storage_key, data->items, items_size);
+    }
+}
+
 void dynamic_init(DynamicData* data)
 {
+    // The compile-time definition owns item_size and the storage keys; only the
+    // dynamic meta (count + next id) is adopted from storage — and only when the
+    // stored layout matches. On mismatch (a struct changed size between builds)
+    // the store is reset rather than parsed as garbage. (Pre-release policy: no
+    // migrations, losing the data beats corrupting it.)
     if(persist_exists(data->meta_data_storage_key))
     {
-        persist_read_data(data->meta_data_storage_key, data, sizeof(DynamicData));
+        DynamicData stored;
+        persist_read_data(data->meta_data_storage_key, &stored, sizeof(DynamicData));
+        if(stored.item_size == data->item_size)
+        {
+            data->number_of_items = stored.number_of_items;
+            data->next_id = stored.next_id;
+        } else
+        {
+            APP_LOG(APP_LOG_LEVEL_WARNING, "store %d: item size changed %d -> %d, resetting store",
+                (int)data->meta_data_storage_key, (int)stored.item_size, (int)data->item_size);
+            persist_delete(data->meta_data_storage_key);
+            persist_blob_delete(data->items_storage_key);
+        }
     }
-    size_t items_size = data->number_of_items * data->item_size;
 
+    size_t items_size = data->number_of_items * data->item_size;
     data->items = malloc(items_size);
     if(data->number_of_items > 0)
     {
-        persist_read_data(data->items_storage_key, data->items, items_size);
+        size_t read = persist_blob_read(data->items_storage_key, data->items, items_size);
+        if(read != items_size)
+        {
+            // Salvage the complete records; drop the truncated tail.
+            APP_LOG(APP_LOG_LEVEL_ERROR, "store %d: expected %d B, read %d B — keeping %d of %d items",
+                (int)data->items_storage_key, (int)items_size, (int)read,
+                (int)(read / data->item_size), (int)data->number_of_items);
+            data->number_of_items = read / data->item_size;
+        }
     }
 }
 
@@ -32,8 +80,7 @@ void dynamic_add(DynamicData* data, byte* item_to_add, SetItemId set_item_id_fun
 
     data->items = new_items;
 
-    persist_write_data(data->meta_data_storage_key, data, sizeof(DynamicData));
-    persist_write_data(data->items_storage_key, data->items, new_size);
+    save_all(data);
 }
 
 void dynamic_delete(const uint16_t delete_id, DynamicData* data, GetItemId get_item_id_function)
@@ -58,14 +105,7 @@ void dynamic_delete(const uint16_t delete_id, DynamicData* data, GetItemId get_i
     free(data->items);
 
     data->items = new_items;
-    persist_write_data(data->meta_data_storage_key, data, sizeof(DynamicData));
-    if(data->items == NULL)
-    {
-        persist_delete(data->items_storage_key);
-    } else
-    {
-        persist_write_data(data->items_storage_key, data->items, new_items_size);
-    }
+    save_all(data);
 }
 
 byte* dynamic_get(const uint16_t id, DynamicData* data, SameIdPredicate same_id_predicate_function)
@@ -85,5 +125,9 @@ byte* dynamic_get(const uint16_t id, DynamicData* data, SameIdPredicate same_id_
 
 void dynamic_save(DynamicData* data)
 {
-    persist_write_data(data->items_storage_key, data->items, data->item_size * data->number_of_items);
+    size_t items_size = data->item_size * data->number_of_items;
+    if(items_size > 0)
+    {
+        persist_blob_write(data->items_storage_key, data->items, items_size);
+    }
 }

@@ -35,9 +35,12 @@ void init()
 
     if(first_start)
     {
-        // Seed a usable default set and schedule its group alarms.
+        // Seed a usable default set and schedule its group alarms. The flag is
+        // written only once seeding completed, so a crash mid-seed retries on
+        // the next launch instead of leaving an empty app.
         metrics_seed_defaults();
         ensure_all_alarms_scheduled();
+        config_mark_started();
     }
 
     if(launch_reason() == APP_LAUNCH_WAKEUP)

@@ -6,12 +6,12 @@ static AppConfig m_app_config;
 
 bool config_first_start()
 {
-    bool is_first_start = !persist_exists(DataKeys_FIRST_START);
-    if(is_first_start)
-    {
-        persist_write_bool(DataKeys_FIRST_START, false);
-    }
-    return is_first_start;
+    return !persist_exists(DataKeys_FIRST_START);
+}
+
+void config_mark_started()
+{
+    persist_write_bool(DataKeys_FIRST_START, false);
 }
 
 static void seed_default_config()

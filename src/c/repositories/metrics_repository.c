@@ -102,6 +102,11 @@ static void set_registration_id(uint16_t id, byte* item)
     ((Registration*)item)->id = id;
 }
 
+static uint16_t get_registration_id(byte* item)
+{
+    return ((Registration*)item)->id;
+}
+
 static bool registration_is_same_metric_id(uint16_t id, byte* item)
 {
     return ((Registration*)item)->metrics_id == id;
@@ -340,8 +345,43 @@ MetricsGroup* metrics_group_new()
 
 void metrics_delete(const uint16_t delete_id)
 {
+    // Release the metric's interned strings and its registrations, or they
+    // linger in storage forever (and count against the persist budget).
+    Metrics* metric = metrics_get(delete_id);
+    if(metric != NULL)
+    {
+        if(metric->title_id != 0)
+        {
+            string_delete(metric->title_id);
+        }
+        for(int option = 0; option < MAX_METRIC_OPTIONS; option++)
+        {
+            if(metric->option_text_ids[option] != 0)
+            {
+                string_delete(metric->option_text_ids[option]);
+            }
+        }
+    }
+
+    bool removed = true;
+    while(removed)
+    {
+        removed = false;
+        for(int i = 0; i < m_registrations.number_of_items; i++)
+        {
+            Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
+            if(reg->metrics_id == delete_id)
+            {
+                dynamic_delete(reg->id, &m_registrations, get_registration_id);
+                removed = true;
+                break;
+            }
+        }
+    }
+
     remove_memberships(false, delete_id);
     dynamic_delete(delete_id, &m_metrics, get_metrics_id);
+    reconnect_titles();
 }
 
 uint32_t metrics_count()

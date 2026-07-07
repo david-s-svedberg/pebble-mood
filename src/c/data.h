@@ -16,21 +16,26 @@
 #define SNOOZED_ALARM_ID (255)
 #define SUMMER_TIME_ALARM_ID (254)
 
+// Persist keys. Single-value keys are small ints; the *_DATA keys are chunked
+// blob BASE keys (see persist_blob.h) — each blob may occupy base..base+31, so
+// base keys are spaced 32 apart. Never reorder or renumber without a data
+// version bump (pre-release: a reinstall wipes storage anyway).
 typedef enum {
-    DataKeys_NONE,
-    DataKeys_STRING_META_DATA,
-    DataKeys_STRINGS_DATA,
-    DataKeys_STRING_CHAR_DATA,
-    DataKeys_METRICS_GROUP_META_DATA,
-    DataKeys_METRICS_GROUP_DATA,
-    DataKeys_METRICS_META_DATA,
-    DataKeys_METRICS_DATA,
-    DataKeys_REGISTRATIONS_META_DATA,
-    DataKeys_REGISTRATIONS_DATA,
-    DataKeys_APP_CONFIG,
-    DataKeys_FIRST_START,
-    DataKeys_GROUP_METRICS_META_DATA,
-    DataKeys_GROUP_METRICS_DATA,
+    DataKeys_NONE = 0,
+    DataKeys_APP_CONFIG = 1,
+    DataKeys_FIRST_START = 2,
+    DataKeys_STRING_META_DATA = 10,
+    DataKeys_METRICS_GROUP_META_DATA = 11,
+    DataKeys_METRICS_META_DATA = 12,
+    DataKeys_REGISTRATIONS_META_DATA = 13,
+    DataKeys_GROUP_METRICS_META_DATA = 14,
+
+    DataKeys_STRINGS_DATA = 100,
+    DataKeys_STRING_CHAR_DATA = 132,
+    DataKeys_METRICS_GROUP_DATA = 164,
+    DataKeys_METRICS_DATA = 196,
+    DataKeys_REGISTRATIONS_DATA = 228,
+    DataKeys_GROUP_METRICS_DATA = 260,
 } DataKeys;
 
 typedef struct {

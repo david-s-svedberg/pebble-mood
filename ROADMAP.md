@@ -60,6 +60,9 @@ namn, typ, värde, timestamp). Kvar: mottagare + analys.
 - **Korrelationer** mellan metrics (Joy vs sömn, Anxiety vs träning, ...) — huvudpoängen
   med appen. Kräver "senaste/medel per dag"-semantik som medvetet bor här och inte på
   klockan.
+- **Gallring efter export** — klockans persist-budget är begränsad (blobbar chunkas nu
+  över 256 B-nycklar, men totalen är ändå ändlig). När companion-appen tagit emot datan
+  bör gamla registreringar gallras från klockan (t.ex. behåll senaste ~7 dagar).
 
 ### 2. Graf-hemskärm (idé)
 

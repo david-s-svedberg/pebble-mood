@@ -6,7 +6,11 @@
 
 #include "../data.h"
 
+// True until config_mark_started() has run once. Read-only: call
+// config_mark_started() after first-start work (seeding) has COMPLETED, so a
+// crash mid-seed retries on the next launch instead of leaving an empty app.
 bool        config_first_start();
+void        config_mark_started();
 void        config_init();
 AppConfig*  config_get();
 void        config_save();
