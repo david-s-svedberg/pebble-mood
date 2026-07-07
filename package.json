@@ -1260,7 +1260,19 @@
             "CFG_GROUP_HOUR",
             "CFG_GROUP_MINUTE",
             "CFG_GROUP_ACTIVE",
-            "CFG_GROUP_MEMBERS"
+            "CFG_GROUP_MEMBERS",
+            "SET_GROUP_ID",
+            "SET_GROUP_NAME",
+            "SET_GROUP_HOUR",
+            "SET_GROUP_MINUTE",
+            "SET_GROUP_ACTIVE",
+            "SET_GROUP_MEMBERS",
+            "SET_METRIC_ID",
+            "SET_METRIC_NAME",
+            "SET_METRIC_TYPE",
+            "SET_METRIC_MIN",
+            "SET_METRIC_MAX",
+            "SET_METRIC_MAIN_ICON"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [

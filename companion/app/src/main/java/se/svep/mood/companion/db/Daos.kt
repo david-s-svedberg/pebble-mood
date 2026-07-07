@@ -79,3 +79,15 @@ interface RegistrationDao {
 }
 
 data class MetricCount(val name: String, val count: Int)
+
+@Dao
+interface PendingDao {
+    @Insert
+    suspend fun enqueue(change: PendingChangeEntity): Long
+
+    @Query("SELECT * FROM pending_change ORDER BY id")
+    suspend fun all(): List<PendingChangeEntity>
+
+    @Query("DELETE FROM pending_change WHERE id IN (:ids)")
+    suspend fun delete(ids: List<Long>): Int
+}

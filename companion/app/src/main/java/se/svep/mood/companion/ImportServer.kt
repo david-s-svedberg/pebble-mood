@@ -9,19 +9,19 @@ import java.net.Socket
 import kotlin.concurrent.thread
 
 /**
- * Minimal HTTP listener for the pkjs export delivery (POST /import).
+ * Minimal HTTP listener for the pkjs bridge. Bound to loopback only — nothing
+ * is reachable from the network. Routes:
+ *   POST /import       — the export batch (config + registrations)
+ *   GET  /pending      — queued phone-side config changes for the watch
+ *   POST /pending-ack  — pkjs confirmed which changes landed
  *
- * The Pebble phone app's JS runtime POSTs the full registration batch to
- * http://127.0.0.1:9099/import (see src/pkjs/index.js in the repo root).
- * Bound to loopback only — nothing is reachable from the network.
- *
- * Deliberately hand-rolled (no Ktor/NanoHTTPD) while this is a spike; it only
- * needs to parse one shape of request from one well-known client.
+ * Deliberately hand-rolled (no Ktor/NanoHTTPD); it only needs to parse one
+ * shape of request from one well-known client.
  */
 class ImportServer(
     private val port: Int = 9099,
-    /** Handles the POSTed batch and returns the JSON response body (the ack). */
-    private val onImport: (body: String) -> String,
+    /** Returns the JSON response body, or null for 404. */
+    private val route: (method: String, path: String, body: String) -> String?,
 ) {
     @Volatile private var serverSocket: ServerSocket? = null
 
@@ -50,6 +50,9 @@ class ImportServer(
     private fun handle(client: Socket) {
         val reader = BufferedReader(InputStreamReader(client.getInputStream(), Charsets.UTF_8))
         val requestLine = reader.readLine() ?: return
+        val parts = requestLine.split(" ")
+        val method = parts.getOrElse(0) { "" }
+        val path = parts.getOrElse(1) { "" }.substringBefore('?')
 
         var contentLength = 0
         while (true) {
@@ -61,30 +64,31 @@ class ImportServer(
             if (name == "content-length") contentLength = value.toIntOrNull() ?: 0
         }
 
-        val ok = requestLine.startsWith("POST") && requestLine.contains("/import")
-        var response: String? = null
-        if (ok && contentLength > 0) {
-            val body = CharArray(contentLength)
+        var body = ""
+        if (contentLength > 0) {
+            val chars = CharArray(contentLength)
             var read = 0
             while (read < contentLength) {
-                val n = reader.read(body, read, contentLength - read)
+                val n = reader.read(chars, read, contentLength - read)
                 if (n < 0) break
                 read += n
             }
-            response = try {
-                onImport(String(body, 0, read))
-            } catch (e: Exception) {
-                Log.e(TAG, "import handler failed", e)
-                "{\"status\":\"error\"}"
-            }
+            body = String(chars, 0, read)
         }
 
-        val status = if (ok) "200 OK" else "404 Not Found"
-        val payload = response ?: if (ok) "{\"status\":\"ok\"}" else "{\"status\":\"unknown endpoint\"}"
+        val response = try {
+            route(method, path, body)
+        } catch (e: Exception) {
+            Log.e(TAG, "handler failed for $method $path", e)
+            "{\"status\":\"error\"}"
+        }
+
+        val status = if (response != null) "200 OK" else "404 Not Found"
+        val payload = response ?: "{\"status\":\"unknown endpoint\"}"
         client.getOutputStream().write(
             ("HTTP/1.1 $status\r\n" +
                 "Content-Type: application/json\r\n" +
-                "Content-Length: ${payload.length}\r\n" +
+                "Content-Length: ${payload.toByteArray(Charsets.UTF_8).size}\r\n" +
                 "Connection: close\r\n\r\n" +
                 payload).toByteArray(Charsets.UTF_8)
         )

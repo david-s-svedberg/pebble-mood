@@ -70,3 +70,16 @@ data class RegistrationEntity(
     /** Unix millis when this row arrived here. */
     val importedAt: Long,
 )
+
+/**
+ * A config edit made in the companion, queued until pkjs pulls and applies it
+ * to the watch (the watch must be running for AppMessage). payload is the
+ * change as JSON in the pkjs wire shape (kind: "group" | "metric").
+ */
+@Entity(tableName = "pending_change")
+data class PendingChangeEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val kind: String,
+    val payload: String,
+    val createdAt: Long,
+)

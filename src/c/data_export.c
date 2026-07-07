@@ -4,6 +4,7 @@
 #include "message_keys.auto.h"
 
 #include "repositories/metrics_repository.h"
+#include "config_apply.h"
 
 #define MAX_RETRIES_PER_ITEM (3)
 // Group members are packed as one uint8 metric id per byte.
@@ -203,6 +204,12 @@ void data_export_send_all()
 
 static void inbox_received(DictionaryIterator* iter, void* context)
 {
+    // Phone-side config edits (queued in the companion, relayed by pkjs).
+    if(config_apply_handle(iter))
+    {
+        return;
+    }
+
     if(dict_find(iter, MESSAGE_KEY_EXPORT_REQUEST) != NULL)
     {
         data_export_send_all();

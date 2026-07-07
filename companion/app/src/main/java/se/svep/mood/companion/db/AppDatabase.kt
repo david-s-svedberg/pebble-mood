@@ -11,14 +11,16 @@ import androidx.room.RoomDatabase
         GroupEntity::class,
         MembershipEntity::class,
         RegistrationEntity::class,
+        PendingChangeEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun metrics(): MetricDao
     abstract fun groups(): GroupDao
     abstract fun registrations(): RegistrationDao
+    abstract fun pending(): PendingDao
 
     companion object {
         @Volatile private var instance: AppDatabase? = null

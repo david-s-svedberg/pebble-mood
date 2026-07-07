@@ -10,6 +10,8 @@
 // bridge errors on raw IPs (http://127.0.0.1:... gives onerror, verified on
 // coreapp 1.5.0.2), while `localhost` resolves and connects fine.
 var COMPANION_IMPORT_URL = 'http://localhost:9099/import';
+var COMPANION_PENDING_URL = 'http://localhost:9099/pending';
+var COMPANION_PENDING_ACK_URL = 'http://localhost:9099/pending-ack';
 
 var OPTION_TEXT_SEPARATOR = '\x1f';
 
@@ -75,8 +77,7 @@ function ackToWatch(responseText) {
   );
 }
 
-Pebble.addEventListener('ready', function() {
-  console.log('Mood PebbleKit JS ready — requesting export');
+function requestExport() {
   registrations = [];
   metrics = [];
   groups = [];
@@ -85,6 +86,83 @@ Pebble.addEventListener('ready', function() {
     function() {},
     function(e) { console.log('Failed to request export: ' + JSON.stringify(e)); }
   );
+}
+
+// Config changes edited in the companion queue there; we pull and apply them
+// to the watch BEFORE requesting the export, so the export mirrors the new
+// config back (self-verifying round trip).
+function buildChangeMessage(c) {
+  if (c.kind === 'group') {
+    return {
+      'SET_GROUP_ID': c.groupId || 0,
+      'SET_GROUP_NAME': c.name || '',
+      'SET_GROUP_HOUR': c.hour || 0,
+      'SET_GROUP_MINUTE': c.minute || 0,
+      'SET_GROUP_ACTIVE': c.active ? 1 : 0,
+      'SET_GROUP_MEMBERS': c.members || []
+    };
+  }
+  if (c.kind === 'metric') {
+    return {
+      'SET_METRIC_ID': c.metricId || 0,
+      'SET_METRIC_NAME': c.name || '',
+      'SET_METRIC_TYPE': c.typeCode || 0,
+      'SET_METRIC_MIN': c.min || 0,
+      'SET_METRIC_MAX': c.max || 0,
+      'SET_METRIC_MAIN_ICON': c.mainIcon || 0
+    };
+  }
+  return null;
+}
+
+function applyPendingChanges(changes) {
+  var applied = [];
+  var i = 0;
+  function next() {
+    if (i >= changes.length) {
+      ackPendingChanges(applied);
+      return;
+    }
+    var change = changes[i++];
+    var msg = buildChangeMessage(change);
+    if (!msg) { next(); return; }
+    Pebble.sendAppMessage(msg,
+      function() { applied.push(change.id); next(); },
+      function(e) {
+        // Watch unreachable mid-batch: ack what landed, retry rest next time.
+        console.log('Config apply failed: ' + JSON.stringify(e));
+        ackPendingChanges(applied);
+      });
+  }
+  console.log('Applying ' + changes.length + ' config change(s) to watch');
+  next();
+}
+
+function ackPendingChanges(ids) {
+  if (ids.length === 0) { requestExport(); return; }
+  var req = new XMLHttpRequest();
+  req.open('POST', COMPANION_PENDING_ACK_URL, true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.onload = function() { requestExport(); };
+  req.onerror = function() { requestExport(); };
+  req.send(JSON.stringify({ ids: ids }));
+}
+
+Pebble.addEventListener('ready', function() {
+  console.log('Mood PebbleKit JS ready');
+  var req = new XMLHttpRequest();
+  req.open('GET', COMPANION_PENDING_URL, true);
+  req.onload = function() {
+    var changes = [];
+    if (req.status === 200) {
+      try { changes = JSON.parse(req.responseText).changes || []; }
+      catch (e) { console.log('Pending parse failed: ' + e); }
+    }
+    if (changes.length > 0) { applyPendingChanges(changes); }
+    else { requestExport(); }
+  };
+  req.onerror = function() { requestExport(); };
+  req.send();
 });
 
 Pebble.addEventListener('appmessage', function(e) {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
+import se.svep.mood.companion.config.ConfigSync
 
 /**
  * Foreground service that owns the import listener, so the sync happens the
@@ -31,7 +32,7 @@ class ImportService : Service() {
     override fun onCreate() {
         super.onCreate()
         repository = ImportRepository(this)
-        server = ImportServer(onImport = ::handleImport).also { it.start() }
+        server = ImportServer(route = ::route).also { it.start() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -48,12 +49,19 @@ class ImportService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun handleImport(body: String): String {
-        // ImportServer calls from its socket thread; the DB work is quick and
-        // the response must carry the ack, so run it to completion here.
-        val result = runBlocking { repository.import(body) }
-        return "{\"status\":\"ok\",\"received\":${result.received}," +
-            "\"new\":${result.new},\"ackedThrough\":${result.ackedThrough}}"
+    // ImportServer calls from its socket thread; the DB work is quick and the
+    // responses must carry results, so run to completion here.
+    private fun route(method: String, path: String, body: String): String? = runBlocking {
+        when {
+            method == "POST" && path == "/import" -> {
+                val result = repository.import(body)
+                "{\"status\":\"ok\",\"received\":${result.received}," +
+                    "\"new\":${result.new},\"ackedThrough\":${result.ackedThrough}}"
+            }
+            method == "GET" && path == "/pending" -> ConfigSync.pendingJson(this@ImportService)
+            method == "POST" && path == "/pending-ack" -> ConfigSync.ack(this@ImportService, body)
+            else -> null
+        }
     }
 
     private fun startForegroundCompat() {
