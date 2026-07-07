@@ -1,12 +1,29 @@
 // PebbleKit JS phone-side for Mood.
 //
 // On launch it asks the watch to export all registrations, receives them one
-// message at a time, and assembles them into a list. This is the bridge the
-// companion app will use to pull data for mood-vs-activity correlation.
-// For now the assembled list is logged; sending it onward (server / companion
-// app) is the next step.
+// message at a time, assembles them into a list and delivers the batch to the
+// companion app's local import listener (see design/companion_app_plan.md —
+// the companion runs an HTTP listener on localhost; nothing leaves the phone).
+
+// The companion app's import listener (companion/: ImportServer).
+var COMPANION_IMPORT_URL = 'http://127.0.0.1:9099/import';
 
 var registrations = [];
+
+function deliverToCompanion(received) {
+  var req = new XMLHttpRequest();
+  req.open('POST', COMPANION_IMPORT_URL, true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.onload = function() {
+    console.log('Companion delivery: HTTP ' + req.status);
+  };
+  req.onerror = function() {
+    // Normal when the companion app isn't installed/running — the data stays
+    // on the watch and is re-exported on the next launch.
+    console.log('Companion delivery failed (listener not running?)');
+  };
+  req.send(JSON.stringify({ version: 1, exportedAt: Date.now(), registrations: received }));
+}
 
 function metricTypeName(type) {
   // Mirrors MetricsType in src/c/data.h:
@@ -61,7 +78,6 @@ Pebble.addEventListener('appmessage', function(e) {
     var missing = p.REG_TOTAL - received.length;
     console.log('Export complete: ' + received.length + ' registrations' +
       (missing > 0 ? ' (' + missing + ' missing)' : ''));
-    console.log('FULL EXPORT: ' + JSON.stringify(received));
-    // TODO(companion): deliver `received` to the companion app / server.
+    deliverToCompanion(received);
   }
 });
