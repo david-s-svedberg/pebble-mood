@@ -4,6 +4,8 @@ LABEL MAINTAINER="David Svedberg"
 # Pebble-emulatorns och SDK:ns systemberoenden (Core Devices pebble-tool).
 # Notera SDL2 (inte SDL1 som gamla Rebble-SDK:n krävde).
 # iptables/ipset/dnsutils/aggregate/jq behövs av remote-control-sandboxens firewall.
+# openjdk-17 + unzip behövs av Android-toolchainen (companion-appen); själva
+# Android-SDK:n installeras av post-create.sh till en named volume.
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -20,6 +22,8 @@ RUN apt-get update \
         dnsutils \
         aggregate \
         jq \
+        openjdk-17-jdk-headless \
+        unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
@@ -37,6 +41,7 @@ RUN chmod 0755 /usr/local/bin/init-firewall.sh \
 
 # Skapa mountpunkterna ägda av vscode INNAN named volumes monteras: en tom named volume ärver
 # katalogens ägare/rättigheter från imagen vid första monteringen, så vscode (uid 1000) kan skriva.
-RUN mkdir -p /home/vscode/.claude /home/vscode/.ssh \
-    && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.ssh \
+# android-sdk ligger i en named volume så att ~600 MB SDK överlever rebuilds.
+RUN mkdir -p /home/vscode/.claude /home/vscode/.ssh /home/vscode/android-sdk \
+    && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.ssh /home/vscode/android-sdk \
     && chmod 700 /home/vscode/.ssh

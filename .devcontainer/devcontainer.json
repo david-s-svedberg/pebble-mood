@@ -18,6 +18,8 @@
         // Container-lokal deploy key i named volume. INGEN host-~/.ssh monteras (skulle exponera alla
         // host-nycklar).
         "source=pebble-mood-ssh,target=/home/vscode/.ssh,type=volume",
+        // Android-SDK:n (~600 MB, companion-appen) i named volume så rebuilds inte laddar om den.
+        "source=pebble-mood-android-sdk,target=/home/vscode/android-sdk,type=volume",
         // Host-gitconfig read-only på en SIDO-sökväg (inte ~/.gitconfig). Läses den som ~/.gitconfig
         // klagar git vid varje kommando på dess Windows-/WSL-safe.directory-rader ("not absolute").
         // post-create.sh plockar istället ut user.name/email till en container-egen ~/.gitconfig.
@@ -27,7 +29,10 @@
     ],
 
     "remoteEnv": {
-        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin",
+        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/android-sdk/platform-tools:/home/vscode/android-sdk/cmdline-tools/latest/bin",
+        // Android-toolchainen (companion-appen). Gradle-wrappern i companion/ hittar SDK:n via
+        // ANDROID_HOME; adb kör wireless debugging mot telefonen (192.168.1.161, öppen i firewallen).
+        "ANDROID_HOME": "/home/vscode/android-sdk",
         // GitHub-MCP:ns token matas in från host-env, bakas aldrig in i repots .mcp.json.
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
     },
@@ -50,7 +55,8 @@
                 "ms-vscode.cpptools",
                 "ms-vscode.cpptools-extension-pack",
                 "shardulm94.trailing-spaces",
-                "Anthropic.claude-code"
+                "Anthropic.claude-code",
+                "fwcd.kotlin"
             ]
         }
     }

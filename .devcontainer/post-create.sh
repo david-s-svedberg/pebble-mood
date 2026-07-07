@@ -26,6 +26,29 @@ set +o pipefail
 yes | pebble sdk install latest
 set -o pipefail
 
+# --- Android-SDK (companion-appen) ---
+# Ligger i named volume (pebble-mood-android-sdk) så nedladdningen (~600 MB) överlever rebuilds.
+# Körs vid postCreate = FÖRE firewallen, så dl.google.com är nåbar. Gradle-beroenden vid byggtid
+# fungerar ändå: firewallen blockerar bara LAN, inte publika internet.
+ANDROID_HOME="$HOME/android-sdk"
+CMDLINE_TOOLS_ZIP="commandlinetools-linux-11076708_latest.zip"
+if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
+    echo "Installerar Android cmdline-tools..."
+    mkdir -p "$ANDROID_HOME/cmdline-tools"
+    curl -Lo "/tmp/$CMDLINE_TOOLS_ZIP" "https://dl.google.com/android/repository/$CMDLINE_TOOLS_ZIP"
+    unzip -q "/tmp/$CMDLINE_TOOLS_ZIP" -d "$ANDROID_HOME/cmdline-tools"
+    mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+    rm "/tmp/$CMDLINE_TOOLS_ZIP"
+fi
+
+SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+# Samma SIGPIPE-dans som för pebble sdk ovan.
+set +o pipefail
+yes | "$SDKMANAGER" --licenses > /dev/null
+set -o pipefail
+"$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+echo "Android-SDK klar: $("$ANDROID_HOME/platform-tools/adb" --version | head -1)"
+
 # --- Container-lokal deploy key (remote-control-sandbox, least credential blast radius) ---
 # Ingen host-~/.ssh monteras in. Istället en dedikerad nyckel i en named volume (överlever rebuilds).
 # Registrera dess publika halva som read/write deploy key på ENBART det här GitHub-repot.

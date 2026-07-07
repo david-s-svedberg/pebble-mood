@@ -53,10 +53,15 @@ Kvar är de stora spåren: companion-app, hälsodata och graf-hemskärmen.
 
 ## Nästa stora spår
 
-### 1. Companion-app (störst payoff)
+### 1. Companion-app (störst payoff) — PLAN FINNS
 
-Klock-sidan av exporten finns (AppMessage → pkjs skickar alla registreringar med metric-id,
-namn, typ, värde, timestamp). Kvar: mottagare + analys.
+Detaljerad plan i [design/companion_app_plan.md](design/companion_app_plan.md): Android
+(Kotlin/Compose/Room) i `companion/`-katalogen, dataväg pkjs → localhost-POST (spike
+avgör), sex steg från mottagning till korrelationer. Dev-miljön (JDK + Android-SDK i
+devcontainern) är förberedd — kräver container-rebuild.
+
+Klock-sidan av exporten är klar (AppMessage → pkjs, komplett kontrakt med min/max,
+grupp-id/namn, timestamp). Kvar: mottagare + analys.
 
 - Leverera datan vidare från pkjs (localStorage → fil/moln/webapp).
 - Överblick: historik, trender per metric.
