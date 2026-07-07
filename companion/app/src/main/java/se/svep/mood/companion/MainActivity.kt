@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import se.svep.mood.companion.graph.GraphScreen
+import se.svep.mood.companion.insights.InsightsScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -41,10 +42,12 @@ class MainActivity : ComponentActivity() {
                     Column(Modifier.fillMaxSize().padding(padding)) {
                         TabRow(selectedTabIndex = tab) {
                             Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Graf") })
-                            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Status") })
+                            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Insikter") })
+                            Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Status") })
                         }
                         when (tab) {
                             0 -> GraphScreen(Modifier.fillMaxSize())
+                            1 -> InsightsScreen(Modifier.fillMaxSize())
                             else -> StatusScreen(Modifier.fillMaxSize())
                         }
                     }

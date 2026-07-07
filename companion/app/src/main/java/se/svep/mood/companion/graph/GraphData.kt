@@ -48,6 +48,28 @@ data class EventTrack(
 
 enum class Resolution { DAY, DETAIL }
 
+/**
+ * The day-aggregation semantics, shared by the graph's DAY mode and the
+ * correlation engine (they MUST agree): group slots count once each (latest
+ * answer per slot — a re-answer supersedes older imported versions),
+ * spontaneous entries count individually; the day's value is the mean.
+ * Bool day-value: 1 if ANY answer that day was yes, else 0.
+ */
+object DailyAggregation {
+    fun dailyValue(dayRegs: List<RegistrationEntity>): Float {
+        val slotValues = dayRegs
+            .filter { it.groupId != 0 }
+            .groupBy { it.groupId }
+            .map { (_, slot) -> slot.maxBy { it.timestamp }.value.toFloat() }
+        val spontaneous = dayRegs.filter { it.groupId == 0 }.map { it.value.toFloat() }
+        val all = slotValues + spontaneous
+        return all.sum() / all.size
+    }
+
+    fun boolDayValue(dayRegs: List<RegistrationEntity>): Float =
+        if (dayRegs.any { it.value != 0 }) 1f else 0f
+}
+
 object GraphBuilder {
 
     /**
@@ -127,20 +149,8 @@ object GraphBuilder {
         }
     }
 
-    /**
-     * A day's value: group slots count once each (latest answer per slot — a
-     * re-answer replaces, and older imported versions of the same slot are
-     * superseded), spontaneous entries count individually; mean of all.
-     */
-    private fun dailyValue(dayRegs: List<RegistrationEntity>): Float {
-        val slotValues = dayRegs
-            .filter { it.groupId != 0 }
-            .groupBy { it.groupId }
-            .map { (_, slot) -> slot.maxBy { it.timestamp }.value.toFloat() }
-        val spontaneous = dayRegs.filter { it.groupId == 0 }.map { it.value.toFloat() }
-        val all = slotValues + spontaneous
-        return all.sum() / all.size
-    }
+    private fun dailyValue(dayRegs: List<RegistrationEntity>): Float =
+        DailyAggregation.dailyValue(dayRegs)
 
     private fun buildEvents(
         regs: List<RegistrationEntity>,

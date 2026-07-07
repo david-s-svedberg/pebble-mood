@@ -96,10 +96,18 @@ verifiera empiriskt vad som faktiskt skriver till Health Connect på telefonen (
 Core Devices-appen Pebble-datan dit?); annars omprövas klock-spåret som komplement.
 
 **Fas 7 — Korrelation (beslutat: matte inbyggd + AI som tillval).**
-- **Matematisk grund:** per-dag-serier per metric; parvis Spearman-korrelation inklusive
-  lag ±1 dag ("tränade igår → mående idag"); insiktsvy med konfidens-brasklapp vid få
-  datapunkter. Lokalt, gratis, kontinuerligt. Ska fungera även för framtida
-  användarskapade metrics (inget hårdkodat kring seed-uppsättningen).
+- **Matematisk grund — KLAR (v1):** per-dag-serier per metric (delad aggregerings-semantik
+  med grafen via `DailyAggregation`); parvis Spearman inklusive lag ±1 dag; "Insikter"-flik
+  sorterad på styrka med dagantal + brasklapp vid <14 dagar. Generisk över alla metrics.
+  Verifierad mot demodatans planterade samband (Irritation↔Stress +0,84, Joy↔Anxiety −0,62,
+  Exercised→Joy nästa dag +0,39 — alla hittade).
+- **Valens per metric (beslutad idé, ej byggd):** metadata om huruvida högt värde är bra,
+  dåligt eller neutralt (Joy = positiv, Anxiety = negativ, …). Behövs INTE för matematiken
+  (Spearmans tecken bär riktningen) men lyfter presentationen: "träning verkar bra för dig"
+  istället för "samband åt motsatt håll", och möjliggör ett framtida "bra dagar"-index.
+  Bor enbart i companion-appens MetricEntity (klockan analyserar inget — ingen export- eller
+  klockändring); sätts i companion-appens metric-redigerare (fas 4), rimliga defaults för
+  seed-uppsättningen.
 - **AI-analys som explicit funktion:** "Analysera period"-knapp som dumpar vald period
   (registreringar + hälsodata) som JSON till Claude API och visar resonemanget om vad som
   verkar påverka vad. API-nyckel i settings + tydlig notis om att datan lämnar telefonen
