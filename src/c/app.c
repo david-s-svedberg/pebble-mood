@@ -83,6 +83,12 @@ void init()
     {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting from non Wakeup");
 
+        // Revive any dead group alarms. Rescheduling normally happens when an
+        // alarm fires, so a wakeup that expired while the watch was off would
+        // otherwise never come back. Idempotent: already-scheduled alarms are
+        // left untouched (wakeup_query guard).
+        ensure_all_alarms_scheduled();
+
         wakeup_service_subscribe(wakeup_handler);
 
         // Open the AppMessage channel so a connected phone can pull

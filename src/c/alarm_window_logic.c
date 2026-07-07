@@ -179,9 +179,15 @@ static void snooze_alarm_handler(ClickRecognizerRef recognizer, void* context)
 static void back_alarm_handler(ClickRecognizerRef recognizer, void* context)
 {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "back pressed on alarm");
-    time_t t = time(NULL);
-    t += (SECONDS_PER_MINUTE * 5);
-    wakeup_schedule(t, m_wakup_alarm->index, true);
+    // "Remind me in 5 minutes": same path as a snooze — through the scheduler
+    // (collision handling, persisted wakeup id) with the group remembered so
+    // the relaunch reopens the right registration.
+    if(m_registering_group != NULL)
+    {
+        config_set_snoozed_group_id(m_registering_group->id);
+    }
+    schedule_snooze_alarm(m_wakup_alarm, time(NULL) + 5 * SECONDS_PER_MINUTE);
+    config_save();
     close_alarm();
 }
 
@@ -219,6 +225,9 @@ bool setup_alarm_state(int32_t alarm_index)
         m_wakup_alarm->active = false;
         // The snooze alarm carries no group of its own, so recover the group
         // that was snoozed (persisted across the relaunch the snooze caused).
+        // No rescheduling here: the group's own daily alarm covers tomorrow —
+        // rescheduling the snooze alarm too would add a duplicate wakeup
+        // 30-60s after the real one every day.
         m_registering_group = metrics_group_get(config_get_snoozed_group_id());
     } else {
         MetricsGroup* metric_group = metrics_group_get(alarm_index);
@@ -231,9 +240,11 @@ bool setup_alarm_state(int32_t alarm_index)
         }
         m_wakup_alarm = &metric_group->alarm;
         m_registering_group = metric_group;
+        // Re-arm this group's alarm for tomorrow right away, so it survives
+        // whatever happens to this registration session.
+        schedule_alarm(m_wakup_alarm);
     }
 
-    schedule_alarm(m_wakup_alarm);
     config_save();
     run_vibration(NULL);
     set_timeout();

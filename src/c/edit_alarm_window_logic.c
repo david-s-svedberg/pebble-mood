@@ -178,6 +178,10 @@ void edit_alarm_action_bar_click_config_provider(void* context)
     window_single_click_subscribe(BUTTON_ID_UP, toggle_enabled);
     window_single_click_subscribe(BUTTON_ID_SELECT, edit_time);
     window_single_click_subscribe(BUTTON_ID_DOWN, save_alarm_and_go_back);
+    // Back also saves: toggle_enabled mutates the group in memory immediately,
+    // so leaving without saving would desync storage and the scheduled wakeup
+    // from what the user saw.
+    window_single_click_subscribe(BUTTON_ID_BACK, save_alarm_and_go_back);
 }
 
 void update_edit_alarm_time_layers()
