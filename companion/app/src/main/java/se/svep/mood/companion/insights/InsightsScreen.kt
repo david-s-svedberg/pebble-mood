@@ -92,11 +92,23 @@ private fun InsightRow(insight: Correlations.Insight) {
     }
     val caveat = if (insight.n < 14) " · få datapunkter" else ""
 
+    // Valence framing (set per metric under Konfig): with both valences known,
+    // the correlation's human meaning is computable — moving together is
+    // favorable when the valences agree (r * valA * valB > 0), etc.
+    val framing = if (insight.a.valence != 0 && insight.b.valence != 0 && abs(insight.r) >= 0.4) {
+        if (insight.r * insight.a.valence * insight.b.valence > 0) " · verkar gynnsamt 👍"
+        else " · verkar ogynnsamt 👎"
+    } else ""
+
     Column {
         Text(title, style = MaterialTheme.typography.titleSmall)
         Text(
-            "$strength samband $direction  ·  r ${"%+.2f".format(insight.r)} · ${insight.n} dagar$caveat",
+            "$strength samband $direction$framing",
             style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            "r ${"%+.2f".format(insight.r)} · ${insight.n} dagar$caveat",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

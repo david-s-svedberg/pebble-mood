@@ -5,8 +5,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Metric metadata as last seen in an import. Upserted every import — the watch
- * owns the definitions (until config parity, phase 4), we mirror them.
+ * Metric definition as last seen in a config export. The watch owns the
+ * definitions (until phase-4 editing ships both ways); we mirror them —
+ * EXCEPT [valence], which is companion-only metadata and survives imports.
  */
 @Entity(tableName = "metric")
 data class MetricEntity(
@@ -16,8 +17,36 @@ data class MetricEntity(
     val type: String,
     val min: Int,
     val max: Int,
+    /** IconChoice ordinal on the watch (0 = none). */
+    val mainIcon: Int = 0,
+    /** Comma-joined IconChoice ordinals for the option buttons. */
+    val optionIcons: String = "",
+    /** Unit-separator-joined option labels. */
+    val optionTexts: String = "",
+    /**
+     * Companion-only: is a high value good (+1), bad (-1) or neutral (0)?
+     * Used to frame insights ("seems good for you"), never by the math.
+     */
+    val valence: Int = 0,
     /** Unix seconds of the newest import that mentioned this metric. */
     val lastSeenAt: Long,
+)
+
+/** Scheduled group (registration slot) as exported by the watch. */
+@Entity(tableName = "grp")
+data class GroupEntity(
+    @PrimaryKey val groupId: Int,
+    val name: String,
+    val hour: Int,
+    val minute: Int,
+    val active: Boolean,
+)
+
+/** Which metrics belong to which group (mirrors the watch's GroupMetric). */
+@Entity(tableName = "membership", primaryKeys = ["groupId", "metricId"])
+data class MembershipEntity(
+    val groupId: Int,
+    val metricId: Int,
 )
 
 /**

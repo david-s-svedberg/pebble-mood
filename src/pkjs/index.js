@@ -1,9 +1,9 @@
 // PebbleKit JS phone-side for Mood.
 //
-// On launch it asks the watch to export all registrations, receives them one
-// message at a time, assembles them into a list and delivers the batch to the
-// companion app's local import listener (see design/companion_app_plan.md —
-// the companion runs an HTTP listener on localhost; nothing leaves the phone).
+// On launch it asks the watch to export its config (metric/group definitions)
+// and all registrations, receives them one message at a time, and delivers the
+// batch to the companion app's local import listener (see
+// design/companion_app_plan.md — nothing leaves the phone).
 
 // The companion app's import listener (companion/: ImportServer).
 // NOTE: must be the literal hostname `localhost` — the Core Devices app's XHR
@@ -11,9 +11,32 @@
 // coreapp 1.5.0.2), while `localhost` resolves and connects fine.
 var COMPANION_IMPORT_URL = 'http://localhost:9099/import';
 
-var registrations = [];
+var OPTION_TEXT_SEPARATOR = '\x1f';
 
-function deliverToCompanion(received) {
+var registrations = [];
+var metrics = [];
+var groups = [];
+
+function metricTypeName(type) {
+  // Mirrors MetricsType in src/c/data.h:
+  // NONE=0, BOOL=1, INTERVAL=2, THREE_OPTION=3.
+  switch (type) {
+    case 1: return 'bool';
+    case 2: return 'interval';
+    case 3: return 'three_option';
+    default: return 'unknown';
+  }
+}
+
+function deliverToCompanion() {
+  var received = registrations.filter(function(r) { return r !== undefined; });
+  var payload = {
+    version: 2,
+    exportedAt: Date.now(),
+    config: { metrics: metrics, groups: groups },
+    registrations: received
+  };
+
   var req = new XMLHttpRequest();
   req.open('POST', COMPANION_IMPORT_URL, true);
   req.setRequestHeader('Content-Type', 'application/json');
@@ -28,7 +51,7 @@ function deliverToCompanion(received) {
     // on the watch and is re-exported on the next launch.
     console.log('Companion delivery failed (listener not running?)');
   };
-  req.send(JSON.stringify({ version: 1, exportedAt: Date.now(), registrations: received }));
+  req.send(JSON.stringify(payload));
 }
 
 // Tell the watch how far the companion has safely stored the export, so it can
@@ -52,20 +75,11 @@ function ackToWatch(responseText) {
   );
 }
 
-function metricTypeName(type) {
-  // Mirrors MetricsType in src/c/data.h:
-  // NONE=0, BOOL=1, INTERVAL=2, THREE_OPTION=3.
-  switch (type) {
-    case 1: return 'bool';
-    case 2: return 'interval';
-    case 3: return 'three_option';
-    default: return 'unknown';
-  }
-}
-
 Pebble.addEventListener('ready', function() {
-  console.log('Mood PebbleKit JS ready — requesting registration export');
+  console.log('Mood PebbleKit JS ready — requesting export');
   registrations = [];
+  metrics = [];
+  groups = [];
   Pebble.sendAppMessage(
     { 'EXPORT_REQUEST': 1 },
     function() {},
@@ -75,36 +89,54 @@ Pebble.addEventListener('ready', function() {
 
 Pebble.addEventListener('appmessage', function(e) {
   var p = e.payload;
-  if (p.REG_INDEX === undefined) {
+
+  if (p.CFG_METRIC_ID !== undefined) {
+    var texts = (p.CFG_METRIC_OPTION_TEXTS || '').split(OPTION_TEXT_SEPARATOR);
+    metrics.push({
+      metricId: p.CFG_METRIC_ID,
+      name: p.CFG_METRIC_NAME,
+      type: metricTypeName(p.CFG_METRIC_TYPE),
+      min: p.CFG_METRIC_MIN,
+      max: p.CFG_METRIC_MAX,
+      mainIcon: p.CFG_METRIC_MAIN_ICON,
+      optionIcons: p.CFG_METRIC_OPTION_ICONS || [],   // byte array -> number array
+      optionTexts: texts
+    });
     return;
   }
 
-  var registration = {
-    metricId: p.REG_METRIC_ID,
-    metricName: p.REG_METRIC_NAME,
-    metricType: metricTypeName(p.REG_METRIC_TYPE),
-    // Value range for interval metrics (e.g. Joy 1-5 vs Anxiety 0-5), so the
-    // consumer can normalize scales.
-    min: p.REG_METRIC_MIN,
-    max: p.REG_METRIC_MAX,
-    value: p.REG_VALUE,
-    timestamp: p.REG_TIMESTAMP,                              // unix seconds
-    isoTime: new Date(p.REG_TIMESTAMP * 1000).toISOString(),
-    // Which scheduled slot this answers (0 / '' = spontaneous).
-    groupId: p.REG_GROUP_ID,
-    groupName: p.REG_GROUP_NAME
-  };
-  registrations[p.REG_INDEX] = registration;
-  console.log('Received registration ' + (p.REG_INDEX + 1) + '/' + p.REG_TOTAL +
-    ': ' + JSON.stringify(registration));
+  if (p.CFG_GROUP_ID !== undefined) {
+    groups.push({
+      groupId: p.CFG_GROUP_ID,
+      name: p.CFG_GROUP_NAME,
+      hour: p.CFG_GROUP_HOUR,
+      minute: p.CFG_GROUP_MINUTE,
+      active: p.CFG_GROUP_ACTIVE === 1,
+      members: p.CFG_GROUP_MEMBERS || []
+    });
+    return;
+  }
 
-  if (p.REG_INDEX === p.REG_TOTAL - 1) {
-    // The watch gives up on an item after a few retries, which leaves a hole
-    // at that index — deliver only the entries that actually arrived.
+  if (p.REG_INDEX !== undefined) {
+    registrations[p.REG_INDEX] = {
+      metricId: p.REG_METRIC_ID,
+      metricName: p.REG_METRIC_NAME,
+      metricType: metricTypeName(p.REG_METRIC_TYPE),
+      min: p.REG_METRIC_MIN,
+      max: p.REG_METRIC_MAX,
+      value: p.REG_VALUE,
+      timestamp: p.REG_TIMESTAMP,                              // unix seconds
+      isoTime: new Date(p.REG_TIMESTAMP * 1000).toISOString(),
+      groupId: p.REG_GROUP_ID,
+      groupName: p.REG_GROUP_NAME
+    };
+    return;
+  }
+
+  if (p.EXPORT_DONE !== undefined) {
     var received = registrations.filter(function(r) { return r !== undefined; });
-    var missing = p.REG_TOTAL - received.length;
-    console.log('Export complete: ' + received.length + ' registrations' +
-      (missing > 0 ? ' (' + missing + ' missing)' : ''));
-    deliverToCompanion(received);
+    console.log('Export complete: ' + metrics.length + ' metrics, ' +
+      groups.length + ' groups, ' + received.length + ' registrations');
+    deliverToCompanion();
   }
 });

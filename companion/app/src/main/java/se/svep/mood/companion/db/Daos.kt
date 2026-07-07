@@ -13,6 +13,30 @@ interface MetricDao {
 
     @Query("SELECT * FROM metric ORDER BY metricId")
     suspend fun all(): List<MetricEntity>
+
+    @Query("SELECT * FROM metric WHERE metricId = :id")
+    suspend fun byId(id: Int): MetricEntity?
+
+    @Query("UPDATE metric SET valence = :valence WHERE metricId = :id")
+    suspend fun setValence(id: Int, valence: Int)
+}
+
+@Dao
+interface GroupDao {
+    @Upsert
+    suspend fun upsertAll(groups: List<GroupEntity>)
+
+    @Query("SELECT * FROM grp ORDER BY hour, minute")
+    suspend fun all(): List<GroupEntity>
+
+    @Query("DELETE FROM membership WHERE groupId = :groupId")
+    suspend fun clearMembers(groupId: Int)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addMembers(members: List<MembershipEntity>)
+
+    @Query("SELECT * FROM membership")
+    suspend fun memberships(): List<MembershipEntity>
 }
 
 @Dao

@@ -1245,7 +1245,22 @@
             "REG_TIMESTAMP",
             "REG_GROUP_ID",
             "REG_GROUP_NAME",
-            "EXPORT_ACK_THROUGH"
+            "EXPORT_ACK_THROUGH",
+            "EXPORT_DONE",
+            "CFG_METRIC_ID",
+            "CFG_METRIC_NAME",
+            "CFG_METRIC_TYPE",
+            "CFG_METRIC_MIN",
+            "CFG_METRIC_MAX",
+            "CFG_METRIC_MAIN_ICON",
+            "CFG_METRIC_OPTION_ICONS",
+            "CFG_METRIC_OPTION_TEXTS",
+            "CFG_GROUP_ID",
+            "CFG_GROUP_NAME",
+            "CFG_GROUP_HOUR",
+            "CFG_GROUP_MINUTE",
+            "CFG_GROUP_ACTIVE",
+            "CFG_GROUP_MEMBERS"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [

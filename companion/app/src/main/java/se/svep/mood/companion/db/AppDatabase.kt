@@ -6,12 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [MetricEntity::class, RegistrationEntity::class],
-    version = 1,
+    entities = [
+        MetricEntity::class,
+        GroupEntity::class,
+        MembershipEntity::class,
+        RegistrationEntity::class,
+    ],
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun metrics(): MetricDao
+    abstract fun groups(): GroupDao
     abstract fun registrations(): RegistrationDao
 
     companion object {
@@ -23,7 +29,12 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mood.db",
-                ).build().also { instance = it }
+                )
+                    // Pre-release: schema changes reset the DB. Acceptable —
+                    // the watch re-exports its retained history on next sync
+                    // (only pruned-away days would be lost; none exist yet).
+                    .fallbackToDestructiveMigration()
+                    .build().also { instance = it }
             }
     }
 }

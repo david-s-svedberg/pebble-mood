@@ -259,7 +259,11 @@ private fun Legend(
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
                 Spacer(Modifier.size(10.dp).background(colors[metric.metricId] ?: chrome.inkMuted, CircleShape))
                 Spacer(Modifier.width(6.dp))
-                val scale = if (metric.type == "bool") "ja/nej" else "${metric.min}–${metric.max}"
+                val scale = when (metric.type) {
+                    "bool" -> "ja/nej"
+                    "three_option" -> "3 alt"
+                    else -> "${metric.min}–${metric.max}"
+                }
                 Text("${metric.name} ($scale)", color = chrome.inkSecondary, fontSize = 13.sp)
             }
         }

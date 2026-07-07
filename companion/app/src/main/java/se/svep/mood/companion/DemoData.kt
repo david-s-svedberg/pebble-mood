@@ -28,15 +28,16 @@ object DemoData {
         val random = Random(42)
         val now = System.currentTimeMillis() / 1000
 
-        db.metrics().upsertAll(
-            listOf(
-                MetricEntity(1, "Joy", "interval", 1, 5, now),
-                MetricEntity(2, "Anxiety", "interval", 0, 5, now),
-                MetricEntity(3, "Irritation", "interval", 0, 5, now),
-                MetricEntity(4, "Stress", "interval", 0, 5, now),
-                MetricEntity(8, "Exercised", "bool", 0, 1, now),
-            )
+        // Only create metrics that don't exist — never touch existing rows
+        // (they carry user-set valence and watch-synced icon config).
+        val demoMetrics = listOf(
+            MetricEntity(metricId = 1, name = "Joy", type = "interval", min = 1, max = 5, lastSeenAt = now),
+            MetricEntity(metricId = 2, name = "Anxiety", type = "interval", min = 0, max = 5, lastSeenAt = now),
+            MetricEntity(metricId = 3, name = "Irritation", type = "interval", min = 0, max = 5, lastSeenAt = now),
+            MetricEntity(metricId = 4, name = "Stress", type = "interval", min = 0, max = 5, lastSeenAt = now),
+            MetricEntity(metricId = 8, name = "Exercised", type = "bool", min = 0, max = 1, lastSeenAt = now),
         )
+        db.metrics().upsertAll(demoMetrics.filter { db.metrics().byId(it.metricId) == null })
 
         val rows = ArrayList<RegistrationEntity>()
         val today = LocalDate.now(zone)

@@ -4,8 +4,11 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
 import org.json.JSONObject
 import se.svep.mood.companion.db.AppDatabase
+import se.svep.mood.companion.db.GroupEntity
+import se.svep.mood.companion.db.MembershipEntity
 import se.svep.mood.companion.db.MetricEntity
 import se.svep.mood.companion.db.RegistrationEntity
 
@@ -18,8 +21,8 @@ data class ImportResult(
 )
 
 /**
- * Parses a pkjs export payload and stores it idempotently. Emits on
- * [lastImport] so any UI can refresh.
+ * Parses a pkjs export payload (config + registrations) and stores it
+ * idempotently. Emits on [dataVersion] so any UI can refresh.
  */
 class ImportRepository(context: Context) {
 
@@ -27,30 +30,80 @@ class ImportRepository(context: Context) {
 
     suspend fun import(body: String): ImportResult {
         val payload = JSONObject(body)
-        val regs = payload.getJSONArray("registrations")
         val now = System.currentTimeMillis()
 
-        val metrics = LinkedHashMap<Int, MetricEntity>()
+        payload.optJSONObject("config")?.let { config ->
+            importMetrics(config.optJSONArray("metrics") ?: JSONArray(), now)
+            importGroups(config.optJSONArray("groups") ?: JSONArray())
+        }
+
+        val result = importRegistrations(payload.getJSONArray("registrations"), now)
+        Log.i(TAG, "import: received=${result.received} new=${result.new} ackedThrough=${result.ackedThrough}")
+        lastImportFlow.value = result to now
+        bumpDataVersion()
+        return result
+    }
+
+    /** Config mirrors the watch — except valence, which is ours and survives. */
+    private suspend fun importMetrics(metrics: JSONArray, now: Long) {
+        val rows = ArrayList<MetricEntity>()
+        for (i in 0 until metrics.length()) {
+            val m = metrics.getJSONObject(i)
+            val id = m.getInt("metricId")
+            val existingValence = db.metrics().byId(id)?.valence ?: 0
+            rows.add(
+                MetricEntity(
+                    metricId = id,
+                    name = m.optString("name", ""),
+                    type = m.optString("type", "unknown"),
+                    min = m.optInt("min", 0),
+                    max = m.optInt("max", 0),
+                    mainIcon = m.optInt("mainIcon", 0),
+                    optionIcons = m.optJSONArray("optionIcons").toCsv(),
+                    optionTexts = m.optJSONArray("optionTexts")?.let { arr ->
+                        (0 until arr.length()).joinToString("\u001f") { arr.optString(it) }
+                    } ?: "",
+                    valence = existingValence,
+                    lastSeenAt = now / 1000,
+                )
+            )
+        }
+        if (rows.isNotEmpty()) db.metrics().upsertAll(rows)
+    }
+
+    private suspend fun importGroups(groups: JSONArray) {
+        val groupRows = ArrayList<GroupEntity>()
+        for (i in 0 until groups.length()) {
+            val g = groups.getJSONObject(i)
+            val groupId = g.getInt("groupId")
+            groupRows.add(
+                GroupEntity(
+                    groupId = groupId,
+                    name = g.optString("name", ""),
+                    hour = g.optInt("hour", 0),
+                    minute = g.optInt("minute", 0),
+                    active = g.optBoolean("active", true),
+                )
+            )
+            db.groups().clearMembers(groupId)
+            val members = g.optJSONArray("members") ?: JSONArray()
+            db.groups().addMembers(
+                (0 until members.length()).map { MembershipEntity(groupId, members.getInt(it)) }
+            )
+        }
+        if (groupRows.isNotEmpty()) db.groups().upsertAll(groupRows)
+    }
+
+    private suspend fun importRegistrations(regs: JSONArray, now: Long): ImportResult {
         val rows = ArrayList<RegistrationEntity>(regs.length())
         var newest = 0L
-
         for (i in 0 until regs.length()) {
             val r = regs.getJSONObject(i)
-            val metricId = r.getInt("metricId")
             val timestamp = r.getLong("timestamp")
             if (timestamp > newest) newest = timestamp
-
-            metrics[metricId] = MetricEntity(
-                metricId = metricId,
-                name = r.optString("metricName", ""),
-                type = r.optString("metricType", "unknown"),
-                min = r.optInt("min", 0),
-                max = r.optInt("max", 0),
-                lastSeenAt = now / 1000,
-            )
             rows.add(
                 RegistrationEntity(
-                    metricId = metricId,
+                    metricId = r.getInt("metricId"),
                     groupId = r.optInt("groupId", 0),
                     groupName = r.optString("groupName", ""),
                     value = r.getInt("value"),
@@ -59,16 +112,12 @@ class ImportRepository(context: Context) {
                 )
             )
         }
-
-        db.metrics().upsertAll(metrics.values.toList())
-        val inserted = db.registrations().insertAll(rows).count { it != -1L }
-
-        val result = ImportResult(received = rows.size, new = inserted, ackedThrough = newest)
-        Log.i(TAG, "import: received=${result.received} new=${result.new} ackedThrough=${result.ackedThrough}")
-        lastImportFlow.value = result to now
-        bumpDataVersion()
-        return result
+        val inserted = if (rows.isEmpty()) 0 else db.registrations().insertAll(rows).count { it != -1L }
+        return ImportResult(received = rows.size, new = inserted, ackedThrough = newest)
     }
+
+    private fun JSONArray?.toCsv(): String =
+        if (this == null) "" else (0 until length()).joinToString(",") { optInt(it).toString() }
 
     companion object {
         private const val TAG = "MoodCompanion"
