@@ -79,6 +79,10 @@ registreringsflödet. Bäst värde ihop med companion-korrelationerna.
 
 ## Öppna småtrådar
 
+- [ ] **Visuell röktest på 144×168** (diorite/basalt-emulatorn) — layouten är kodgranskad
+      (allt beräknas från bounds/konstanter) men appen har bara synats på emery. En
+      engångs-syn när emulatorn beter sig.
+
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. textfritt/förvalt alternativ.
 - [ ] **Fler valbara ikoner** vid behov (pipeline finns: Pillow-script → svart/vit/20px-

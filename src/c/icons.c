@@ -165,11 +165,6 @@ GBitmap* get_icon_by_choice_ex(uint8_t choice, bool light)
     return get_icon(res, cache);
 }
 
-GBitmap* get_icon_by_choice(uint8_t choice)
-{
-    return get_icon_by_choice_ex(choice, false);
-}
-
 GBitmap* get_icon_row_by_choice(uint8_t choice, bool light)
 {
     if(choice == IconChoice_NONE || choice >= IconChoice_COUNT)

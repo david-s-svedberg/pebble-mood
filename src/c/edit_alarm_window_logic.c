@@ -5,6 +5,7 @@
 #include "format.h"
 #include "icons.h"
 #include "scheduler.h"
+#include "repositories/app_config_repository.h"
 
 static TextLayer *m_edit_alarm_active_layer;
 static TextLayer *m_edit_alarm_time_hour_layer;
@@ -29,28 +30,34 @@ static void save_alarm_and_go_back(ClickRecognizerRef recognizer, void* context)
     window_stack_pop(true);
 }
 
+// The edited time unit is shown inverted against the theme (fg background,
+// bg text); un-highlighting restores the normal theme colours.
+static void set_unit_highlight(TextLayer* layer, bool highlighted)
+{
+    GColor bg = highlighted ? config_get_foreground_color() : config_get_background_color();
+    GColor fg = highlighted ? config_get_background_color() : config_get_foreground_color();
+    text_layer_set_background_color(layer, bg);
+    text_layer_set_text_color(layer, fg);
+}
+
 static void highlight_hours()
 {
-    text_layer_set_background_color(m_edit_alarm_time_hour_layer, GColorWhite);
-    text_layer_set_text_color(m_edit_alarm_time_hour_layer, GColorBlack);
+    set_unit_highlight(m_edit_alarm_time_hour_layer, true);
 }
 
 static void un_highlight_hours()
 {
-    text_layer_set_background_color(m_edit_alarm_time_hour_layer, GColorBlack);
-    text_layer_set_text_color(m_edit_alarm_time_hour_layer, GColorWhite);
+    set_unit_highlight(m_edit_alarm_time_hour_layer, false);
 }
 
 static void highlight_minutes()
 {
-    text_layer_set_background_color(m_edit_alarm_time_minute_layer, GColorWhite);
-    text_layer_set_text_color(m_edit_alarm_time_minute_layer, GColorBlack);
+    set_unit_highlight(m_edit_alarm_time_minute_layer, true);
 }
 
 static void un_highlight_minutes()
 {
-    text_layer_set_background_color(m_edit_alarm_time_minute_layer, GColorBlack);
-    text_layer_set_text_color(m_edit_alarm_time_minute_layer, GColorWhite);
+    set_unit_highlight(m_edit_alarm_time_minute_layer, false);
 }
 
 static void update_alarm_active_text()

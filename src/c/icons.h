@@ -49,9 +49,6 @@ typedef enum
 // otherwise the black variant (for a light background) is returned.
 GBitmap* get_icon_by_choice_ex(uint8_t choice, bool light);
 
-// Convenience: the black (light-background) variant.
-GBitmap* get_icon_by_choice(uint8_t choice);
-
 // A menu-row-sized (20px) bitmap for an IconChoice. Main icons use a dedicated
 // small variant; smaller choices fall back to their normal bitmap. `light`
 // picks the white variant. NULL for IconChoice_NONE / unknown.
