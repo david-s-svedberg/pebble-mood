@@ -1,8 +1,18 @@
 # Companion-appen — plan
 
-Android-app som tar emot Moods registreringar från klockan, lagrar historiken och gör
-analysen som medvetet INTE bor på klockan: överblick, trender och korrelationer
-(Joy vs sömn, Anxiety vs träning, lag-effekter). Klockan förblir "dum" insamlare.
+Android-app som är en **fullvärdig tvilling** till klockappen: tar emot registreringar,
+lagrar historiken, kan själv mata in metrics (telefonläge med egna notiser), hanterar
+konfigurationen (grupper/metrics/ikoner, synkad till klockan) och gör analysen som
+medvetet INTE bor på klockan: grafer, korrelationer (matematiskt + AI-analys som tillval)
+och hälsodata via Health Connect.
+
+**Faserna och besluten ägs av [../ROADMAP.md](../ROADMAP.md) (companion-avsnittet)** —
+det här dokumentet håller de tekniska detaljerna.
+
+**Status: spike (steg 1) VERIFIERAD på riktig hårdvara 2026-07-07** — hela kedjan
+klocka → AppMessage → pkjs (Core Devices 1.5.0.2) → localhost-POST → companion (Pixel 6).
+Gotcha: XHR-bryggan kräver hostnamnet `localhost`; råa IP:n (`127.0.0.1`) ger onerror.
+Dataväg A gäller; PebbleKit-fallbacken behövdes aldrig.
 
 ## Dataväg: klocka → telefon → companion (nyckelbeslutet)
 
@@ -17,37 +27,42 @@ pkjs → companion-appen:
 | B. PebbleKit Android direkt | Companion registrerar `PebbleDataReceiver` för appens UUID, klockan skickar direkt | Inget HTTP-hopp | Klassisk begränsning: watchapp MED pkjs-komponent får meddelanden routade till JS-runtimen, PebbleKit-broadcasts blir opålitliga; skulle kräva att pkjs droppas (och den gör redan jobbet) |
 | C. Moln-endpoint | pkjs POST:ar till server | Funkar även utan companion igång | Overkill, privacy, drift — måendedata ska inte behöva lämna telefonen |
 
-**Beslut: A, gated på en spike** (steg 1 nedan). Faller spiken: B (droppa pkjs, flytta
-mottagningen till PebbleKit Android).
+**Utfall: A verifierad.** PebbleKit-fallbacken behövdes aldrig.
 
-## Steg (MVP → korrelationer)
+## Tekniska detaljer per fas (fasordning + beslut: se ROADMAP)
 
-1. **Spike: localhost-hoppet.** Minimal companion-app = foreground service med inbäddad
-   HTTP-lyssnare (Ktor embedded eller NanoHTTPD) + logg. pkjs utökas med POST av den
-   färdiga exportlistan. Bevis: registreringar syns i companion-loggen. *Avgör A vs B.*
-2. **Mottagning + lagring.** Room-databas; dedupe på `(metricId, groupId, timestamp)`
-   (klockan skickar om HELA historiken varje export tills gallring finns — importen måste
-   vara idempotent). Metric-metadata (namn/typ/min/max) versioneras per import.
-3. **Historik-UI.** Jetpack Compose: dagvy (alla svar per dag, grupperade per pass) +
-   metricvy (alla svar för en metric över tid).
-4. **Trender.** Per-metric-graf (Vico), daglig aggregering: grupp-slots är redan "senaste
-   svaret per pass"; spontana medelvärdas per dag. 7/30-dagarsfönster. Normalisera skalor
-   via exporterade min/max.
-5. **Ack + gallring** (kräver liten klock-ändring): companion svarar OK → pkjs skickar
-   ACK-AppMessage → klockan gallrar exporterade registreringar äldre än ~7 dagar.
-   Löser klockans ändliga persist-budget (se ROADMAP).
-6. **Korrelationer.** Per-dag-serier per metric; parvis Spearman-korrelation inklusive
-   lag ±1 dag (tränade igår → mående idag). "Insikter"-vy: starkaste sambanden med
-   konfidens-brasklapp (få datapunkter första veckorna).
+- **Fas 2 (mottagning):** foreground service äger `ImportServer`-lyssnaren (spike-versionen
+  är aktivitets-bunden — flyttas). Room med dedupe-nyckel `(metricId, groupId, timestamp)`;
+  metric-metadata (namn/typ/min/max/ikon) upsertas per import. **Ack + gallring:**
+  companion svarar `{status:"ok", ackedThrough:<timestamp>}` → pkjs skickar
+  ACK-AppMessage → klockan gallrar synkade registreringar äldre än ~7 dagar — MEN
+  favorit-metricsens trendcache (klockgrafen, ROADMAP §2) fylls FÖRE gallring.
+- **Fas 3 (graf):** Vico. Dag-aggregerad översikt + detaljzoom med råa tidsstämplar
+  (spontana = flera punkter/dag). Bool = event-markörer på egen rad, aldrig linjer.
+  Normalisering via min/max.
+- **Fas 4 (config-synk):** nytt AppMessage-kontrakt telefon→klocka (config-entiteter:
+  grupp {id, namn, tid, aktiv}, metric {id, namn, typ, min/max, ikoner, texter},
+  medlemskap). Klockan applicerar via repositories. `IconChoice`-enumen blir delad
+  kontraktskonstant. Konfliktmodell: last-write-wins per entitet (revisionsräknare).
+- **Fas 5 (telefonläge):** global setting; av-läge skickar `alarm.active=false`-synk till
+  klockan och schemalägger lokala notiser (AlarmManager) vid grupptiderna; inmatnings-UI
+  återanvänder registreringsflödets semantik (en metric i taget, knapp=värde).
+  Telefonsvar → synk till klockan (registrering med group_id) som uppdaterar
+  "besvarad idag" + trendcachen.
+- **Fas 6 (Health Connect):** läsbehörigheter för sömn/steg/puls; daglig aggregering till
+  auto-metrics. Steg 0: `adb shell` / HC-appen — verifiera vilka källor som skriver.
+- **Fas 7 (korrelation):** Spearman + lag ±1d på per-dag-serier, generisk över alla
+  metrics (även användarskapade). AI-tillval: JSON-dump av vald period → Claude API
+  (nyckel i settings, privacy-notis) → resonemang renderas/sparas.
 
 ## Teknikval
 
 - **Kotlin + Jetpack Compose**, minSdk 26, target/compile SDK 35.
-- **Room** för lagring, **Vico** för grafer, **Ktor embedded** (eller NanoHTTPD) för
-  import-lyssnaren.
+- **Room** för lagring, **Vico** för grafer; import-lyssnaren är en hand-rullad
+  loopback-`ServerSocket` (noll beroenden, redan skriven i spiken).
 - **Monorepo:** appen bor i `companion/` i det här repot (delar ROADMAP, review-skill och
   export-kontraktet; kontraktsändringar i `messageKeys`/pkjs/companion hålls i samma commit).
-  Gradle-wrapper checkas in — ingen global gradle i containern.
+  Gradle-wrapper incheckad — ingen global gradle i containern.
 
 ## Dev-miljö (klar i devcontainern)
 
@@ -62,8 +77,12 @@ mottagningen till PebbleKit Android).
 
 ## Öppna frågor (avgörs under resans gång)
 
-- Core Devices-appens JS-runtime: tillåts XHR mot localhost? (Spiken, steg 1.)
+- ~~Core Devices-appens JS-runtime: tillåts XHR mot localhost?~~ **Ja** — men bara med
+  hostnamnet `localhost`, inte råa IP:n (verifierat på coreapp 1.5.0.2).
+- Skriver Core Devices-appen Pebble-hälsodata till Health Connect? (Fas 6, steg 0.)
 - Trigga export på begäran från companion (idag pushar pkjs vid 'ready') — räcker
-  auto-push, eller behövs en pull-knapp (PebbleKit-intent / notifikation)?
-- Grafen på klockans hemskärm (ROADMAP-idé) hämtar sin data lokalt på klockan — oberoende
-  av companion, men bör dela aggregerings-semantiken (senaste per pass / medel per dag).
+  auto-push, eller behövs en pull-knapp?
+- Config-synkens transport: AppMessage-kontraktet växer rejält i fas 4 — utvärdera om
+  pkjs bör chunka config-payloads likt klockans persist_blob.
+- Grafen på klockans hemskärm delar aggregerings-semantik med companion (senaste per
+  pass / medel per dag) — håll definitionerna i sync.

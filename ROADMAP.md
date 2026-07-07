@@ -53,37 +53,66 @@ Kvar är de stora spåren: companion-app, hälsodata och graf-hemskärmen.
 
 ## Nästa stora spår
 
-### 1. Companion-app (störst payoff) — PLAN FINNS
+### 1. Companion-app — SPIKE VERIFIERAD, målbild beslutad
 
-Detaljerad plan i [design/companion_app_plan.md](design/companion_app_plan.md): Android
-(Kotlin/Compose/Room) i `companion/`-katalogen, dataväg pkjs → localhost-POST (spike
-avgör), sex steg från mottagning till korrelationer. Dev-miljön (JDK + Android-SDK i
-devcontainern) är förberedd — kräver container-rebuild.
+Detaljplan i [design/companion_app_plan.md](design/companion_app_plan.md). **Spiken är i
+land på riktig hårdvara** (2026-07-07): klocka → AppMessage → pkjs → localhost-POST →
+companion-appen på telefonen, komplett kontrakt mottaget. (Gotcha: Core Devices XHR-brygga
+kräver hostnamnet `localhost`, råa IP:n ger onerror.) Skelettet bor i `companion/`.
 
-Klock-sidan av exporten är klar (AppMessage → pkjs, komplett kontrakt med min/max,
-grupp-id/namn, timestamp). Kvar: mottagare + analys.
+**Målbild (beslutad 2026-07-07):** companion-appen är en fullvärdig tvilling till
+klockappen — inte bara en mottagare. Faserna, i ordning:
 
-- Leverera datan vidare från pkjs (localStorage → fil/moln/webapp).
-- Överblick: historik, trender per metric.
-- **Korrelationer** mellan metrics (Joy vs sömn, Anxiety vs träning, ...) — huvudpoängen
-  med appen. Kräver "senaste/medel per dag"-semantik som medvetet bor här och inte på
-  klockan.
-- **Gallring efter export** — klockans persist-budget är begränsad (blobbar chunkas nu
-  över 256 B-nycklar, men totalen är ändå ändlig). När companion-appen tagit emot datan
-  bör gamla registreringar gallras från klockan (t.ex. behåll senaste ~7 dagar).
+**Fas 2 — Riktig mottagning.** Foreground service (beslutat: synk ska ske direkt när data
+matats in på klockan, inte bara när appen råkar vara öppen) + Room-lagring med idempotent
+import (klockan omsänder hela historiken tills gallring finns; dedupe på
+`(metricId, groupId, timestamp)`). Därefter **ack + gallring**: klockan rensar synkade
+registreringar äldre än ~7 dagar (persist-budgeten).
 
-### 2. Graf-hemskärm (idé)
+**Fas 3 — Grafläge.** Välj vilka metrics som visas; utveckling över tid.
+- Två upplösningar: **dag-aggregerad översikt** (medel per dag för intervall) och
+  **detaljzoom** med faktiska tidsstämplar där spontana registreringar syns som egna
+  punkter (dynamisk x-axel). Exakt balans utvärderas mot riktig data.
+- **Booleans är events, inte linjer**: markörer/prickar på egen rad ("den dagen tränade
+  jag") — aldrig interpolerade kurvor.
+- Skalor normaliseras via exporterade min/max (Joy 1–5 vs Anxiety 0–5).
 
-Ersätt/komplettera hemskärmen med en enkel graf över senaste dagarnas värden (t.ex. Joy
-sparkline). Merparten av analysen bor i companion-appen; klockan visar bara en snabb glimt.
-(7-dagars-snittet togs bort från listorna när Today fick "ditt svar" som subtitle —
-`main_window_format_average` ligger kvar oanvänd tills grafen/companion tar över.)
+**Fas 4 — Konfigurationsparitet + synk.** Grupper, metrics, medlemskap och ikoner ska
+kunna redigeras i Android-appen och synkas till klockan (nytt AppMessage-kontrakt:
+config-synk telefon→klocka). Klockans config förblir redigerbar; enkel konfliktmodell
+(senaste ändring vinner per entitet) — designas i fasen.
 
-### 3. Hälsodata-källor (idé)
+**Fas 5 — Telefonläge (globalt val, beslutat).** Setting "Pebble-integration" på/av:
+- **På** (default): larm + inmatning på klockan som idag.
+- **Av**: klockans larm avaktiveras; telefonen tar över med notiser vid grupptiderna och
+  samma inmatningsflöde (en metric i taget, samma ikoner) i appen.
+- **Telefonsvar synkas alltid tillbaka till klockan** (beslutat) så "redan besvarad
+  idag"-logiken och klockans graf stämmer oavsett var man svarade.
 
-Pebbles HealthService kan ge steg, sömn, aktiva minuter, puls. Ge `Metrics` en källa
-(manual vs health-*); health-källade metrics fylls i automatiskt och behöver inte visas i
-registreringsflödet. Bäst värde ihop med companion-korrelationerna.
+**Fas 6 — Hälsodata via Health Connect (beslutat: telefonsidan, inte klockans
+HealthService).** Companion läser sömn, steg och puls ur Androids Health Connect som
+auto-metrics i grafer/korrelationer — fångar alla källor utan klock-kod. Steg 0:
+verifiera empiriskt vad som faktiskt skriver till Health Connect på telefonen (skriver
+Core Devices-appen Pebble-datan dit?); annars omprövas klock-spåret som komplement.
+
+**Fas 7 — Korrelation (beslutat: matte inbyggd + AI som tillval).**
+- **Matematisk grund:** per-dag-serier per metric; parvis Spearman-korrelation inklusive
+  lag ±1 dag ("tränade igår → mående idag"); insiktsvy med konfidens-brasklapp vid få
+  datapunkter. Lokalt, gratis, kontinuerligt. Ska fungera även för framtida
+  användarskapade metrics (inget hårdkodat kring seed-uppsättningen).
+- **AI-analys som explicit funktion:** "Analysera period"-knapp som dumpar vald period
+  (registreringar + hälsodata) som JSON till Claude API och visar resonemanget om vad som
+  verkar påverka vad. API-nyckel i settings + tydlig notis om att datan lämnar telefonen
+  vid just de anropen.
+
+### 2. Klockans graf-hemskärm (beslutad form)
+
+Välj **1–3 favoritmetrics**; hemskärmen visar deras utveckling senaste 7 dagarna som
+graf/sparkline (ersätter/kompletterar stora ikonen). Lagringsdesign med hänsyn till
+gallringen (fas 2): favoriterna får en **kompakt trendcache på klockan** — per favorit en
+ringbuffer med 7 dagliga aggregat (några dussin bytes), fristående från
+registrations-storen. Uppdateras vid registrering OCH när telefonsvar synkas tillbaka
+(fas 5); påverkas inte av att synkade registreringar gallras.
 
 ## Öppna småtrådar
 
