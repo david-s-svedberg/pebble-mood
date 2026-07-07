@@ -4,8 +4,11 @@ Planerade förbättringar och öppna trådar. Se [CLAUDE.md](CLAUDE.md) för nul
 och [design/design_notes.txt](design/design_notes.txt) för den ursprungliga datamodellen.
 
 **Status (uppdaterad):** hela den ursprungliga grundplanen (avsnitt 1–6 nedan) är klar,
-liksom polish-batchen (tema, timeout, option-text). Kvar är de stora spåren: companion-app,
-hälsodata och graf-hemskärmen.
+liksom polish-batchen (tema, timeout, option-text). En full post-implementation-review
+(8 pass: minne, persistens, alarm/tid, export, arkitektur, UI, budget, docs — se
+`.claude/skills/post-implementation-review/`) genomfördes i commits `95e7bb2..c417516`
+och åtgärdade bl.a. en sträng-UAF, tyst 256 B-persisttrunkering och döda gruppalarm.
+Kvar är de stora spåren: companion-app, hälsodata och graf-hemskärmen.
 
 **Plattformar:** diorite, basalt, emery (PT2). *Aplite (Pebble Classic/Steel) droppades* —
 24KB app-RAM räckte inte längre (statiskt data svämmade över och heapen var nere på ~1,6KB).
