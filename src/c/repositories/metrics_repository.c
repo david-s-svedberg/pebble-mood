@@ -453,6 +453,39 @@ Registration* registration_today_for_group_metric(uint16_t group_id, uint16_t me
     return latest;
 }
 
+// Registrations are pruned when BOTH hold: the companion has stored them
+// (time_stamp <= acked_through) AND they're past the on-watch retention window.
+typedef struct
+{
+    time_t acked_through;
+    time_t keep_after;
+} PruneBounds;
+
+static bool registration_is_prunable(byte* item, void* context)
+{
+    Registration* reg = (Registration*)item;
+    PruneBounds* bounds = (PruneBounds*)context;
+    return reg->time_stamp <= bounds->acked_through && reg->time_stamp < bounds->keep_after;
+}
+
+#define REGISTRATION_RETENTION_DAYS (7)
+
+uint16_t registrations_prune_synced(time_t acked_through)
+{
+    PruneBounds bounds =
+    {
+        .acked_through = acked_through,
+        .keep_after = time(NULL) - (REGISTRATION_RETENTION_DAYS * SECONDS_PER_DAY),
+    };
+    uint16_t removed = dynamic_delete_where(&m_registrations, registration_is_prunable, &bounds);
+    if(removed > 0)
+    {
+        APP_LOG(APP_LOG_LEVEL_INFO, "prune: removed %d synced registrations (%d left)",
+            removed, (int)m_registrations.number_of_items);
+    }
+    return removed;
+}
+
 bool registrations_last_value(uint16_t metric_id, uint8_t* out_value)
 {
     bool found = false;

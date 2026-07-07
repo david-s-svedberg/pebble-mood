@@ -18,9 +18,14 @@ typedef struct {
 typedef void (*SetItemId)(uint16_t id, byte* item);
 typedef uint16_t (*GetItemId)(byte* item);
 typedef bool (*SameIdPredicate)(uint16_t id, byte* item);
+typedef bool (*RemovePredicate)(byte* item, void* context);
 
 void    dynamic_init(DynamicData* data);
 void    dynamic_add(DynamicData* data, byte* new_item, SetItemId set_item_id_function);
 void    dynamic_delete(const uint16_t delete_id, DynamicData* data, GetItemId get_item_id_function);
+// Bulk delete: removes every item the predicate accepts in ONE pass with ONE
+// persist write (a dynamic_delete loop would rewrite storage per item).
+// Returns the number of removed items.
+uint16_t dynamic_delete_where(DynamicData* data, RemovePredicate should_remove, void* context);
 byte*   dynamic_get(const uint16_t id, DynamicData* data, SameIdPredicate same_id_predicate_function);
 void    dynamic_save(DynamicData* data);

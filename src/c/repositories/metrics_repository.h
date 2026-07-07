@@ -35,6 +35,11 @@ bool            metrics_group_complete_today(uint16_t group_id);
 // Value of the most recent registration for a metric (any group), for defaulting
 // the next entry. Returns false if the metric has never been registered.
 bool            registrations_last_value(uint16_t metric_id, uint8_t* out_value);
+// Prunes registrations the companion has confirmed stored (time_stamp <=
+// acked_through) that are also older than the on-watch retention window
+// (~7 days) — the watch keeps a recent tail for Today/update-in-place/trends.
+// Returns the number of removed registrations.
+uint16_t        registrations_prune_synced(time_t acked_through);
 Registration*   registrations_get_all();
 uint32_t        registrations_count();
 

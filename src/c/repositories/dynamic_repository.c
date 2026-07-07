@@ -108,6 +108,31 @@ void dynamic_delete(const uint16_t delete_id, DynamicData* data, GetItemId get_i
     save_all(data);
 }
 
+uint16_t dynamic_delete_where(DynamicData* data, RemovePredicate should_remove, void* context)
+{
+    uint16_t kept = 0;
+    for(uint16_t i = 0; i < data->number_of_items; i++)
+    {
+        byte* current_item = &data->items[i * data->item_size];
+        if(!should_remove(current_item, context))
+        {
+            if(kept != i)
+            {
+                memcpy(&data->items[kept * data->item_size], current_item, data->item_size);
+            }
+            kept++;
+        }
+    }
+
+    uint16_t removed = data->number_of_items - kept;
+    if(removed > 0)
+    {
+        data->number_of_items = kept;
+        save_all(data);
+    }
+    return removed;
+}
+
 byte* dynamic_get(const uint16_t id, DynamicData* data, SameIdPredicate same_id_predicate_function)
 {
     byte* found = NULL;

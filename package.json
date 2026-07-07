@@ -1244,7 +1244,8 @@
             "REG_VALUE",
             "REG_TIMESTAMP",
             "REG_GROUP_ID",
-            "REG_GROUP_NAME"
+            "REG_GROUP_NAME",
+            "EXPORT_ACK_THROUGH"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [

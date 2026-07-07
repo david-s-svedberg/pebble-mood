@@ -20,7 +20,8 @@ import kotlin.concurrent.thread
  */
 class ImportServer(
     private val port: Int = 9099,
-    private val onImport: (body: String) -> Unit,
+    /** Handles the POSTed batch and returns the JSON response body (the ack). */
+    private val onImport: (body: String) -> String,
 ) {
     @Volatile private var serverSocket: ServerSocket? = null
 
@@ -61,6 +62,7 @@ class ImportServer(
         }
 
         val ok = requestLine.startsWith("POST") && requestLine.contains("/import")
+        var response: String? = null
         if (ok && contentLength > 0) {
             val body = CharArray(contentLength)
             var read = 0
@@ -69,11 +71,16 @@ class ImportServer(
                 if (n < 0) break
                 read += n
             }
-            onImport(String(body, 0, read))
+            response = try {
+                onImport(String(body, 0, read))
+            } catch (e: Exception) {
+                Log.e(TAG, "import handler failed", e)
+                "{\"status\":\"error\"}"
+            }
         }
 
         val status = if (ok) "200 OK" else "404 Not Found"
-        val payload = if (ok) "{\"status\":\"ok\"}" else "{\"status\":\"unknown endpoint\"}"
+        val payload = response ?: if (ok) "{\"status\":\"ok\"}" else "{\"status\":\"unknown endpoint\"}"
         client.getOutputStream().write(
             ("HTTP/1.1 $status\r\n" +
                 "Content-Type: application/json\r\n" +

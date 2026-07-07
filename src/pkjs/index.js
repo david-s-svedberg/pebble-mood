@@ -19,6 +19,9 @@ function deliverToCompanion(received) {
   req.setRequestHeader('Content-Type', 'application/json');
   req.onload = function() {
     console.log('Companion delivery: HTTP ' + req.status);
+    if (req.status === 200) {
+      ackToWatch(req.responseText);
+    }
   };
   req.onerror = function() {
     // Normal when the companion app isn't installed/running — the data stays
@@ -26,6 +29,27 @@ function deliverToCompanion(received) {
     console.log('Companion delivery failed (listener not running?)');
   };
   req.send(JSON.stringify({ version: 1, exportedAt: Date.now(), registrations: received }));
+}
+
+// Tell the watch how far the companion has safely stored the export, so it can
+// prune old synced registrations (its persist budget is finite). Losing this
+// message is harmless — the next export re-acks.
+function ackToWatch(responseText) {
+  var ackedThrough = 0;
+  try {
+    ackedThrough = JSON.parse(responseText).ackedThrough || 0;
+  } catch (e) {
+    console.log('Ack parse failed: ' + e);
+    return;
+  }
+  if (ackedThrough <= 0) {
+    return;
+  }
+  Pebble.sendAppMessage(
+    { 'EXPORT_ACK_THROUGH': ackedThrough },
+    function() { console.log('Ack sent to watch: through ' + ackedThrough); },
+    function(e) { console.log('Ack to watch failed: ' + JSON.stringify(e)); }
+  );
 }
 
 function metricTypeName(type) {

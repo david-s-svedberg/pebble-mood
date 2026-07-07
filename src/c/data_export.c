@@ -91,6 +91,15 @@ static void inbox_received(DictionaryIterator* iter, void* context)
     {
         data_export_send_all();
     }
+
+    // The companion confirmed how far it has safely stored the export — prune
+    // old synced registrations (the persist budget is finite). The recent tail
+    // stays on the watch for Today / update-in-place / trends.
+    Tuple* ack = dict_find(iter, MESSAGE_KEY_EXPORT_ACK_THROUGH);
+    if(ack != NULL)
+    {
+        registrations_prune_synced((time_t)ack->value->uint32);
+    }
 }
 
 static void outbox_sent(DictionaryIterator* iter, void* context)

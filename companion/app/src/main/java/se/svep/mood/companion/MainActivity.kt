@@ -1,74 +1,90 @@
 package se.svep.mood.companion
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import se.svep.mood.companion.db.AppDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Spike UI: starts the import listener and shows what arrives, raw.
- *
- * Purpose (step 1 in design/companion_app_plan.md): prove that the Pebble
- * app's JS runtime can deliver the export to us over localhost on a real
- * phone. Keep this app open, then open the Pebble app so the watchapp's JS
- * side relaunches and pushes the export. Everything else (persistence, UI,
- * correlations) comes after this is proven.
- *
- * The server is activity-scoped on purpose — a foreground service is real-app
- * territory, not spike territory.
+ * Phase-2 status view: starts the import service and shows what the database
+ * holds. The real UI (history, graphs) is phase 3.
  */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var log: TextView
-    private var server: ImportServer? = null
-    private var imports = 0
+    private lateinit var status: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        log = TextView(this).apply {
+        status = TextView(this).apply {
             setPadding(32, 32, 32, 32)
-            textSize = 14f
+            textSize = 15f
         }
-        setContentView(ScrollView(this).apply { addView(log) })
-        append("Mood companion — import spike\nLyssnar på 127.0.0.1:9099/import …\n")
-        append("Öppna Pebble-appen så att klockans JS-sida startar om och pushar exporten.\n")
-    }
+        setContentView(ScrollView(this).apply { addView(status) })
 
-    override fun onStart() {
-        super.onStart()
-        server = ImportServer(onImport = ::onImport).also { it.start() }
-    }
+        requestNotificationPermissionIfNeeded()
+        ImportService.start(this)
 
-    override fun onStop() {
-        server?.stop()
-        server = null
-        super.onStop()
-    }
-
-    private fun onImport(body: String) {
-        Log.i("MoodCompanion", "import: ${body.take(500)}")
-        val summary = try {
-            val payload = JSONObject(body)
-            val regs = payload.getJSONArray("registrations")
-            val first = if (regs.length() > 0) regs.getJSONObject(0).toString(2) else "(tom)"
-            "✅ Import #${++imports}: ${regs.length()} registreringar\nFörsta posten:\n$first"
-        } catch (e: Exception) {
-            "⚠️ Kunde inte tolka payload (${e.message}):\n${body.take(300)}"
-        }
-        runOnUiThread {
-            append("\n[${timestamp()}] $summary\n")
+        // Refresh on every completed import (and once at startup).
+        lifecycleScope.launch {
+            ImportRepository.lastImport.collectLatest { refresh(it) }
         }
     }
 
-    private fun append(text: String) {
-        log.append(text)
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { refresh(ImportRepository.lastImport.value) }
     }
 
-    private fun timestamp(): String =
-        SimpleDateFormat("HH:mm:ss", Locale.ROOT).format(Date())
+    private suspend fun refresh(last: Pair<ImportResult, Long>?) {
+        val db = AppDatabase.get(this)
+        val total = db.registrations().count()
+        val newest = db.registrations().newestTimestamp()
+        val perMetric = db.registrations().countsPerMetric()
+
+        val text = buildString {
+            appendLine("Mood Companion")
+            appendLine("Synk-tjänsten lyssnar på localhost:9099.")
+            appendLine()
+            if (last != null) {
+                val (result, at) = last
+                appendLine("Senaste import ${time(at)}: ${result.received} mottagna, ${result.new} nya.")
+            } else {
+                appendLine("Ingen import den här sessionen ännu.")
+            }
+            appendLine()
+            appendLine("I databasen: $total registreringar")
+            if (newest != null) {
+                appendLine("Senaste svar: ${time(newest * 1000)}")
+            }
+            if (perMetric.isNotEmpty()) {
+                appendLine()
+                appendLine("Per metric:")
+                perMetric.forEach { appendLine("  ${it.name}: ${it.count}") }
+            }
+        }
+        runOnUiThread { status.text = text }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        }
+    }
+
+    private fun time(millis: Long): String =
+        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date(millis))
 }
