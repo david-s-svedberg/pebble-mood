@@ -48,6 +48,10 @@ interface RegistrationDao {
         "ORDER BY timestamp"
     )
     suspend fun inWindow(metricIds: List<Int>, fromTimestamp: Long): List<RegistrationEntity>
+
+    /** Removes demo rows (DemoData marks them via importedAt). */
+    @Query("DELETE FROM registration WHERE importedAt = :marker")
+    suspend fun deleteByImportMarker(marker: Long): Int
 }
 
 data class MetricCount(val name: String, val count: Int)

@@ -59,11 +59,18 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
-// Validated reference palette (dataviz skill): first four categorical slots,
-// light + dark steps. Chart chrome inks likewise. Marks/labels use ink tokens;
-// only marks wear series color.
-private val SERIES_LIGHT = listOf(Color(0xFF2A78D6), Color(0xFF1BAF7A), Color(0xFFEDA100), Color(0xFF008300))
-private val SERIES_DARK = listOf(Color(0xFF3987E5), Color(0xFF199E70), Color(0xFFC98500), Color(0xFF008300))
+// Validated reference palette (dataviz skill): all eight categorical slots in
+// their CVD-optimized fixed order, light + dark steps. The selection cap IS
+// the palette size — colors are never cycled or generated (a 9th simultaneous
+// series would be unidentifiable). Marks wear series color; text wears ink.
+private val SERIES_LIGHT = listOf(
+    Color(0xFF2A78D6), Color(0xFF1BAF7A), Color(0xFFEDA100), Color(0xFF008300),
+    Color(0xFF4A3AA7), Color(0xFFE34948), Color(0xFFE87BA4), Color(0xFFEB6834),
+)
+private val SERIES_DARK = listOf(
+    Color(0xFF3987E5), Color(0xFF199E70), Color(0xFFC98500), Color(0xFF008300),
+    Color(0xFF9085E9), Color(0xFFE66767), Color(0xFFD55181), Color(0xFFD95926),
+)
 private val MAX_SELECTED = SERIES_LIGHT.size
 
 private data class Chrome(
@@ -141,9 +148,9 @@ fun GraphScreen(modifier: Modifier = Modifier) {
     var chartColors by remember { mutableStateOf<Map<Int, Color>>(emptyMap()) }
     var readout by remember { mutableStateOf<String?>(null) }
 
-    val lastImport by ImportRepository.lastImport.collectAsStateSafe()
+    val dataVersion by ImportRepository.dataVersion.collectAsStateSafe()
 
-    LaunchedEffect(selected, windowDays, resolution, lastImport) {
+    LaunchedEffect(selected, windowDays, resolution, dataVersion) {
         val colorSnapshot = selected.associateWith { seriesColors[slots.slotFor(it)] }
         withContext(Dispatchers.IO) {
             val db = AppDatabase.get(context)

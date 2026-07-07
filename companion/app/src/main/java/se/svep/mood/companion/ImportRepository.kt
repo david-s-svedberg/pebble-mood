@@ -66,6 +66,7 @@ class ImportRepository(context: Context) {
         val result = ImportResult(received = rows.size, new = inserted, ackedThrough = newest)
         Log.i(TAG, "import: received=${result.received} new=${result.new} ackedThrough=${result.ackedThrough}")
         lastImportFlow.value = result to now
+        bumpDataVersion()
         return result
     }
 
@@ -73,7 +74,15 @@ class ImportRepository(context: Context) {
         private const val TAG = "MoodCompanion"
 
         private val lastImportFlow = MutableStateFlow<Pair<ImportResult, Long>?>(null)
-        /** Latest completed import (result, wall-clock millis) — UI refresh signal. */
+        /** Latest completed import (result, wall-clock millis) — for the status text. */
         val lastImport = lastImportFlow.asStateFlow()
+
+        private val dataVersionFlow = MutableStateFlow(0)
+        /** Bumps on ANY data change (imports, demo data) — the UI refresh signal. */
+        val dataVersion = dataVersionFlow.asStateFlow()
+
+        fun bumpDataVersion() {
+            dataVersionFlow.value++
+        }
     }
 }
