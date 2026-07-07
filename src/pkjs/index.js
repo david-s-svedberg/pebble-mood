@@ -6,7 +6,10 @@
 // the companion runs an HTTP listener on localhost; nothing leaves the phone).
 
 // The companion app's import listener (companion/: ImportServer).
-var COMPANION_IMPORT_URL = 'http://127.0.0.1:9099/import';
+// NOTE: must be the literal hostname `localhost` — the Core Devices app's XHR
+// bridge errors on raw IPs (http://127.0.0.1:... gives onerror, verified on
+// coreapp 1.5.0.2), while `localhost` resolves and connects fine.
+var COMPANION_IMPORT_URL = 'http://localhost:9099/import';
 
 var registrations = [];
 
