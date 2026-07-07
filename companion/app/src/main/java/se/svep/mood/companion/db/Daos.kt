@@ -41,6 +41,13 @@ interface RegistrationDao {
         "GROUP BY r.metricId ORDER BY count DESC"
     )
     suspend fun countsPerMetric(): List<MetricCount>
+
+    @Query(
+        "SELECT * FROM registration " +
+        "WHERE metricId IN (:metricIds) AND timestamp >= :fromTimestamp " +
+        "ORDER BY timestamp"
+    )
+    suspend fun inWindow(metricIds: List<Int>, fromTimestamp: Long): List<RegistrationEntity>
 }
 
 data class MetricCount(val name: String, val count: Int)

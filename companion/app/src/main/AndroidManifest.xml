@@ -4,7 +4,7 @@
     <!-- Needed to open the listening socket (the phone-internal import listener). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -20,10 +20,17 @@
         </activity>
 
         <!-- Owns the localhost import listener so sync happens the moment the
-             watch app runs, regardless of whether the UI is open. -->
+             watch app runs, regardless of whether the UI is open. specialUse
+             rather than dataSync: Android 15 time-boxes dataSync services
+             (~6 h) and killed us with ForegroundServiceDidNotStopInTime; a
+             standing watch-sync listener has no natural stop point. -->
         <service
             android:name=".ImportService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Standing localhost listener receiving Pebble watch sync batches" />
+        </service>
     </application>
 </manifest>
