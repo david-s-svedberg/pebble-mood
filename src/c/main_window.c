@@ -6,6 +6,7 @@
 #include "metric_list_window.h"
 #include "scheduler.h"
 #include "icons.h"
+#include "menu_theme.h"
 #include "repositories/app_config_repository.h"
 
 static Window* m_main_window;
@@ -46,13 +47,6 @@ static void update_next_time()
     text_layer_set_text(m_next_layer, m_next_buffer);
 }
 
-static void setup_status_bar(Layer* window_layer)
-{
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
-}
 
 static void setup_title_layer(Layer* window_layer, GRect bounds)
 {
@@ -130,7 +124,7 @@ static void load_main_window(Window* window)
     Layer* window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    setup_status_bar(window_layer);
+    m_status_bar = status_bar_create_themed(window_layer);
     setup_title_layer(window_layer, bounds);
     setup_icon_layer(window_layer, bounds);
     setup_next_layer(window_layer, bounds);

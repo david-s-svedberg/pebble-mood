@@ -103,10 +103,8 @@ void deinit()
 {
     APP_LOG(APP_LOG_LEVEL_INFO, "Deiniting Mood");
 
-    // tear_down_config_window();
-    // tear_down_edit_alarm_window();
-    // tear_down_alarm_window();
-
-    // destroy_all_icons();
-    // setup_app_glance();
+    // Windows are intentionally not destroyed: the OS reclaims the whole heap
+    // at exit, and the reuse-one-Window pattern keeps them alive on purpose.
+    setup_app_glance();     // launcher glance: "Next time: HH:MM"
+    destroy_all_icons();
 }

@@ -4,8 +4,8 @@
 
 #include "repositories/app_config_repository.h"
 #include "edit_alarm_window_logic.h"
-#include "persistance.h"
 #include "icons.h"
+#include "menu_theme.h"
 
 static Window *edit_alarm_window;
 
@@ -95,16 +95,6 @@ static void setup_edit_alarm_time_layer(Layer *window_layer, GRect bounds)
     layer_add_child(window_layer, text_layer_get_layer(edit_alarm_time_minute_layer));
 }
 
-static void setup_status_bar(Layer *window_layer, GRect bounds)
-{
-    status_bar = status_bar_layer_create();
-
-    status_bar_layer_set_colors(status_bar, config_get_background_color(), config_get_foreground_color());
-    status_bar_layer_set_separator_mode(status_bar, StatusBarLayerSeparatorModeDotted);
-
-    layer_add_child(window_layer, status_bar_layer_get_layer(status_bar));
-}
-
 static void load_edit_alarm_window(Window *edit_alarm_window)
 {
     window_set_background_color(edit_alarm_window, config_get_background_color());
@@ -114,7 +104,7 @@ static void load_edit_alarm_window(Window *edit_alarm_window)
     setup_edit_alarm_action_bar_layer(edit_alarm_window_layer, edit_alarm_window_bounds);
     setup_edit_alarm_active_layer(edit_alarm_window_layer, edit_alarm_window_bounds);
     setup_edit_alarm_time_layer(edit_alarm_window_layer, edit_alarm_window_bounds);
-    setup_status_bar(edit_alarm_window_layer, edit_alarm_window_bounds);
+    status_bar = status_bar_create_themed(edit_alarm_window_layer);
 
     set_edit_alarm_layers(
         edit_alarm_active_layer,

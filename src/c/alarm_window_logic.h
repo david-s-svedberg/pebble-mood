@@ -2,7 +2,6 @@
 
 #include <pebble.h>
 
-#include "persistance.h"
 
 void set_alarm_window(Window* alarm_window);
 void set_alarm_layers(

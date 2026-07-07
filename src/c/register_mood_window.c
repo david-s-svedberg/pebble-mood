@@ -4,6 +4,7 @@
 
 #include "register_mood_window_logic.h"
 #include "icons.h"
+#include "menu_theme.h"
 #include "repositories/app_config_repository.h"
 
 static Window* m_mood_window;
@@ -15,14 +16,6 @@ static ActionBarLayer* m_action_bar;
 // Per-option text labels, right-aligned next to the action bar at the Up /
 // Select / Down button heights (index 0 = Up, 1 = Select, 2 = Down).
 static TextLayer* m_option_labels[3];
-
-static void setup_status_bar(Layer *window_layer, GRect bounds)
-{
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
-}
 
 static void setup_title_layer(Layer *window_layer, GRect bounds)
 {
@@ -93,7 +86,7 @@ static void load_mood_window(Window *window)
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    setup_status_bar(window_layer, bounds);
+    m_status_bar = status_bar_create_themed(window_layer);
     setup_title_layer(window_layer, bounds);
     setup_icon_layer(window_layer, bounds);
     setup_value_layer(window_layer, bounds);

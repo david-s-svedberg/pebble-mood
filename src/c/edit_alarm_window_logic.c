@@ -2,7 +2,6 @@
 
 #include <pebble.h>
 
-#include "persistance.h"
 #include "format.h"
 #include "icons.h"
 #include "scheduler.h"

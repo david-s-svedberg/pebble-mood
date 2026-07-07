@@ -107,11 +107,6 @@ static uint16_t get_registration_id(byte* item)
     return ((Registration*)item)->id;
 }
 
-static bool registration_is_same_metric_id(uint16_t id, byte* item)
-{
-    return ((Registration*)item)->metrics_id == id;
-}
-
 // Re-points every cached title at the string store. Must run after ANY string
 // mutation: string_add/string_delete realloc the String array (dynamic_add/
 // dynamic_delete free the old one), so every String* handed out before the
@@ -413,11 +408,6 @@ void registration_update(Registration* registration, uint8_t value)
     dynamic_save(&m_registrations);
 }
 
-Registration* registrations_get_for_metric(uint16_t metric_id)
-{
-    return (Registration*)dynamic_get(metric_id, &m_registrations, registration_is_same_metric_id);
-}
-
 Registration* registrations_get_all()
 {
     return (Registration*)m_registrations.items;
@@ -436,20 +426,6 @@ static time_t start_of_today()
     local->tm_min = 0;
     local->tm_sec = 0;
     return mktime(local);
-}
-
-bool metric_registered_today(uint16_t metric_id)
-{
-    time_t since = start_of_today();
-    for(int i = 0; i < m_registrations.number_of_items; i++)
-    {
-        Registration* reg = (Registration*)&m_registrations.items[i * m_registrations.item_size];
-        if(reg->metrics_id == metric_id && reg->time_stamp >= since)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool metric_registered_today_in_group(uint16_t group_id, uint16_t metric_id)
@@ -492,18 +468,6 @@ bool registrations_last_value(uint16_t metric_id, uint8_t* out_value)
         }
     }
     return found;
-}
-
-bool metric_in_any_group(uint16_t metric_id)
-{
-    for(int i = 0; i < m_group_metrics.number_of_items; i++)
-    {
-        if(group_metric_at(i)->metric_id == metric_id)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool metrics_group_complete_today(uint16_t group_id)

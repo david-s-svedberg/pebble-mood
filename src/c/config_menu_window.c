@@ -171,20 +171,13 @@ static void create_menu(Layer* window_layer, GRect bounds)
     layer_add_child(window_layer, menu_layer_get_layer(m_config_menu_layer));
 }
 
-static void setup_status_bar(Layer *window_layer)
-{
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
-}
-
 static void load_config_window(Window *window)
 {
     window_set_background_color(window, config_get_background_color());
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    setup_status_bar(window_layer);
+    m_status_bar = status_bar_create_themed(window_layer);
     create_menu(window_layer, bounds);
     update_status_bar();
 }

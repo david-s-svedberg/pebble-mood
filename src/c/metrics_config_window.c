@@ -332,9 +332,7 @@ static void load_main_window(Window *window)
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
+    m_status_bar = status_bar_create_themed(window_layer);
     update_status_bar();
 
     build_metric_rows();

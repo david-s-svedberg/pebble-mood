@@ -1,6 +1,7 @@
 #include "icon_picker_window.h"
 
 #include "icons.h"
+#include "menu_theme.h"
 #include "repositories/app_config_repository.h"
 
 static Window* m_window = NULL;
@@ -108,11 +109,7 @@ static void window_load(Window* window)
     Layer* window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    status_bar_layer_set_colors(m_status_bar,
-        config_get_background_color(), config_get_foreground_color());
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
+    m_status_bar = status_bar_create_themed(window_layer);
 
     m_menu_layer = menu_layer_create(GRect(0, STATUS_BAR_LAYER_HEIGHT,
         bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));

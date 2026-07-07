@@ -4,6 +4,7 @@
 
 #include "alarm_window_logic.h"
 #include "icons.h"
+#include "menu_theme.h"
 #include "repositories/app_config_repository.h"
 
 static Window *alarm_window;
@@ -71,16 +72,6 @@ static void setup_alarm_snooze_time_layer(Layer *window_layer, GRect bounds)
     layer_add_child(window_layer, text_layer_get_layer(snooze_time_layer));
 }
 
-static void setup_status_bar(Layer *window_layer, GRect bounds)
-{
-    status_bar = status_bar_layer_create();
-
-    status_bar_layer_set_colors(status_bar, config_get_background_color(), config_get_foreground_color());
-    status_bar_layer_set_separator_mode(status_bar, StatusBarLayerSeparatorModeDotted);
-
-    layer_add_child(window_layer, status_bar_layer_get_layer(status_bar));
-}
-
 static void load_alarm_window(Window *window)
 {
     window_set_background_color(window, config_get_background_color());
@@ -91,7 +82,7 @@ static void load_alarm_window(Window *window)
     setup_alarm_time_layer(window_layer, bounds);
     setup_alarm_snooze_time_layer(window_layer, bounds);
     setup_alarm_window_action_bar_layer(window_layer, bounds);
-    setup_status_bar(window_layer, bounds);
+    status_bar = status_bar_create_themed(window_layer);
 
     set_alarm_layers(alarm_time_layer, snooze_time_layer, alarm_window_action_bar_layer);
 }

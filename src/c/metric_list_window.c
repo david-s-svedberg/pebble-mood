@@ -279,18 +279,10 @@ static void create_menu()
     }
 }
 
-static void setup_status_bar(Layer* window_layer)
-{
-    m_status_bar = status_bar_layer_create();
-    status_bar_layer_set_colors(m_status_bar, config_get_background_color(), config_get_foreground_color());
-    status_bar_layer_set_separator_mode(m_status_bar, StatusBarLayerSeparatorModeDotted);
-    layer_add_child(window_layer, status_bar_layer_get_layer(m_status_bar));
-}
-
 static void load_window(Window* window)
 {
     window_set_background_color(window, config_get_background_color());
-    setup_status_bar(window_get_root_layer(window));
+    m_status_bar = status_bar_create_themed(window_get_root_layer(window));
     create_menu();
 }
 

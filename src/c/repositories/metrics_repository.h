@@ -27,17 +27,14 @@ void            metrics_save();
 
 void            registration_add(Registration* registration);
 void            registration_update(Registration* registration, uint8_t value);
-bool            metric_registered_today(uint16_t metric_id);
 bool            metric_registered_today_in_group(uint16_t group_id, uint16_t metric_id);
 // Today's registration for a given (group, metric) slot, or NULL. group_id 0
 // matches spontaneous registrations.
 Registration*   registration_today_for_group_metric(uint16_t group_id, uint16_t metric_id);
 bool            metrics_group_complete_today(uint16_t group_id);
-bool            metric_in_any_group(uint16_t metric_id);
 // Value of the most recent registration for a metric (any group), for defaulting
 // the next entry. Returns false if the metric has never been registered.
 bool            registrations_last_value(uint16_t metric_id, uint8_t* out_value);
-Registration*   registrations_get_for_metric(uint16_t metric_id);
 Registration*   registrations_get_all();
 uint32_t        registrations_count();
 

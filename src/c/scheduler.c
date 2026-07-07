@@ -98,13 +98,6 @@ static struct tm get_alarm_time_base(Alarm* alarm)
     return *base_alarm_time;
 }
 
-void schedule_alarm_for_tomorrow(Alarm* alarm)
-{
-    struct tm next_alarm = get_alarm_time_base(alarm);
-    next_alarm.tm_mday += 1;
-    schedule(alarm, mktime(&next_alarm));
-}
-
 static bool is_less_than_x_seconds_from_now(int x, struct tm* time_to_check)
 {
     time_t now = time(NULL);
@@ -134,11 +127,6 @@ void reschedule_alarm(Alarm* alarm)
 void unschedule_alarm(Alarm* alarm)
 {
     wakeup_cancel(alarm->wakeup_id);
-}
-
-void unschedule_all()
-{
-    wakeup_cancel_all();
 }
 
 TimeOfDay get_scheduled_time(Alarm* alarm)

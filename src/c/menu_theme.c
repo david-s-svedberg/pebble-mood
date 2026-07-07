@@ -15,3 +15,13 @@ bool menu_theme_icon_light(const Layer* cell_layer)
     bool highlighted = menu_cell_layer_is_highlighted(cell_layer);
     return highlighted ? !config_is_dark_theme() : config_is_dark_theme();
 }
+
+StatusBarLayer* status_bar_create_themed(Layer* window_layer)
+{
+    StatusBarLayer* status_bar = status_bar_layer_create();
+    status_bar_layer_set_colors(status_bar,
+        config_get_background_color(), config_get_foreground_color());
+    status_bar_layer_set_separator_mode(status_bar, StatusBarLayerSeparatorModeDotted);
+    layer_add_child(window_layer, status_bar_layer_get_layer(status_bar));
+    return status_bar;
+}

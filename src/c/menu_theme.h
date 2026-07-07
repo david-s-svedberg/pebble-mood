@@ -14,3 +14,7 @@ void menu_theme_apply_colors(MenuLayer* menu_layer);
 // row in a light theme, or any normal row in a dark theme — i.e. whenever the
 // cell's background is dark.
 bool menu_theme_icon_light(const Layer* cell_layer);
+
+// Creates a status bar in the theme colours with the app's dotted separator and
+// adds it to window_layer. The caller owns it (destroy in .unload).
+StatusBarLayer* status_bar_create_themed(Layer* window_layer);

@@ -2,7 +2,6 @@
 
 #include <pebble.h>
 
-#include "persistance.h"
 #include "format.h"
 #include "scheduler.h"
 #include "register_mood_window.h"

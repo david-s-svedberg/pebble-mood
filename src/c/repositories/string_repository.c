@@ -54,11 +54,6 @@ void strings_init()
     connect_string_values();
 }
 
-String* strings_get_all()
-{
-    return (String*)strings.items;
-}
-
 String* string_get(const uint16_t id)
 {
     String* found = NULL;
@@ -145,11 +140,6 @@ void string_delete(const uint16_t delete_id)
             persist_blob_write(DataKeys_STRING_CHAR_DATA, m_string_values_data, m_total_string_char_length);
         }
     }
-}
-
-uint32_t strings_count()
-{
-    return strings.number_of_items;
 }
 
 void strings_tear_down()

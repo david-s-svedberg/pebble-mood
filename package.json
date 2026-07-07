@@ -8,9 +8,9 @@
         "resources": {
             "publishedMedia": [
                 {
-                  "name": "APP_GLANCE_ICON",
-                  "id": 1,
-                  "glance": "PILL_ICON"
+                    "name": "APP_GLANCE_ICON",
+                    "id": 1,
+                    "glance": "MENU_ICON"
                 }
             ],
             "media": [
@@ -18,13 +18,6 @@
                     "file": "images/mood_menu.png",
                     "name": "MENU_ICON",
                     "menuIcon": true,
-                    "targetPlatforms": ["diorite","basalt","emery"],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/steps.png",
-                    "name": "STEP_ICON",
-                    "spaceOptimization": "memory",
                     "targetPlatforms": [
                         "diorite",
                         "basalt",
@@ -170,50 +163,6 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/alarm16_16_trans.png",
-                    "name": "ALARM_ICON_TRANS",
-                    "spaceOptimization": "memory",
-                    "targetPlatforms": [
-                        "diorite",
-                        "basalt",
-                        "emery"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/no_alarm16_16_trans.png",
-                    "name": "NO_ALARM_ICON_TRANS",
-                    "spaceOptimization": "memory",
-                    "targetPlatforms": [
-                        "diorite",
-                        "basalt",
-                        "emery"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/mood_50.png",
-                    "name": "MOOD_50_ICON",
-                    "spaceOptimization": "memory",
-                    "targetPlatforms": [
-                        "diorite",
-                        "basalt",
-                        "emery"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/exercise_50.png",
-                    "name": "EXERCISE_50_ICON",
-                    "spaceOptimization": "memory",
-                    "targetPlatforms": [
-                        "diorite",
-                        "basalt",
-                        "emery"
-                    ],
-                    "type": "bitmap"
-                },
-                {
                     "file": "images/cross20_20.png",
                     "name": "CROSS_ICON",
                     "spaceOptimization": "memory",
@@ -228,134 +177,1058 @@
                     "file": "images/face_sad.png",
                     "name": "FACE_SAD_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/face_neutral.png",
                     "name": "FACE_NEUTRAL_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/face_happy.png",
                     "name": "FACE_HAPPY_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/level_low.png",
                     "name": "LEVEL_LOW_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/level_mid.png",
                     "name": "LEVEL_MID_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/level_high.png",
                     "name": "LEVEL_HIGH_ICON",
                     "spaceOptimization": "memory",
-                    "targetPlatforms": ["diorite","basalt","emery"],
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
                     "type": "bitmap"
                 },
-                { "file": "images/check20_20_white.png", "name": "CHECK_W20_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/cross20_20_white.png", "name": "CROSS_W20_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/up_white.png", "name": "UP_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/down_white.png", "name": "DOWN_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/pill_white.png", "name": "PILL_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/face_sad_white.png", "name": "FACE_SAD_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/face_neutral_white.png", "name": "FACE_NEUTRAL_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/face_happy_white.png", "name": "FACE_HAPPY_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/level_low_white.png", "name": "LEVEL_LOW_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/level_mid_white.png", "name": "LEVEL_MID_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/level_high_white.png", "name": "LEVEL_HIGH_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_sun.png", "name": "MAIN_SUN_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_moon.png", "name": "MAIN_MOON_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_droplet.png", "name": "MAIN_DROPLET_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_heart.png", "name": "MAIN_HEART_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bolt.png", "name": "MAIN_BOLT_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_coffee.png", "name": "MAIN_COFFEE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_glass.png", "name": "MAIN_GLASS_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_thermo.png", "name": "MAIN_THERMO_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_phone.png", "name": "MAIN_PHONE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_cloud.png", "name": "MAIN_CLOUD_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_dumbbell.png", "name": "MAIN_DUMBBELL_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bubble.png", "name": "MAIN_BUBBLE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_checkbox.png", "name": "MAIN_CHECKBOX_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_apple.png", "name": "MAIN_APPLE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_target.png", "name": "MAIN_TARGET_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_pulse.png", "name": "MAIN_PULSE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_sun_black.png", "name": "MAIN_SUN_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_moon_black.png", "name": "MAIN_MOON_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_droplet_black.png", "name": "MAIN_DROPLET_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_heart_black.png", "name": "MAIN_HEART_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bolt_black.png", "name": "MAIN_BOLT_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_coffee_black.png", "name": "MAIN_COFFEE_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_glass_black.png", "name": "MAIN_GLASS_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_thermo_black.png", "name": "MAIN_THERMO_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_phone_black.png", "name": "MAIN_PHONE_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_cloud_black.png", "name": "MAIN_CLOUD_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_dumbbell_black.png", "name": "MAIN_DUMBBELL_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bubble_black.png", "name": "MAIN_BUBBLE_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_checkbox_black.png", "name": "MAIN_CHECKBOX_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_apple_black.png", "name": "MAIN_APPLE_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_target_black.png", "name": "MAIN_TARGET_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_pulse_black.png", "name": "MAIN_PULSE_BLACK_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_sun_sm.png", "name": "MAIN_SUN_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_sun_sm_white.png", "name": "MAIN_SUN_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_moon_sm.png", "name": "MAIN_MOON_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_moon_sm_white.png", "name": "MAIN_MOON_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_droplet_sm.png", "name": "MAIN_DROPLET_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_droplet_sm_white.png", "name": "MAIN_DROPLET_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_heart_sm.png", "name": "MAIN_HEART_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_heart_sm_white.png", "name": "MAIN_HEART_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bolt_sm.png", "name": "MAIN_BOLT_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bolt_sm_white.png", "name": "MAIN_BOLT_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_coffee_sm.png", "name": "MAIN_COFFEE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_coffee_sm_white.png", "name": "MAIN_COFFEE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_glass_sm.png", "name": "MAIN_GLASS_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_glass_sm_white.png", "name": "MAIN_GLASS_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_thermo_sm.png", "name": "MAIN_THERMO_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_thermo_sm_white.png", "name": "MAIN_THERMO_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_phone_sm.png", "name": "MAIN_PHONE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_phone_sm_white.png", "name": "MAIN_PHONE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_cloud_sm.png", "name": "MAIN_CLOUD_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_cloud_sm_white.png", "name": "MAIN_CLOUD_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_dumbbell_sm.png", "name": "MAIN_DUMBBELL_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_dumbbell_sm_white.png", "name": "MAIN_DUMBBELL_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bubble_sm.png", "name": "MAIN_BUBBLE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_bubble_sm_white.png", "name": "MAIN_BUBBLE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_checkbox_sm.png", "name": "MAIN_CHECKBOX_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_checkbox_sm_white.png", "name": "MAIN_CHECKBOX_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_apple_sm.png", "name": "MAIN_APPLE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_apple_sm_white.png", "name": "MAIN_APPLE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_target_sm.png", "name": "MAIN_TARGET_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_target_sm_white.png", "name": "MAIN_TARGET_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_pulse_sm.png", "name": "MAIN_PULSE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/main_pulse_sm_white.png", "name": "MAIN_PULSE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/edit15_15_inv.png", "name": "EDIT_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/config16_16_inv.png", "name": "CONFIG_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/play_inv.png", "name": "PLAY_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/snooze_inv.png", "name": "SNOOZE_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/silence_inv.png", "name": "SILENCE_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/alarm16_16_inv.png", "name": "ALARM_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/no_alarm16_16_inv.png", "name": "NO_ALARM_INV_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/mood_48.png", "name": "MOOD_48_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/mood_48_white.png", "name": "MOOD_48_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/exercise_48.png", "name": "EXERCISE_48_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/exercise_48_white.png", "name": "EXERCISE_48_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/mood_sm.png", "name": "MOOD_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/mood_sm_white.png", "name": "MOOD_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/exercise_sm.png", "name": "EXERCISE_SM_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" },
-                { "file": "images/exercise_sm_white.png", "name": "EXERCISE_SM_WHITE_ICON", "spaceOptimization": "memory", "targetPlatforms": ["diorite","basalt","emery"], "type": "bitmap" }
+                {
+                    "file": "images/check20_20_white.png",
+                    "name": "CHECK_W20_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/cross20_20_white.png",
+                    "name": "CROSS_W20_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/up_white.png",
+                    "name": "UP_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/down_white.png",
+                    "name": "DOWN_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/pill_white.png",
+                    "name": "PILL_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/face_sad_white.png",
+                    "name": "FACE_SAD_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/face_neutral_white.png",
+                    "name": "FACE_NEUTRAL_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/face_happy_white.png",
+                    "name": "FACE_HAPPY_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_low_white.png",
+                    "name": "LEVEL_LOW_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_mid_white.png",
+                    "name": "LEVEL_MID_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/level_high_white.png",
+                    "name": "LEVEL_HIGH_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_sun.png",
+                    "name": "MAIN_SUN_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_moon.png",
+                    "name": "MAIN_MOON_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_droplet.png",
+                    "name": "MAIN_DROPLET_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_heart.png",
+                    "name": "MAIN_HEART_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bolt.png",
+                    "name": "MAIN_BOLT_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_coffee.png",
+                    "name": "MAIN_COFFEE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_glass.png",
+                    "name": "MAIN_GLASS_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_thermo.png",
+                    "name": "MAIN_THERMO_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_phone.png",
+                    "name": "MAIN_PHONE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_cloud.png",
+                    "name": "MAIN_CLOUD_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_dumbbell.png",
+                    "name": "MAIN_DUMBBELL_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bubble.png",
+                    "name": "MAIN_BUBBLE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_checkbox.png",
+                    "name": "MAIN_CHECKBOX_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_apple.png",
+                    "name": "MAIN_APPLE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_target.png",
+                    "name": "MAIN_TARGET_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_pulse.png",
+                    "name": "MAIN_PULSE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_sun_black.png",
+                    "name": "MAIN_SUN_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_moon_black.png",
+                    "name": "MAIN_MOON_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_droplet_black.png",
+                    "name": "MAIN_DROPLET_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_heart_black.png",
+                    "name": "MAIN_HEART_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bolt_black.png",
+                    "name": "MAIN_BOLT_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_coffee_black.png",
+                    "name": "MAIN_COFFEE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_glass_black.png",
+                    "name": "MAIN_GLASS_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_thermo_black.png",
+                    "name": "MAIN_THERMO_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_phone_black.png",
+                    "name": "MAIN_PHONE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_cloud_black.png",
+                    "name": "MAIN_CLOUD_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_dumbbell_black.png",
+                    "name": "MAIN_DUMBBELL_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bubble_black.png",
+                    "name": "MAIN_BUBBLE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_checkbox_black.png",
+                    "name": "MAIN_CHECKBOX_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_apple_black.png",
+                    "name": "MAIN_APPLE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_target_black.png",
+                    "name": "MAIN_TARGET_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_pulse_black.png",
+                    "name": "MAIN_PULSE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_sun_sm.png",
+                    "name": "MAIN_SUN_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_sun_sm_white.png",
+                    "name": "MAIN_SUN_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_moon_sm.png",
+                    "name": "MAIN_MOON_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_moon_sm_white.png",
+                    "name": "MAIN_MOON_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_droplet_sm.png",
+                    "name": "MAIN_DROPLET_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_droplet_sm_white.png",
+                    "name": "MAIN_DROPLET_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_heart_sm.png",
+                    "name": "MAIN_HEART_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_heart_sm_white.png",
+                    "name": "MAIN_HEART_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bolt_sm.png",
+                    "name": "MAIN_BOLT_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bolt_sm_white.png",
+                    "name": "MAIN_BOLT_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_coffee_sm.png",
+                    "name": "MAIN_COFFEE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_coffee_sm_white.png",
+                    "name": "MAIN_COFFEE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_glass_sm.png",
+                    "name": "MAIN_GLASS_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_glass_sm_white.png",
+                    "name": "MAIN_GLASS_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_thermo_sm.png",
+                    "name": "MAIN_THERMO_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_thermo_sm_white.png",
+                    "name": "MAIN_THERMO_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_phone_sm.png",
+                    "name": "MAIN_PHONE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_phone_sm_white.png",
+                    "name": "MAIN_PHONE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_cloud_sm.png",
+                    "name": "MAIN_CLOUD_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_cloud_sm_white.png",
+                    "name": "MAIN_CLOUD_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_dumbbell_sm.png",
+                    "name": "MAIN_DUMBBELL_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_dumbbell_sm_white.png",
+                    "name": "MAIN_DUMBBELL_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bubble_sm.png",
+                    "name": "MAIN_BUBBLE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_bubble_sm_white.png",
+                    "name": "MAIN_BUBBLE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_checkbox_sm.png",
+                    "name": "MAIN_CHECKBOX_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_checkbox_sm_white.png",
+                    "name": "MAIN_CHECKBOX_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_apple_sm.png",
+                    "name": "MAIN_APPLE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_apple_sm_white.png",
+                    "name": "MAIN_APPLE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_target_sm.png",
+                    "name": "MAIN_TARGET_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_target_sm_white.png",
+                    "name": "MAIN_TARGET_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_pulse_sm.png",
+                    "name": "MAIN_PULSE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/main_pulse_sm_white.png",
+                    "name": "MAIN_PULSE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/edit15_15_inv.png",
+                    "name": "EDIT_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/config16_16_inv.png",
+                    "name": "CONFIG_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/play_inv.png",
+                    "name": "PLAY_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/snooze_inv.png",
+                    "name": "SNOOZE_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/silence_inv.png",
+                    "name": "SILENCE_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/alarm16_16_inv.png",
+                    "name": "ALARM_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/no_alarm16_16_inv.png",
+                    "name": "NO_ALARM_INV_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/mood_48.png",
+                    "name": "MOOD_48_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/mood_48_white.png",
+                    "name": "MOOD_48_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/exercise_48.png",
+                    "name": "EXERCISE_48_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/exercise_48_white.png",
+                    "name": "EXERCISE_48_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/mood_sm.png",
+                    "name": "MOOD_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/mood_sm_white.png",
+                    "name": "MOOD_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/exercise_sm.png",
+                    "name": "EXERCISE_SM_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/exercise_sm_white.png",
+                    "name": "EXERCISE_SM_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                }
             ]
         },
         "enableMultiJS": true,
