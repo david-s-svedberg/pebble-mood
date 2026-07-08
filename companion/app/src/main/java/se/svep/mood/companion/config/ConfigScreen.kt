@@ -42,7 +42,12 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import se.svep.mood.companion.ImportRepository
+import se.svep.mood.companion.MetricIcons
 import se.svep.mood.companion.health.HealthMetrics
 import se.svep.mood.companion.db.AppDatabase
 import se.svep.mood.companion.db.GroupEntity
@@ -166,18 +171,27 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
                 }
                 // Health Connect auto-metrics aren't watch config — they can't be
                 // renamed/deleted/edited, only given a valence (below). So no
-                // editor tap; the third field notes their source instead of an icon.
+                // editor tap, no watch icon; the label notes their source instead.
                 val isHealth = metric.metricId in HealthMetrics.ALL
-                val trailer = if (isHealth) "Health Connect"
-                    else ICON_CHOICE_NAMES.getOrElse(metric.mainIcon) { "?" }
-                val nameModifier = Modifier.fillMaxWidth().let {
-                    if (isHealth) it else it.clickable { editMetric = metric }
+                val iconRes = if (isHealth) null else MetricIcons.drawableFor(metric.mainIcon)
+                val label = "${metric.name}  ·  $scale" + if (isHealth) "  ·  Health Connect" else ""
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().let {
+                        if (isHealth) it else it.clickable { editMetric = metric }
+                    },
+                ) {
+                    if (iconRes != null) {
+                        Image(
+                            painter = painterResource(iconRes),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text(label, fontWeight = FontWeight.SemiBold)
                 }
-                Text(
-                    "${metric.name}  ·  $scale  ·  $trailer",
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = nameModifier,
-                )
                 Spacer(Modifier.height(4.dp))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     listOf(-1 to "Negativ", 0 to "Neutral", 1 to "Positiv").forEachIndexed { i, (value, label) ->

@@ -2,7 +2,11 @@ package se.svep.mood.companion.graph
 
 import android.content.Context
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import se.svep.mood.companion.MetricIcons
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -259,6 +263,15 @@ private fun Legend(
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
                 Spacer(Modifier.size(10.dp).background(colors[metric.metricId] ?: chrome.inkMuted, CircleShape))
                 Spacer(Modifier.width(6.dp))
+                MetricIcons.drawableFor(metric.mainIcon)?.let { res ->
+                    Image(
+                        painter = painterResource(res),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(chrome.inkSecondary),
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
                 val scale = when (metric.type) {
                     "bool" -> "ja/nej"
                     "three_option" -> "3 alt"
