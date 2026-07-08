@@ -37,3 +37,6 @@ bool        config_toggle_favorite(uint16_t metric_id);
 void        config_get_favorites(uint16_t* out);
 // Drops any favourite whose metric no longer exists (call after a delete).
 void        config_prune_favorite(uint16_t deleted_metric_id);
+// Wipes every persisted store. The app must exit right after — the next launch
+// re-seeds defaults via the first-start path.
+void        config_factory_reset();

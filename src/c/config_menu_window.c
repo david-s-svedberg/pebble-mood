@@ -19,6 +19,8 @@
 static Window *m_config_window;
 static StatusBarLayer* m_status_bar;
 static MenuLayer* m_config_menu_layer = NULL;
+// Two-tap guard on the destructive "Erase all data" row.
+static bool m_reset_armed = false;
 
 static void update_status_bar()
 {
@@ -38,7 +40,7 @@ static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void*
     {
         case SECTION_GROUPS:  return (uint16_t)metrics_groups_count() + 1;  // +1 for "+"
         case SECTION_METRICS: return (uint16_t)metrics_count() + 1;
-        default:              return 3;  // Alarm timeout, Theme, Home graph
+        default:              return 4;  // Alarm timeout, Theme, Home graph, Erase
     }
 }
 
@@ -91,11 +93,15 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
         {
             menu_cell_basic_draw(ctx, cell_layer, "Theme",
                 config_is_dark_theme() ? "Dark" : "Light", NULL);
-        } else
+        } else if(index->row == 2)
         {
             static char fav_buffer[8];
             snprintf(fav_buffer, sizeof(fav_buffer), "%d/%d", config_favorite_count(), MAX_FAVORITES);
             menu_cell_basic_draw(ctx, cell_layer, "Home graph", fav_buffer, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer,
+                m_reset_armed ? "Tap again to erase" : "Erase all data", NULL, NULL);
         }
     }
 }
@@ -124,6 +130,13 @@ static void cycle_alarm_timeout()
 
 static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* context)
 {
+    // Any selection other than the erase row itself disarms the confirm.
+    bool erase_row = (index->section == SECTION_APP && index->row == 3);
+    if(!erase_row)
+    {
+        m_reset_armed = false;
+    }
+
     if(index->section == SECTION_GROUPS)
     {
         size_t count = metrics_groups_count();
@@ -156,9 +169,22 @@ static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* con
         {
             config_toggle_theme();
             apply_theme();
-        } else
+        } else if(index->row == 2)
         {
             setup_favorites_window();
+        } else
+        {
+            if(m_reset_armed)
+            {
+                // Wipe every store and exit; the next launch re-seeds defaults.
+                wakeup_cancel_all();
+                config_factory_reset();
+                window_stack_pop_all(true);
+            } else
+            {
+                m_reset_armed = true;
+                layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
+            }
         }
     }
 }
@@ -201,6 +227,7 @@ static void unload_config_window(Window *window)
 static void appear_config_windows(Window *window)
 {
     // Groups/metrics may have been added or edited; repaint with fresh data.
+    m_reset_armed = false;
     if(m_config_menu_layer != NULL)
     {
         menu_layer_reload_data(m_config_menu_layer);

@@ -1,6 +1,7 @@
 #include "app_config_repository.h"
 
 #include "../data.h"
+#include "persist_blob.h"
 
 static AppConfig m_app_config;
 
@@ -201,6 +202,29 @@ void config_prune_favorite(uint16_t deleted_metric_id)
     {
         config_toggle_favorite(deleted_metric_id);   // removes it
     }
+}
+
+void config_factory_reset()
+{
+    // Delete every persisted store. Clearing FIRST_START means the next launch
+    // takes the first-start path and re-seeds defaults from scratch — so the
+    // caller should exit the app right after (no in-memory re-init dance).
+    persist_delete(DataKeys_APP_CONFIG);
+    persist_delete(DataKeys_FIRST_START);
+    persist_delete(DataKeys_STRING_META_DATA);
+    persist_delete(DataKeys_METRICS_GROUP_META_DATA);
+    persist_delete(DataKeys_METRICS_META_DATA);
+    persist_delete(DataKeys_REGISTRATIONS_META_DATA);
+    persist_delete(DataKeys_GROUP_METRICS_META_DATA);
+
+    persist_blob_delete(DataKeys_STRINGS_DATA);
+    persist_blob_delete(DataKeys_STRING_CHAR_DATA);
+    persist_blob_delete(DataKeys_METRICS_GROUP_DATA);
+    persist_blob_delete(DataKeys_METRICS_DATA);
+    persist_blob_delete(DataKeys_REGISTRATIONS_DATA);
+    persist_blob_delete(DataKeys_GROUP_METRICS_DATA);
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "factory reset: all stores wiped");
 }
 
 void config_set_snoozed_group_id(uint16_t group_id)
