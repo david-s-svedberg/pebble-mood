@@ -48,8 +48,8 @@ Projektet har numera **två kodbaser**:
 - **Verktyg (lägre ribba):** `.vscode/`, `.devcontainer/`, Gradle-wrappern.
 - **Granskas aldrig:** `build/`, `companion/**/build/`, `.claude/`, `design/` (historiska
   anteckningar — men håll `design/companion_app_plan.md` faktakorrekt i pass 10).
-- **Legacy:** `src/c/persistance.c`/`.h` är en död kvarleva från före repository-lagret
-  (headern helt utkommenterad). Granska den inte rad för rad — flagga den för borttagning.
+- **Legacy:** `src/c/persistance.c`/`.h` togs bort i en tidigare review — finns inte längre.
+  (Om de mot förmodan dyker upp igen: död kvarleva, flagga för borttagning.)
 
 ## Före pass 1: självkontroll av den här skillen
 
@@ -185,11 +185,11 @@ Konventionerna som håller kodbasen navigerbar. Tänk på:
   inline by design; `config_apply` är ren beteendekod utan UI.)
 - Repository-lagret är enda vägen till persist — inga direkta `persist_*`-anrop utanför
   `repositories/` (undantag: legacy).
-- Död kod: `persistance.c`/`.h` (flagga för borttagning), oanvända funktioner
-  (`main_window_format_average` — hemskärmsgrafen använder numera `trend.c`, INTE denna, så
-  om den fortfarande är oanvänd: flagga den), `config_prune_favorite` (definierad men inget
-  delete-flöde anropar den ännu — medvetet för framtiden?), oanvända ikon-getters/resurser,
-  utkommenterade block (`deinit`:s tear_downs, `app_glance`).
+- Död kod: oanvända funktioner och getters, utkommenterade block (`deinit`:s tear_downs,
+  `app_glance`), samt sålda-men-olästa message keys (t.ex. `REG_TOTAL` togs bort så — kolla
+  att C-skrivningar matchar det pkjs faktiskt läser). Not: `persistance.c` och
+  `main_window_format_average` är redan borta; `config_prune_favorite`/`metrics_delete` är
+  numera INTE död kod — delete-flödet (watch-editorer + companion) anropar dem.
 - Duplicering värd att extrahera (t.ex. status-bar-setup upprepas i varje fönster;
   temafärgs-appliceringen).
 - Namngivning/idiom-konsekvens med omgivande kod.
