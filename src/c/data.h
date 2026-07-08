@@ -7,7 +7,13 @@
 // Bump this whenever the AppConfig layout changes (and only append new fields
 // to the end of AppConfig). config_init() re-seeds when the stored version or
 // size no longer matches, so existing installs can't read a stale layout.
-#define CURRENT_DATA_VERSION (6)
+#define CURRENT_DATA_VERSION (7)
+
+// Home-screen trend graph: up to this many favourite metrics, each shown as a
+// 7-day sparkline. Aggregates are computed on demand from the registrations
+// store (which keeps a >=7-day tail — see registrations_prune_synced).
+#define MAX_FAVORITES (3)
+#define TREND_DAYS (7)
 
 // Reserved Alarm.index values for the non-group alarms. They live in a uint8_t
 // (Alarm.index) and are also used as the wakeup cookie (compared as int in
@@ -70,6 +76,10 @@ typedef struct {
     // Global on purpose — it does NOT touch each group's own alarm.active, so
     // flipping back restores exactly the schedule the user had.
     bool alarms_suspended;
+
+    // Home-screen graph favourites (metric ids, 0 = empty slot). When any is
+    // set, the home screen shows their 7-day sparklines instead of the big icon.
+    uint16_t favorite_metrics[MAX_FAVORITES];
 } AppConfig;
 
 typedef enum

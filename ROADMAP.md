@@ -128,20 +128,28 @@ grafer/korrelationer — fångar alla källor utan klock-kod.
   verkar påverka vad. API-nyckel i settings + tydlig notis om att datan lämnar telefonen
   vid just de anropen.
 
-### 2. Klockans graf-hemskärm (beslutad form)
+### 2. Klockans graf-hemskärm — KLAR (emulator-verifierad 2026-07-08)
 
-Välj **1–3 favoritmetrics**; hemskärmen visar deras utveckling senaste 7 dagarna som
-graf/sparkline (ersätter/kompletterar stora ikonen). Lagringsdesign med hänsyn till
-gallringen (fas 2): favoriterna får en **kompakt trendcache på klockan** — per favorit en
-ringbuffer med 7 dagliga aggregat (några dussin bytes), fristående från
-registrations-storen. Uppdateras vid registrering OCH när telefonsvar synkas tillbaka
-(fas 5); påverkas inte av att synkade registreringar gallras.
+Välj **1–3 favoritmetrics** (Settings → Home graph, cap 3); hemskärmen visar deras 7-dygns
+utveckling som sparklines i stället för stora ikonen (0 favoriter → ikonen kvar).
+- **Lagringsbeslutet ändrat:** ingen separat trendcache. Aggregaten (dagsmedel per favorit)
+  beräknas **on-demand ur registrations-storen** vid hemskärmens `.appear` — storen behåller
+  redan en ≥7-dygns svans (gallringen sparar just för trender), så en cache vore redundant och
+  bara en källa till staleness. `trend.c` gör en pass över registreringarna per favorit;
+  effektiv min/max per typ normaliserar höjden (delad semantik med data_export).
+- Favoriter lagras i AppConfig (`favorite_metrics[3]`, v7). Saknad data/dag → glapp i linjen;
+  favorit utan data → "ingen data". Uppdateras automatiskt när man kommer tillbaka från en
+  registrering eller telefon-sync (appear beräknar om).
 
 ## Öppna småtrådar
 
 - [ ] **Visuell röktest på 144×168** (diorite/basalt-emulatorn) — layouten är kodgranskad
-      (allt beräknas från bounds/konstanter) men appen har bara synats på emery. En
-      engångs-syn när emulatorn beter sig.
+      (allt beräknas från bounds/konstanter) men appen har bara synats på emery, inkl. den
+      nya hemskärmsgrafen. Sparkline-höjden på 144×168 blir ~39 px/rad vid 3 favoriter
+      (beräknat, ej synat). En engångs-syn när emulatorn beter sig.
+      (Not: qemu-pebble ligger i SDK:ns `toolchain/bin` och är inte på PATH i containern —
+      exportera `$HOME/.local/share/pebble-sdk/SDKs/4.17/toolchain/bin` före `pebble install
+      --emulator`.)
 
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. textfritt/förvalt alternativ.

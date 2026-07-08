@@ -143,6 +143,66 @@ void config_set_alarms_suspended(bool suspended)
     config_save();
 }
 
+uint8_t config_favorite_count()
+{
+    uint8_t count = 0;
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(m_app_config.favorite_metrics[i] != 0) count++;
+    }
+    return count;
+}
+
+bool config_is_favorite(uint16_t metric_id)
+{
+    if(metric_id == 0) return false;
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(m_app_config.favorite_metrics[i] == metric_id) return true;
+    }
+    return false;
+}
+
+bool config_toggle_favorite(uint16_t metric_id)
+{
+    if(metric_id == 0) return false;
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(m_app_config.favorite_metrics[i] == metric_id)
+        {
+            m_app_config.favorite_metrics[i] = 0;   // remove
+            config_save();
+            return true;
+        }
+    }
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(m_app_config.favorite_metrics[i] == 0)
+        {
+            m_app_config.favorite_metrics[i] = metric_id;   // add
+            config_save();
+            return true;
+        }
+    }
+    return false;   // full
+}
+
+void config_get_favorites(uint16_t* out)
+{
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        out[i] = m_app_config.favorite_metrics[i];
+    }
+}
+
+void config_prune_favorite(uint16_t deleted_metric_id)
+{
+    if(config_is_favorite(deleted_metric_id))
+    {
+        config_toggle_favorite(deleted_metric_id);   // removes it
+    }
+}
+
 void config_set_snoozed_group_id(uint16_t group_id)
 {
     m_app_config.snoozed_group_id = group_id;

@@ -10,6 +10,7 @@
 #include "edit_alarm_window.h"
 #include "metric_group_config_window.h"
 #include "metrics_config_window.h"
+#include "favorites_window.h"
 
 #define SECTION_GROUPS (0)
 #define SECTION_METRICS (1)
@@ -37,7 +38,7 @@ static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void*
     {
         case SECTION_GROUPS:  return (uint16_t)metrics_groups_count() + 1;  // +1 for "+"
         case SECTION_METRICS: return (uint16_t)metrics_count() + 1;
-        default:              return 2;  // Alarm timeout, Theme
+        default:              return 3;  // Alarm timeout, Theme, Home graph
     }
 }
 
@@ -86,10 +87,15 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
             static char timeout_buffer[8];
             snprintf(timeout_buffer, sizeof(timeout_buffer), "%d min", config_get_alarm_timeout() / 60);
             menu_cell_basic_draw(ctx, cell_layer, "Alarm timeout", timeout_buffer, NULL);
-        } else
+        } else if(index->row == 1)
         {
             menu_cell_basic_draw(ctx, cell_layer, "Theme",
                 config_is_dark_theme() ? "Dark" : "Light", NULL);
+        } else
+        {
+            static char fav_buffer[8];
+            snprintf(fav_buffer, sizeof(fav_buffer), "%d/%d", config_favorite_count(), MAX_FAVORITES);
+            menu_cell_basic_draw(ctx, cell_layer, "Home graph", fav_buffer, NULL);
         }
     }
 }
@@ -146,10 +152,13 @@ static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* con
         {
             cycle_alarm_timeout();
             layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
-        } else
+        } else if(index->row == 1)
         {
             config_toggle_theme();
             apply_theme();
+        } else
+        {
+            setup_favorites_window();
         }
     }
 }

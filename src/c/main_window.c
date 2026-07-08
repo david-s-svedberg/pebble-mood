@@ -7,13 +7,16 @@
 #include "scheduler.h"
 #include "icons.h"
 #include "menu_theme.h"
+#include "trend.h"
 #include "repositories/app_config_repository.h"
+#include "repositories/metrics_repository.h"
 
 static Window* m_main_window;
 static StatusBarLayer* m_status_bar;
 static TextLayer* m_title_layer;
 static TextLayer* m_next_layer;
 static BitmapLayer* m_icon_layer;
+static Layer* m_graph_layer;
 static ActionBarLayer* m_action_bar;
 static char m_next_buffer[24];
 
@@ -78,6 +81,130 @@ static void setup_icon_layer(Layer* window_layer, GRect bounds)
     layer_add_child(window_layer, bitmap_layer_get_layer(m_icon_layer));
 }
 
+// Draws one favourite's sparkline within row_rect: a small "Name  latest"
+// label on top and a 7-day normalized line below it.
+static void draw_sparkline(GContext* ctx, GRect row_rect, uint16_t metric_id)
+{
+    Metrics* metric = metrics_get(metric_id);
+    if(metric == NULL) return;
+
+    GColor fg = config_get_foreground_color();
+    graphics_context_set_text_color(ctx, fg);
+    graphics_context_set_stroke_color(ctx, fg);
+    graphics_context_set_fill_color(ctx, fg);
+
+    TrendSeries series;
+    trend_build(metric_id, &series);
+
+    // Label row: metric name on the left, latest value on the right.
+    const char* name = (metric->title != NULL) ? metric->title->value : "";
+    GRect label_rect = GRect(row_rect.origin.x + 2, row_rect.origin.y,
+        row_rect.size.w - 4, 16);
+    graphics_draw_text(ctx, name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+        label_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+
+    static char val_buf[8];
+    if(series.points > 0 && series.has[TREND_DAYS - 1])
+    {
+        snprintf(val_buf, sizeof(val_buf), "%d", series.value[TREND_DAYS - 1]);
+        graphics_draw_text(ctx, val_buf, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+            label_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+    }
+
+    // Plot area below the label.
+    int plot_top = row_rect.origin.y + 17;
+    int plot_bottom = row_rect.origin.y + row_rect.size.h - 3;
+    int plot_left = row_rect.origin.x + 3;
+    int plot_right = row_rect.origin.x + row_rect.size.w - 3;
+    int plot_h = plot_bottom - plot_top;
+    int plot_w = plot_right - plot_left;
+    if(plot_h < 4 || plot_w < 6) return;
+
+    if(series.points == 0)
+    {
+        graphics_draw_text(ctx, "ingen data", fonts_get_system_font(FONT_KEY_GOTHIC_14),
+            GRect(plot_left, plot_top - 2, plot_w, plot_h + 4),
+            GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+        return;
+    }
+
+    int span = series.max_v - series.min_v;   // effective_range guarantees >= 1
+    graphics_context_set_antialiased(ctx, true);
+    graphics_context_set_stroke_width(ctx, 2);
+
+    // Point x/y per day; connect consecutive days that both have data.
+    GPoint prev = GPointZero;
+    bool have_prev = false;
+    for(int d = 0; d < TREND_DAYS; d++)
+    {
+        if(!series.has[d])
+        {
+            have_prev = false;   // gap: don't bridge missing days
+            continue;
+        }
+        int x = plot_left + (TREND_DAYS == 1 ? 0 : (d * plot_w) / (TREND_DAYS - 1));
+        int y = plot_bottom - ((series.value[d] - series.min_v) * plot_h) / span;
+        GPoint p = GPoint(x, y);
+        if(have_prev)
+        {
+            graphics_draw_line(ctx, prev, p);
+        }
+        graphics_fill_circle(ctx, p, 2);
+        prev = p;
+        have_prev = true;
+    }
+    graphics_context_set_stroke_width(ctx, 1);
+}
+
+static void graph_update_proc(Layer* layer, GContext* ctx)
+{
+    GRect bounds = layer_get_bounds(layer);
+
+    uint16_t favorites[MAX_FAVORITES];
+    config_get_favorites(favorites);
+
+    // Collect the favourites whose metric still exists.
+    uint16_t valid[MAX_FAVORITES];
+    uint8_t n = 0;
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(favorites[i] != 0 && metrics_get(favorites[i]) != NULL)
+        {
+            valid[n++] = favorites[i];
+        }
+    }
+    if(n == 0) return;
+
+    int row_h = bounds.size.h / n;
+    for(uint8_t i = 0; i < n; i++)
+    {
+        GRect row = GRect(0, i * row_h, bounds.size.w, row_h);
+        draw_sparkline(ctx, row, valid[i]);
+    }
+}
+
+static void setup_graph_layer(Layer* window_layer, GRect bounds)
+{
+    int content_w = bounds.size.w - ACTION_BAR_WIDTH;
+    int top = STATUS_BAR_LAYER_HEIGHT + 4;
+    int bottom = bounds.size.h - 28 - 2;
+    m_graph_layer = layer_create(GRect(2, top, content_w - 4, bottom - top));
+    layer_set_update_proc(m_graph_layer, graph_update_proc);
+    layer_add_child(window_layer, m_graph_layer);
+}
+
+// Home screen shows either the big mood icon (no favourites) or the favourite
+// sparklines. The window stays on the stack under Settings, so this is
+// re-evaluated on every appear.
+static void update_home_content()
+{
+    bool graph = config_favorite_count() > 0;
+    layer_set_hidden(bitmap_layer_get_layer(m_icon_layer), graph);
+    layer_set_hidden(text_layer_get_layer(m_title_layer), graph);
+    layer_set_hidden(m_graph_layer, !graph);
+    layer_mark_dirty(m_graph_layer);
+}
+
 static void setup_next_layer(Layer* window_layer, GRect bounds)
 {
     // Bottom-left corner, left aligned.
@@ -127,15 +254,19 @@ static void load_main_window(Window* window)
     m_status_bar = status_bar_create_themed(window_layer);
     setup_title_layer(window_layer, bounds);
     setup_icon_layer(window_layer, bounds);
+    setup_graph_layer(window_layer, bounds);
     setup_next_layer(window_layer, bounds);
     setup_action_bar();
     apply_theme();
+    update_home_content();
 }
 
 static void appear_main_window(Window* window)
 {
     apply_theme();
     update_next_time();
+    // Favourites and registrations may have changed under Settings/registration.
+    update_home_content();
 }
 
 static void unload_main_window(Window* window)
@@ -144,6 +275,7 @@ static void unload_main_window(Window* window)
     text_layer_destroy(m_title_layer);
     text_layer_destroy(m_next_layer);
     bitmap_layer_destroy(m_icon_layer);
+    layer_destroy(m_graph_layer);
     action_bar_layer_remove_from_window(m_action_bar);
     action_bar_layer_destroy(m_action_bar);
 }
