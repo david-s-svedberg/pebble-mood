@@ -56,6 +56,9 @@ dependencies {
     // aggregate API we use and builds fine against compileSdk 35.
     implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
 
+    // Background periodic Health Connect refresh (so the user need not tap).
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+
     // Graph phase: Compose UI. The chart itself is hand-drawn on Canvas — full
     // control over the bespoke marks (bool-as-event tracks, normalized lines)
     // without a chart-library dependency.

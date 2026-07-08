@@ -67,10 +67,11 @@ pkjs → companion-appen:
   grafen + Spearman plockar upp dem gratis. Full-refresh: `deleteByMetricIds` + insert varje
   hämtning (korrekt när dagens totaler växer). Behörighet via
   `PermissionController.createRequestPermissionResultContract` + rationale-intent-filter
-  (inkl. Android 14+-varianten `VIEW_PERMISSION_USAGE`/`HEALTH_PERMISSIONS`). Manuell "Hämta
-  hälsodata"-knapp på Status-fliken (ingen bakgrunds-worker än — read-only historik, on-demand
-  räcker). connect-client pinnad till **1.1.0-alpha10** (rc/stable kräver AGP 8.9 +
-  compileSdk 36 — hela verktygskedjan skulle behöva bumpas).
+  (inkl. Android 14+-varianten `VIEW_PERMISSION_USAGE`/`HEALTH_PERMISSIONS`). "Hämta
+  hälsodata"-knapp på Status-fliken kvar som manuell fallback; en WorkManager-worker
+  (`health/HealthSync`) hämtar automatiskt vid appstart + var 6:e timme (no-op om HC
+  saknas/ej beviljats). connect-client pinnad till **1.1.0-alpha10** (rc/stable kräver AGP
+  8.9 + compileSdk 36). Demodatan/`DemoData` + demoknapparna borttagna inför skarp drift.
 - **Fas 7 (korrelation) — KLAR:** Spearman + lag ±1d på per-dag-serier, generisk över alla
   metrics (även användarskapade + Health Connect). **AI-tillval byggt:** `ai/AiAnalyzer`
   bygger JSON (metric-metadata + valens + per-dag-tabell, delad `DailyAggregation`) och

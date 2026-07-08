@@ -29,6 +29,7 @@ import se.svep.mood.companion.config.ConfigScreen
 import se.svep.mood.companion.phone.PhoneMode
 import se.svep.mood.companion.phone.PhoneScreen
 import se.svep.mood.companion.phone.Reminders
+import se.svep.mood.companion.health.HealthSync
 
 class MainActivity : ComponentActivity() {
 
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermissionIfNeeded()
         PhoneMode.load(this)
         ImportService.start(this)
+        HealthSync.schedule(this)   // immediate + 6-hourly background HC refresh
 
         // A reminder notification deep-links to its group's answer flow.
         val deepLinkGroupId = intent.getIntExtra(Reminders.EXTRA_GROUP_ID, 0)

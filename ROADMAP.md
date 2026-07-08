@@ -151,12 +151,13 @@ utveckling som sparklines i stället för stora ikonen (0 favoriter → ikonen k
 ## Öppna småtrådar
 
 - [ ] **Visuell röktest på 144×168** (diorite/basalt-emulatorn) — layouten är kodgranskad
-      (allt beräknas från bounds/konstanter) men appen har bara synats på emery, inkl. den
-      nya hemskärmsgrafen. Sparkline-höjden på 144×168 blir ~39 px/rad vid 3 favoriter
-      (beräknat, ej synat). En engångs-syn när emulatorn beter sig.
-      (Not: qemu-pebble ligger i SDK:ns `toolchain/bin` och är inte på PATH i containern —
-      exportera `$HOME/.local/share/pebble-sdk/SDKs/4.17/toolchain/bin` före `pebble install
-      --emulator`.)
+      (allt beräknas från bounds/konstanter) men appen har bara synats på emery. Hemskärms-
+      grafens veckodagsaxel HÄRDAD för smala skärmar: etikettbredden följer slot-avståndet
+      (~17 px/slot på 144) i stället för fast 24 px, så de aldrig överlappar. Live-screenshot
+      på basalt/diorite var blockerad av att emulatorns screenshot-kanal hängde sig upprepat
+      (även tom hemskärm timeoutade) — återstår att syna när emulatorn beter sig.
+      (Not: qemu-pebble ligger i SDK:ns `toolchain/bin`, inte på PATH — exportera
+      `$HOME/.local/share/pebble-sdk/SDKs/4.17/toolchain/bin` före `pebble install --emulator`.)
 
 - [ ] **Röstdiktering kräver ansluten telefon** — utan telefon får nya metrics/grupper
       defaultnamn. Ev. textfritt/förvalt alternativ.

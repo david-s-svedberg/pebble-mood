@@ -161,13 +161,18 @@ static void draw_axis(GContext* ctx, int plot_left, int plot_right, int strip_to
     struct tm* lt = localtime(&now);
     int today_wday = lt->tm_wday;   // 0..6
 
+    // Size each label to the slot spacing so labels never overlap on narrow
+    // screens (144 px leaves ~17 px/slot); capped so they don't sprawl on emery.
+    int spacing = (TREND_DAYS > 1) ? (plot_right - plot_left) / (TREND_DAYS - 1) : 24;
+    int label_w = spacing < 26 ? spacing : 26;
+
     for(int d = 0; d < TREND_DAYS; d++)
     {
         int days_ago = (TREND_DAYS - 1) - d;
         int wday = ((today_wday - days_ago) % 7 + 7) % 7;
         int x = day_x(d, plot_left, plot_right);
         graphics_draw_text(ctx, WEEKDAY2[wday], font,
-            GRect(x - 12, strip_top, 24, AXIS_STRIP_H),
+            GRect(x - label_w / 2, strip_top, label_w, AXIS_STRIP_H),
             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     }
 }
