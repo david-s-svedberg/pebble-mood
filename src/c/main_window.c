@@ -81,9 +81,23 @@ static void setup_icon_layer(Layer* window_layer, GRect bounds)
     layer_add_child(window_layer, bitmap_layer_get_layer(m_icon_layer));
 }
 
-// Draws one favourite's sparkline within row_rect: a small "Name  latest"
-// label on top and a 7-day normalized line below it.
-static void draw_sparkline(GContext* ctx, GRect row_rect, uint16_t metric_id)
+// Two-letter weekday labels, indexed by struct tm's tm_wday (0 = Sunday).
+static const char* const WEEKDAY2[7] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+
+#define AXIS_STRIP_H (15)
+
+// x for day-slot d (0 = oldest / 6 days ago, TREND_DAYS-1 = today) across the
+// shared plot span [left, right]. Today sits at the right edge.
+static int day_x(int d, int left, int right)
+{
+    if(TREND_DAYS <= 1) return left;
+    return left + (d * (right - left)) / (TREND_DAYS - 1);
+}
+
+// One favourite's sparkline: metric name label, then a 7-day normalized line.
+// Days without data are simply left blank (the line breaks across gaps); the
+// shared weekday axis below still shows every day so the window is legible.
+static void draw_sparkline(GContext* ctx, GRect row_rect, int plot_left, int plot_right, uint16_t metric_id)
 {
     Metrics* metric = metrics_get(metric_id);
     if(metric == NULL) return;
@@ -93,46 +107,23 @@ static void draw_sparkline(GContext* ctx, GRect row_rect, uint16_t metric_id)
     graphics_context_set_stroke_color(ctx, fg);
     graphics_context_set_fill_color(ctx, fg);
 
+    const char* name = (metric->title != NULL) ? metric->title->value : "";
+    graphics_draw_text(ctx, name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+        GRect(row_rect.origin.x + 2, row_rect.origin.y, row_rect.size.w - 4, 16),
+        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+
     TrendSeries series;
     trend_build(metric_id, &series);
 
-    // Label row: metric name on the left, latest value on the right.
-    const char* name = (metric->title != NULL) ? metric->title->value : "";
-    GRect label_rect = GRect(row_rect.origin.x + 2, row_rect.origin.y,
-        row_rect.size.w - 4, 16);
-    graphics_draw_text(ctx, name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-        label_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-
-    static char val_buf[8];
-    if(series.points > 0 && series.has[TREND_DAYS - 1])
-    {
-        snprintf(val_buf, sizeof(val_buf), "%d", series.value[TREND_DAYS - 1]);
-        graphics_draw_text(ctx, val_buf, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-            label_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-    }
-
-    // Plot area below the label.
-    int plot_top = row_rect.origin.y + 17;
-    int plot_bottom = row_rect.origin.y + row_rect.size.h - 3;
-    int plot_left = row_rect.origin.x + 3;
-    int plot_right = row_rect.origin.x + row_rect.size.w - 3;
+    int plot_top = row_rect.origin.y + 16;
+    int plot_bottom = row_rect.origin.y + row_rect.size.h - 2;
     int plot_h = plot_bottom - plot_top;
-    int plot_w = plot_right - plot_left;
-    if(plot_h < 4 || plot_w < 6) return;
-
-    if(series.points == 0)
-    {
-        graphics_draw_text(ctx, "ingen data", fonts_get_system_font(FONT_KEY_GOTHIC_14),
-            GRect(plot_left, plot_top - 2, plot_w, plot_h + 4),
-            GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-        return;
-    }
+    if(plot_h < 4) return;
 
     int span = series.max_v - series.min_v;   // effective_range guarantees >= 1
     graphics_context_set_antialiased(ctx, true);
     graphics_context_set_stroke_width(ctx, 2);
 
-    // Point x/y per day; connect consecutive days that both have data.
     GPoint prev = GPointZero;
     bool have_prev = false;
     for(int d = 0; d < TREND_DAYS; d++)
@@ -142,18 +133,43 @@ static void draw_sparkline(GContext* ctx, GRect row_rect, uint16_t metric_id)
             have_prev = false;   // gap: don't bridge missing days
             continue;
         }
-        int x = plot_left + (TREND_DAYS == 1 ? 0 : (d * plot_w) / (TREND_DAYS - 1));
+        int x = day_x(d, plot_left, plot_right);
         int y = plot_bottom - ((series.value[d] - series.min_v) * plot_h) / span;
         GPoint p = GPoint(x, y);
-        if(have_prev)
-        {
-            graphics_draw_line(ctx, prev, p);
-        }
+        if(have_prev) graphics_draw_line(ctx, prev, p);
         graphics_fill_circle(ctx, p, 2);
         prev = p;
         have_prev = true;
     }
     graphics_context_set_stroke_width(ctx, 1);
+}
+
+// The one x-axis shared by every sparkline: a baseline and a two-letter weekday
+// under each of the 7 day-slots. Labels roll with the date (today on the right,
+// 6 days ago on the left), and all 7 show even when most days have no data.
+static void draw_axis(GContext* ctx, int plot_left, int plot_right, int strip_top)
+{
+    GColor fg = config_get_foreground_color();
+    graphics_context_set_stroke_color(ctx, fg);
+    graphics_context_set_stroke_width(ctx, 1);
+    graphics_draw_line(ctx, GPoint(plot_left, strip_top), GPoint(plot_right, strip_top));
+
+    graphics_context_set_text_color(ctx, fg);
+    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+
+    time_t now = time(NULL);
+    struct tm* lt = localtime(&now);
+    int today_wday = lt->tm_wday;   // 0..6
+
+    for(int d = 0; d < TREND_DAYS; d++)
+    {
+        int days_ago = (TREND_DAYS - 1) - d;
+        int wday = ((today_wday - days_ago) % 7 + 7) % 7;
+        int x = day_x(d, plot_left, plot_right);
+        graphics_draw_text(ctx, WEEKDAY2[wday], font,
+            GRect(x - 12, strip_top, 24, AXIS_STRIP_H),
+            GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+    }
 }
 
 static void graph_update_proc(Layer* layer, GContext* ctx)
@@ -175,12 +191,18 @@ static void graph_update_proc(Layer* layer, GContext* ctx)
     }
     if(n == 0) return;
 
-    int row_h = bounds.size.h / n;
+    // Reserve the bottom strip for the shared weekday axis; stack the sparklines
+    // in the space above it, all sharing the same left/right plot span.
+    int plot_left = 4;
+    int plot_right = bounds.size.w - 4;
+    int rows_bottom = bounds.size.h - AXIS_STRIP_H;
+    int row_h = rows_bottom / n;
     for(uint8_t i = 0; i < n; i++)
     {
         GRect row = GRect(0, i * row_h, bounds.size.w, row_h);
-        draw_sparkline(ctx, row, valid[i]);
+        draw_sparkline(ctx, row, plot_left, plot_right, valid[i]);
     }
+    draw_axis(ctx, plot_left, plot_right, rows_bottom);
 }
 
 static void setup_graph_layer(Layer* window_layer, GRect bounds)

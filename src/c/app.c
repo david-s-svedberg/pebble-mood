@@ -57,27 +57,11 @@ void init()
             ensure_all_alarms_scheduled();
         } else
         {
-            bool is_snooze = (alarm_index == SNOOZED_ALARM_ID);
-            int32_t group_id = is_snooze ? config_get_snoozed_group_id() : alarm_index;
-
-            if(metrics_group_complete_today(group_id))
-            {
-                // Everything in this group is already registered today: don't
-                // show the alarm or vibrate. Reschedule the daily alarm so it
-                // fires again tomorrow, then exit (no window pushed).
-                APP_LOG(APP_LOG_LEVEL_INFO, "alarm: group %d already complete today, skipping", (int)group_id);
-                if(!is_snooze)
-                {
-                    MetricsGroup* group = metrics_group_get(group_id);
-                    if(group != NULL)
-                    {
-                        schedule_alarm(&group->alarm);
-                    }
-                }
-            } else
-            {
-                setup_alarm_window(alarm_index);
-            }
+            // Group / snooze alarm. setup_alarm_window re-arms the alarm for
+            // tomorrow and skips the UI (no window, no vibration) when the group
+            // is already fully answered today — so a completed group exits
+            // quietly here just as it stays quiet when the app is already open.
+            setup_alarm_window(alarm_index);
         }
     } else
     {

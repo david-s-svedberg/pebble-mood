@@ -137,8 +137,10 @@ utveckling som sparklines i stället för stora ikonen (0 favoriter → ikonen k
   redan en ≥7-dygns svans (gallringen sparar just för trender), så en cache vore redundant och
   bara en källa till staleness. `trend.c` gör en pass över registreringarna per favorit;
   effektiv min/max per typ normaliserar höjden (delad semantik med data_export).
-- Favoriter lagras i AppConfig (`favorite_metrics[3]`, v7). Saknad data/dag → glapp i linjen;
-  favorit utan data → "ingen data". Uppdateras automatiskt när man kommer tillbaka från en
+- Favoriter lagras i AppConfig (`favorite_metrics[3]`, v7). Saknad data/dag → glapp i linjen.
+  **En delad x-axel** under alla sparklines med två-bokstavs veckodagar (Mo/Tu/…), rullande
+  7-dygnsfönster med idag längst till höger; alla 7 dagar visas även när de flesta saknar data.
+  Ingen värdesiffra (trenden är poängen). Uppdateras när man kommer tillbaka från en
   registrering eller telefon-sync (appear beräknar om).
 
 ## Öppna småtrådar

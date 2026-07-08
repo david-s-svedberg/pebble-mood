@@ -245,6 +245,19 @@ bool setup_alarm_state(int32_t alarm_index)
     }
 
     config_save();
+
+    // Everything in this group is already answered today: don't prompt or
+    // vibrate. The alarm is already re-armed for tomorrow above, so we just
+    // bail. This guards BOTH launch paths — the wakeup that relaunches the app
+    // (app.c) and a wakeup that fires while the app is already open
+    // (wakeup_handler) — the latter previously showed the alarm regardless.
+    if(m_registering_group != NULL && metrics_group_complete_today(m_registering_group->id))
+    {
+        APP_LOG(APP_LOG_LEVEL_INFO, "alarm: group %d already complete today, skipping window",
+            m_registering_group->id);
+        return false;
+    }
+
     run_vibration(NULL);
     set_timeout();
     return true;
