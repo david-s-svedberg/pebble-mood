@@ -40,10 +40,14 @@ pkjs → companion-appen:
 - **Fas 3 (graf):** Vico. Dag-aggregerad översikt + detaljzoom med råa tidsstämplar
   (spontana = flera punkter/dag). Bool = event-markörer på egen rad, aldrig linjer.
   Normalisering via min/max.
-- **Fas 4 (config-synk):** nytt AppMessage-kontrakt telefon→klocka (config-entiteter:
+- **Fas 4 (config-synk) — KLAR:** AppMessage-kontrakt telefon→klocka (config-entiteter:
   grupp {id, namn, tid, aktiv}, metric {id, namn, typ, min/max, ikoner, texter},
-  medlemskap). Klockan applicerar via repositories. `IconChoice`-enumen blir delad
-  kontraktskonstant. Konfliktmodell: last-write-wins per entitet (revisionsräknare).
+  medlemskap). Klockan applicerar via repositories (`config_apply.c`). Last-write-wins per
+  entitet. **Radering** (`SET_DELETE_GROUP_ID`/`SET_DELETE_METRIC_ID`) + klocka→telefon-
+  reconciliation i `ImportRepository`: tar bort companion-entiteter som saknas i en KOMPLETT
+  export (watch skickar `EXPORT_METRIC_COUNT`/`GROUP_COUNT`; skippad export-item ⇒ ingen
+  radering). Health-metrics (9001–9003) bevaras alltid; de exkluderas ur grupp-medlemsval
+  (SET_GROUP_MEMBERS är uint8).
 - **Fas 5 (telefonläge) — KLAR:** global setting (`PhoneMode`, SharedPreferences). Av-läge
   synkar en global `alarms_suspended`-flagga (AppConfig, `SET_ALARMS_SUSPENDED`) i stället
   för att klottra varje grupps `alarm.active` — `ensure_all_alarms_scheduled` avarmerar allt

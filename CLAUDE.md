@@ -8,8 +8,15 @@ Mood is a **native (C) Pebble smartwatch app** for registering your mood and oth
 factors on a schedule (concrete emotion metrics: Joy, Anxiety, Irritation, Stress, Love, …).
 It targets **`basalt`, `diorite`, and `emery`** (Pebble Time 2) on Pebble SDK 4.x. *Aplite was
 dropped* — its 24 KB app RAM could no longer fit the app. Data lives entirely in the watch's
-persistent storage; a PebbleKit JS side (`src/pkjs/`) exports registrations to the phone for
-the planned companion app (see [ROADMAP.md](ROADMAP.md)).
+persistent storage; a PebbleKit JS side (`src/pkjs/`) bridges to an **Android companion app**
+(`companion/`, built — fas 2–7, see [ROADMAP.md](ROADMAP.md)). The companion is a full twin:
+it receives registrations, edits the watch's config back (groups/metrics, incl. delete),
+takes registrations in "phone mode", and does the analysis that deliberately does NOT live on
+the watch — graphs, Spearman correlations, Health Connect, and an optional Claude-API pass.
+
+The watch also has a **home-screen trend graph** (1–3 favourite metrics as 7-day sparklines,
+`src/c/trend.c` + `favorites_window.c`) and **phone mode** (a global `alarms_suspended`
+AppConfig flag; the companion owns reminders while the watch stays quiet).
 
 ## Build & run
 
@@ -110,9 +117,35 @@ path to `persist_*`:
 Accepted debt: persisted structs still contain runtime pointer fields (`String* title`,
 `char* value`); they are ignored/rehydrated on load and cost a few bytes per record.
 
-### Export (pkjs)
+### Watch ↔ phone sync (pkjs + companion)
 
-[src/c/data_export.c](src/c/data_export.c) streams all registrations to
-[src/pkjs/index.js](src/pkjs/index.js) over AppMessage on phone request (serial, 3 retries per
-item). The message carries metric id/name/type/min/max, value, timestamp, group id + name.
-Keep `messageKeys` (package.json) ↔ `MESSAGE_KEY_*` (C) ↔ payload keys (JS) in sync.
+The link is **two-way**, bridged by [src/pkjs/index.js](src/pkjs/index.js):
+
+- **Watch → phone (export):** [src/c/data_export.c](src/c/data_export.c) is a state machine
+  that streams config (metrics + groups + memberships) then all registrations over AppMessage
+  on request (serial, 3 retries per item; `outbox_failed` **skips** an item after retries and
+  still sends `EXPORT_DONE`). The DONE message carries authoritative
+  `EXPORT_METRIC_COUNT`/`EXPORT_GROUP_COUNT` so the companion only reconciles deletions
+  (drops absent metrics/groups) on a *complete* export — a skipped item never causes a false
+  delete.
+- **Phone → watch (apply):** [src/c/config_apply.c](src/c/config_apply.c) applies queued
+  companion edits relayed as `SET_*` messages: group/metric create+edit (id 0 = create, watch
+  allocates the id), `SET_ALARMS_SUSPENDED` (phone mode), `SET_REG_*` (a registration answered
+  on the phone), and `SET_DELETE_GROUP_ID`/`SET_DELETE_METRIC_ID`.
+
+Keep the 4-way contract in sync: `messageKeys` (package.json) ↔ `MESSAGE_KEY_*` (C) ↔ pkjs
+payload keys ↔ companion (`ConfigSync`/`ImportRepository`). **Gotcha (bitten twice):** editing
+`src/pkjs/index.js` or `messageKeys` after a build does NOT regenerate the JS bundle —
+`pebble install` ships stale JS. Always `pebble clean && pebble build` when either changes;
+verify with `grep <new-string> build/pebble-js-app.js`.
+
+### Companion app (`companion/`)
+
+Kotlin + Jetpack Compose + Room (`./gradlew :app:assembleDebug`; install on the phone over
+adb). A foreground service owns a loopback-only `ServerSocket` that pkjs POSTs to; imports are
+idempotent (unique `metricId,groupId,timestamp` + IGNORE). Phone-side config edits queue as
+`PendingChangeEntity` and are pulled+applied by pkjs on the next watch launch. Health Connect
+data (steps/sleep/heart-rate the Core Devices app writes) is read via a WorkManager worker and
+exposed as synthetic auto-metrics (ids 9001–9003, kept out of the watch id-space). Nothing
+leaves the phone except the optional Claude-API analysis call. Tabs: Graf, Insikter, Konfig,
+Telefon, Status.

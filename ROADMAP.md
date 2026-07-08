@@ -77,10 +77,13 @@ registreringar äldre än ~7 dagar (persist-budgeten).
   jag") — aldrig interpolerade kurvor.
 - Skalor normaliseras via exporterade min/max (Joy 1–5 vs Anxiety 0–5).
 
-**Fas 4 — Konfigurationsparitet + synk.** Grupper, metrics, medlemskap och ikoner ska
-kunna redigeras i Android-appen och synkas till klockan (nytt AppMessage-kontrakt:
-config-synk telefon→klocka). Klockans config förblir redigerbar; enkel konfliktmodell
-(senaste ändring vinner per entitet) — designas i fasen.
+**Fas 4 — Konfigurationsparitet + synk — KLAR.** Grupper, metrics, medlemskap och ikoner kan
+redigeras i Android-appen och synkas till klockan (config-synk telefon→klocka). Klockans
+config förblir redigerbar; last-write-wins per entitet. **Radering KLAR båda vägar** (verifierad
+på hårdvara): watch-editorer + companion-editorer har two-tap-bekräftelse; telefon→klocka via
+`SET_DELETE_GROUP_ID`/`SET_DELETE_METRIC_ID`, klocka→telefon via reconciliation som bara kör på
+komplett export (watch skickar `EXPORT_METRIC_COUNT`/`GROUP_COUNT`; en skippad export-item
+raderar aldrig av misstag).
 
 **Fas 5 — Telefonläge (globalt val) — KLAR (verifierad på hårdvara 2026-07-08).** Setting
 "Pebble-integration" på/av (companion, Telefon-flik):
