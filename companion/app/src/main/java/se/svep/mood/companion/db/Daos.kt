@@ -37,6 +37,15 @@ interface GroupDao {
 
     @Query("SELECT * FROM membership")
     suspend fun memberships(): List<MembershipEntity>
+
+    @Query("SELECT metricId FROM membership WHERE groupId = :groupId")
+    suspend fun membersOf(groupId: Int): List<Int>
+
+    @Query("SELECT * FROM grp WHERE active = 1 ORDER BY hour, minute")
+    suspend fun active(): List<GroupEntity>
+
+    @Query("SELECT * FROM grp WHERE groupId = :groupId")
+    suspend fun byId(groupId: Int): GroupEntity?
 }
 
 @Dao

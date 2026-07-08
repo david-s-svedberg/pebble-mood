@@ -1272,7 +1272,12 @@
             "SET_METRIC_TYPE",
             "SET_METRIC_MIN",
             "SET_METRIC_MAX",
-            "SET_METRIC_MAIN_ICON"
+            "SET_METRIC_MAIN_ICON",
+            "SET_ALARMS_SUSPENDED",
+            "SET_REG_METRIC_ID",
+            "SET_REG_GROUP_ID",
+            "SET_REG_VALUE",
+            "SET_REG_TIMESTAMP"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [

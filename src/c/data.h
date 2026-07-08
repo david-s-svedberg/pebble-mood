@@ -7,7 +7,7 @@
 // Bump this whenever the AppConfig layout changes (and only append new fields
 // to the end of AppConfig). config_init() re-seeds when the stored version or
 // size no longer matches, so existing installs can't read a stale layout.
-#define CURRENT_DATA_VERSION (5)
+#define CURRENT_DATA_VERSION (6)
 
 // Reserved Alarm.index values for the non-group alarms. They live in a uint8_t
 // (Alarm.index) and are also used as the wakeup cookie (compared as int in
@@ -64,6 +64,12 @@ typedef struct {
     // The group whose alarm was snoozed, so the registration target survives
     // the app exit/relaunch that a snooze causes.
     uint16_t snoozed_group_id;
+
+    // Phone mode (companion "Pebble-integration" = off): the phone owns the
+    // reminders, so all group wakeups are cancelled and left unscheduled.
+    // Global on purpose — it does NOT touch each group's own alarm.active, so
+    // flipping back restores exactly the schedule the user had.
+    bool alarms_suspended;
 } AppConfig;
 
 typedef enum

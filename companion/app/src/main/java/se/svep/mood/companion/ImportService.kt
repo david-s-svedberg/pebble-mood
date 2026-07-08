@@ -17,6 +17,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import se.svep.mood.companion.config.ConfigSync
+import se.svep.mood.companion.phone.PhoneMode
+import se.svep.mood.companion.phone.Reminders
 
 /**
  * Foreground service that owns the import listener, so the sync happens the
@@ -31,6 +33,7 @@ class ImportService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        PhoneMode.load(this)
         repository = ImportRepository(this)
         server = ImportServer(route = ::route).also { it.start() }
     }
@@ -55,6 +58,11 @@ class ImportService : Service() {
         when {
             method == "POST" && path == "/import" -> {
                 val result = repository.import(body)
+                // Config (group times) may have changed: keep phone-mode
+                // reminders in step with the freshly-imported schedule.
+                if (!PhoneMode.isEnabled(this@ImportService)) {
+                    Reminders.rescheduleAll(this@ImportService)
+                }
                 "{\"status\":\"ok\",\"received\":${result.received}," +
                     "\"new\":${result.new},\"ackedThrough\":${result.ackedThrough}}"
             }

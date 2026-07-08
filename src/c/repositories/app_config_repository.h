@@ -24,3 +24,5 @@ Alarm*      config_get_summer_time_alarm();
 void        config_set_alarm_timeout(uint8_t sec);
 uint16_t    config_get_snoozed_group_id();
 void        config_set_snoozed_group_id(uint16_t group_id);
+bool        config_alarms_suspended();
+void        config_set_alarms_suspended(bool suspended);

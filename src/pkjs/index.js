@@ -112,6 +112,20 @@ function buildChangeMessage(c) {
       'SET_METRIC_MAIN_ICON': c.mainIcon || 0
     };
   }
+  if (c.kind === 'app') {
+    // Phone mode toggle: suspend/resume the watch's own group alarms.
+    return { 'SET_ALARMS_SUSPENDED': c.suspended ? 1 : 0 };
+  }
+  if (c.kind === 'registration') {
+    // A registration answered on the phone, synced back so the watch's
+    // "answered today" + trend cache stay correct.
+    return {
+      'SET_REG_METRIC_ID': c.metricId || 0,
+      'SET_REG_GROUP_ID': c.groupId || 0,
+      'SET_REG_VALUE': c.value || 0,
+      'SET_REG_TIMESTAMP': c.timestamp || 0
+    };
+  }
   return null;
 }
 

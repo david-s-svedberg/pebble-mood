@@ -9,6 +9,7 @@ import se.svep.mood.companion.db.GroupEntity
 import se.svep.mood.companion.db.MembershipEntity
 import se.svep.mood.companion.db.MetricEntity
 import se.svep.mood.companion.db.PendingChangeEntity
+import se.svep.mood.companion.db.RegistrationEntity
 
 /**
  * The phone->watch half of config sync: edits are applied to the local mirror
@@ -81,6 +82,58 @@ object ConfigSync {
         ImportRepository.bumpDataVersion()
     }
 
+    /**
+     * Phone mode toggle: queue the watch's alarm-suspend flag. suspended=true
+     * (integration off) cancels the watch's group wakeups; false restores them.
+     */
+    suspend fun saveAppMode(context: Context, suspended: Boolean) {
+        val payload = JSONObject()
+            .put("kind", "app")
+            .put("suspended", suspended)
+        AppDatabase.get(context).pending().enqueue(
+            PendingChangeEntity(kind = "app", payload = payload.toString(), createdAt = System.currentTimeMillis())
+        )
+        ImportRepository.bumpDataVersion()
+    }
+
+    /**
+     * A registration answered on the phone (phone mode). Stored locally so the
+     * graphs/insights see it at once, and queued to sync back to the watch so
+     * its "answered today" + trend cache stay correct wherever you answered.
+     */
+    suspend fun saveRegistration(
+        context: Context,
+        metricId: Int,
+        groupId: Int,
+        groupName: String,
+        value: Int,
+        timestamp: Long,        // unix seconds
+    ) {
+        val db = AppDatabase.get(context)
+        db.registrations().insertAll(
+            listOf(
+                RegistrationEntity(
+                    metricId = metricId,
+                    groupId = groupId,
+                    groupName = groupName,
+                    value = value,
+                    timestamp = timestamp,
+                    importedAt = System.currentTimeMillis(),
+                )
+            )
+        )
+        val payload = JSONObject()
+            .put("kind", "registration")
+            .put("metricId", metricId)
+            .put("groupId", groupId)
+            .put("value", value)
+            .put("timestamp", timestamp)
+        db.pending().enqueue(
+            PendingChangeEntity(kind = "registration", payload = payload.toString(), createdAt = System.currentTimeMillis())
+        )
+        ImportRepository.bumpDataVersion()
+    }
+
     /** GET /pending response: the queue in pkjs wire shape. */
     suspend fun pendingJson(context: Context): String {
         val changes = AppDatabase.get(context).pending().all()
@@ -110,7 +163,10 @@ object ConfigSync {
         val created = (payload.optInt("groupId", -1) == 0 || payload.optInt("metricId", -1) == 0)
         return when (change.kind) {
             "group" -> if (created) "Nytt pass: $name" else "Ändrat pass: $name"
-            else -> if (created) "Ny metric: $name" else "Ändrad metric: $name"
+            "metric" -> if (created) "Ny metric: $name" else "Ändrad metric: $name"
+            "app" -> if (payload.optBoolean("suspended")) "Stäng av klockans larm" else "Slå på klockans larm"
+            "registration" -> "Telefonsvar (metric ${payload.optInt("metricId")})"
+            else -> change.kind
         }
     }
 }

@@ -26,31 +26,41 @@ import androidx.core.content.ContextCompat
 import se.svep.mood.companion.graph.GraphScreen
 import se.svep.mood.companion.insights.InsightsScreen
 import se.svep.mood.companion.config.ConfigScreen
+import se.svep.mood.companion.phone.PhoneMode
+import se.svep.mood.companion.phone.PhoneScreen
+import se.svep.mood.companion.phone.Reminders
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermissionIfNeeded()
+        PhoneMode.load(this)
         ImportService.start(this)
+
+        // A reminder notification deep-links to its group's answer flow.
+        val deepLinkGroupId = intent.getIntExtra(Reminders.EXTRA_GROUP_ID, 0)
 
         setContent {
             MaterialTheme(
                 colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
             ) {
-                var tab by remember { mutableStateOf(0) }
+                // Land on the Telefon tab when opened from a reminder.
+                var tab by remember { mutableStateOf(if (deepLinkGroupId != 0) 4 else 0) }
                 Scaffold { padding ->
                     Column(Modifier.fillMaxSize().padding(padding)) {
                         TabRow(selectedTabIndex = tab) {
                             Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Graf") })
                             Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Insikter") })
                             Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Konfig") })
-                            Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Status") })
+                            Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Telefon") })
+                            Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text("Status") })
                         }
                         when (tab) {
                             0 -> GraphScreen(Modifier.fillMaxSize())
                             1 -> InsightsScreen(Modifier.fillMaxSize())
                             2 -> ConfigScreen(Modifier.fillMaxSize())
+                            3 -> PhoneScreen(Modifier.fillMaxSize(), initialGroupId = deepLinkGroupId)
                             else -> StatusScreen(Modifier.fillMaxSize())
                         }
                     }

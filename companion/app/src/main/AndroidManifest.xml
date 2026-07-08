@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Phone mode (fas 5): re-arm the local group reminders after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:label="@string/app_name"
@@ -32,5 +34,19 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Standing localhost listener receiving Pebble watch sync batches" />
         </service>
+
+        <!-- Phone mode (fas 5): fires each group reminder at its scheduled time. -->
+        <receiver
+            android:name=".phone.ReminderReceiver"
+            android:exported="false" />
+
+        <!-- Re-arm the reminders after a device reboot. -->
+        <receiver
+            android:name=".phone.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

@@ -5,6 +5,7 @@
 #include "scheduler.h"
 #include "icons.h"
 #include "repositories/metrics_repository.h"
+#include "repositories/app_config_repository.h"
 
 // Sets a group's membership to exactly the given metric-id list.
 static void set_members(uint16_t group_id, const uint8_t* wanted, uint16_t wanted_count)
@@ -68,7 +69,9 @@ static void apply_group(DictionaryIterator* iter, uint16_t group_id)
     if(active != NULL) group->alarm.active = active->value->uint8 != 0;
 
     // Time or active state may have changed: re-arm (or cancel) the wakeup.
-    if(group->alarm.active)
+    // In phone mode the companion owns reminders, so never arm here (but keep
+    // the desired alarm.active on record for when the watch takes over again).
+    if(group->alarm.active && !config_alarms_suspended())
     {
         reschedule_alarm(&group->alarm);
     } else
@@ -143,8 +146,56 @@ static void apply_metric(DictionaryIterator* iter, uint16_t metric_id)
     APP_LOG(APP_LOG_LEVEL_INFO, "config: applied metric %d", id);
 }
 
+// Applies a registration answered on the phone (phone mode). Updates the
+// existing slot for this (group, metric) today if there is one, else appends —
+// mirroring how the watch's own registration flow behaves, so "answered today"
+// and the group-complete check stay correct wherever the answer came from.
+static void apply_registration(DictionaryIterator* iter, uint16_t metric_id)
+{
+    Tuple* group = dict_find(iter, MESSAGE_KEY_SET_REG_GROUP_ID);
+    Tuple* value = dict_find(iter, MESSAGE_KEY_SET_REG_VALUE);
+    Tuple* stamp = dict_find(iter, MESSAGE_KEY_SET_REG_TIMESTAMP);
+    if(value == NULL) return;
+
+    uint16_t group_id = (group != NULL) ? group->value->uint16 : 0;
+    uint8_t val = value->value->uint8;
+
+    Registration* existing = registration_today_for_group_metric(group_id, metric_id);
+    if(existing != NULL)
+    {
+        registration_update(existing, val);
+    } else
+    {
+        Registration registration = {
+            .metrics_id = metric_id,
+            .value = val,
+            .time_stamp = (stamp != NULL) ? (time_t)stamp->value->int32 : time(NULL),
+            .group_id = group_id,
+        };
+        registration_add(&registration);
+    }
+    APP_LOG(APP_LOG_LEVEL_INFO, "config: applied phone registration metric %d group %d = %d",
+        metric_id, group_id, val);
+}
+
 bool config_apply_handle(DictionaryIterator* iter)
 {
+    Tuple* suspend = dict_find(iter, MESSAGE_KEY_SET_ALARMS_SUSPENDED);
+    if(suspend != NULL)
+    {
+        config_set_alarms_suspended(suspend->value->uint8 != 0);
+        ensure_all_alarms_scheduled();   // cancel or restore group wakeups
+        APP_LOG(APP_LOG_LEVEL_INFO, "config: alarms_suspended=%d", suspend->value->uint8);
+        return true;
+    }
+
+    Tuple* reg_metric = dict_find(iter, MESSAGE_KEY_SET_REG_METRIC_ID);
+    if(reg_metric != NULL)
+    {
+        apply_registration(iter, (uint16_t)reg_metric->value->uint16);
+        return true;
+    }
+
     Tuple* group_id = dict_find(iter, MESSAGE_KEY_SET_GROUP_ID);
     if(group_id != NULL)
     {

@@ -44,11 +44,18 @@ pkjs → companion-appen:
   grupp {id, namn, tid, aktiv}, metric {id, namn, typ, min/max, ikoner, texter},
   medlemskap). Klockan applicerar via repositories. `IconChoice`-enumen blir delad
   kontraktskonstant. Konfliktmodell: last-write-wins per entitet (revisionsräknare).
-- **Fas 5 (telefonläge):** global setting; av-läge skickar `alarm.active=false`-synk till
-  klockan och schemalägger lokala notiser (AlarmManager) vid grupptiderna; inmatnings-UI
-  återanvänder registreringsflödets semantik (en metric i taget, knapp=värde).
-  Telefonsvar → synk till klockan (registrering med group_id) som uppdaterar
-  "besvarad idag" + trendcachen.
+- **Fas 5 (telefonläge) — KLAR:** global setting (`PhoneMode`, SharedPreferences). Av-läge
+  synkar en global `alarms_suspended`-flagga (AppConfig, `SET_ALARMS_SUSPENDED`) i stället
+  för att klottra varje grupps `alarm.active` — `ensure_all_alarms_scheduled` avarmerar allt
+  vid suspend och återställer exakt schemat vid resume. Lokala notiser via AlarmManager
+  (`setAndAllowWhileIdle`, inexakt → ingen `SCHEDULE_EXACT_ALARM`-behörighet), återarmeras per
+  träff (ReminderReceiver) + efter omstart (BootReceiver). Inmatnings-UI (Telefon-flik,
+  `PhoneScreen`) återanvänder registreringsflödets semantik (en metric i taget, knapp=värde;
+  bool→Nej/Ja, three_option→3 knappar, interval→min..max). Telefonsvar lagras lokalt direkt
+  och köas som `kind:"registration"` → klockan (`SET_REG_*`) uppdaterar dagens slot in-place
+  eller appendar. Kön töms via /pending-ack; ingen dubbelapplicering (idempotent per dag).
+  **Klockgrafens trendcache är ännu inte byggd** — sync-back uppdaterar registrerings-storen,
+  cachen kopplas in när den finns (§2).
 - **Fas 6 (Health Connect):** läsbehörigheter för sömn/steg/puls; daglig aggregering till
   auto-metrics. Steg 0: `adb shell` / HC-appen — verifiera vilka källor som skriver.
 - **Fas 7 (korrelation):** Spearman + lag ±1d på per-dag-serier, generisk över alla

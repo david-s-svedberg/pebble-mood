@@ -82,12 +82,19 @@ kunna redigeras i Android-appen och synkas till klockan (nytt AppMessage-kontrak
 config-synk telefon→klocka). Klockans config förblir redigerbar; enkel konfliktmodell
 (senaste ändring vinner per entitet) — designas i fasen.
 
-**Fas 5 — Telefonläge (globalt val, beslutat).** Setting "Pebble-integration" på/av:
+**Fas 5 — Telefonläge (globalt val) — KLAR (verifierad på hårdvara 2026-07-08).** Setting
+"Pebble-integration" på/av (companion, Telefon-flik):
 - **På** (default): larm + inmatning på klockan som idag.
 - **Av**: klockans larm avaktiveras; telefonen tar över med notiser vid grupptiderna och
-  samma inmatningsflöde (en metric i taget, samma ikoner) i appen.
-- **Telefonsvar synkas alltid tillbaka till klockan** (beslutat) så "redan besvarad
-  idag"-logiken och klockans graf stämmer oavsett var man svarade.
+  samma inmatningsflöde (en metric i taget) i appen.
+- **Telefonsvar synkas alltid tillbaka till klockan** så "redan besvarad idag"-logiken och
+  klockans graf stämmer oavsett var man svarade.
+- Klockans avstängning sker via en **global `alarms_suspended`-flagga i AppConfig** som
+  nollställer grupp-wakeups utan att röra varje grupps egna `alarm.active` — att slå på igen
+  återställer exakt det gamla schemat (verifierat: 09:30/12:30/21:30 kom tillbaka). Synkas
+  över pending-kön (`kind:"app"`), telefonsvar likaså (`kind:"registration"`, uppdaterar
+  dagens slot in-place på klockan). Notiser via AlarmManager (inexakt/idle, ingen exakt-larm-
+  behörighet), återarmeras vid varje träff och efter omstart (BootReceiver).
 
 **Fas 6 — Hälsodata via Health Connect (beslutat: telefonsidan, inte klockans
 HealthService).** Companion läser sömn, steg och puls ur Androids Health Connect som

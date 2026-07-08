@@ -72,6 +72,21 @@ void schedule_snooze_alarm(Alarm* alarm, time_t wakup_time)
 void ensure_all_alarms_scheduled()
 {
     MetricsGroup* metric_groups = metrics_groups_get_all();
+
+    if(config_alarms_suspended())
+    {
+        // Phone mode: the companion posts the reminders. Cancel every group
+        // wakeup (leaving alarm.active untouched, so resuming restores them)
+        // and skip re-arming. The DST alarm stays live so a summer-time shift
+        // still re-runs this — it re-checks the flag and does nothing.
+        for(uint16_t i = 0; i < metrics_groups_count(); i++)
+        {
+            unschedule_alarm(&metric_groups[i].alarm);
+        }
+        schedule_alarm(config_get_summer_time_alarm());
+        return;
+    }
+
     for(uint16_t i = 0; i < metrics_groups_count(); i++)
     {
         MetricsGroup* current_metric_group = &metric_groups[i];

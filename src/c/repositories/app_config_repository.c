@@ -132,6 +132,17 @@ uint16_t config_get_snoozed_group_id()
     return m_app_config.snoozed_group_id;
 }
 
+bool config_alarms_suspended()
+{
+    return m_app_config.alarms_suspended;
+}
+
+void config_set_alarms_suspended(bool suspended)
+{
+    m_app_config.alarms_suspended = suspended;
+    config_save();
+}
+
 void config_set_snoozed_group_id(uint16_t group_id)
 {
     m_app_config.snoozed_group_id = group_id;
