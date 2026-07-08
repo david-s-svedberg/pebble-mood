@@ -218,6 +218,25 @@ char* get_alarm_title()
 
 bool setup_alarm_state(int32_t alarm_index)
 {
+    // Phone mode: the phone owns reminders. A group/snooze wakeup that still
+    // reaches us here — one already queued in the OS when suspension was applied,
+    // or fired while the app was open — must not re-arm, prompt, or vibrate.
+    // Cancel it and bail; init()'s ensure_all_alarms_scheduled cancels the rest,
+    // so this closes the race that would otherwise resurrect a daily alarm.
+    if(config_alarms_suspended())
+    {
+        if(alarm_index == SNOOZED_ALARM_ID)
+        {
+            unschedule_alarm(config_get_snooze_alarm());
+        } else
+        {
+            MetricsGroup* group = metrics_group_get(alarm_index);
+            if(group != NULL) unschedule_alarm(&group->alarm);
+        }
+        APP_LOG(APP_LOG_LEVEL_INFO, "alarm: index %d fired while suspended, cancelled", (int)alarm_index);
+        return false;
+    }
+
     if(alarm_index == SNOOZED_ALARM_ID)
     {
         m_wakup_alarm = config_get_snooze_alarm();
