@@ -84,15 +84,20 @@ fun InsightsScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun InsightRow(insight: Correlations.Insight) {
     val strength = when {
-        abs(insight.r) >= 0.6 -> "starkt"
-        abs(insight.r) >= 0.4 -> "måttligt"
-        else -> "svagt"
+        abs(insight.r) >= 0.6 -> "Starkt"
+        abs(insight.r) >= 0.4 -> "Måttligt"
+        else -> "Svagt"
     }
-    val direction = if (insight.r > 0) "åt samma håll" else "åt motsatt håll"
-    val title = if (insight.lagDays == 0) {
-        "${insight.a.name} ↔ ${insight.b.name}"
+    // Sign of r says whether B follows A up (positive) or down (negative);
+    // lag says whether it's the same day or the day after. Spell it out in
+    // plain language instead of arrows.
+    val bWord = if (insight.r > 0) "högt" else "lågt"
+    val a = insight.a.name
+    val b = insight.b.name
+    val sentence = if (insight.lagDays == 0) {
+        "När $a-värdet är högt är $b-värdet $bWord samma dag ($strength samband)"
     } else {
-        "${insight.a.name} → ${insight.b.name} dagen efter"
+        "Dagen efter $a-värdet varit högt är $b-värdet $bWord ($strength samband)"
     }
     val caveat = if (insight.n < 14) " · få datapunkter" else ""
 
@@ -105,13 +110,9 @@ private fun InsightRow(insight: Correlations.Insight) {
     } else ""
 
     Column {
-        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(sentence, style = MaterialTheme.typography.titleSmall)
         Text(
-            "$strength samband $direction$framing",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Text(
-            "r ${"%+.2f".format(insight.r)} · ${insight.n} dagar$caveat",
+            "r ${"%+.2f".format(insight.r)} · ${insight.n} dagar$caveat$framing",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
