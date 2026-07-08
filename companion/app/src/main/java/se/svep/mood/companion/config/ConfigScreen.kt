@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import se.svep.mood.companion.ImportRepository
+import se.svep.mood.companion.health.HealthMetrics
 import se.svep.mood.companion.db.AppDatabase
 import se.svep.mood.companion.db.GroupEntity
 import se.svep.mood.companion.db.MembershipEntity
@@ -276,7 +277,10 @@ private fun GroupEditorDialog(
                 }
                 Spacer(Modifier.height(8.dp))
                 Text("Metrics i passet:", style = MaterialTheme.typography.labelLarge)
-                allMetrics.forEach { metric ->
+                // Health Connect auto-metrics (companion-only ids) aren't watch
+                // metrics — excluded so they can't be synced as group members
+                // (SET_GROUP_MEMBERS is uint8; their high ids would truncate).
+                allMetrics.filter { it.metricId !in HealthMetrics.ALL }.forEach { metric ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = metric.metricId in members,
