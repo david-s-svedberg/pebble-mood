@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import se.svep.mood.companion.ImportRepository
+import se.svep.mood.companion.ai.AiAnalysisSection
 import se.svep.mood.companion.db.AppDatabase
 import kotlin.math.abs
 
@@ -51,6 +52,9 @@ fun InsightsScreen(modifier: Modifier = Modifier) {
     }
 
     Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
+        AiAnalysisSection()
+        Spacer(Modifier.height(20.dp))
+
         Text("Samband (senaste 90 dagarna)", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
         Text(

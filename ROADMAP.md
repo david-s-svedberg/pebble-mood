@@ -123,10 +123,15 @@ grafer/korrelationer — fångar alla källor utan klock-kod.
   Bor enbart i companion-appens MetricEntity (klockan analyserar inget — ingen export- eller
   klockändring); sätts i companion-appens metric-redigerare (fas 4), rimliga defaults för
   seed-uppsättningen.
-- **AI-analys som explicit funktion:** "Analysera period"-knapp som dumpar vald period
-  (registreringar + hälsodata) som JSON till Claude API och visar resonemanget om vad som
-  verkar påverka vad. API-nyckel i settings + tydlig notis om att datan lämnar telefonen
-  vid just de anropen.
+- **AI-analys som explicit funktion — KLAR (verifierad på hårdvara 2026-07-08).**
+  "Analysera period"-knapp (Insikter-fliken, ovanför korrelationslistan) med periodval
+  14/30/90 dagar. Bygger en kompakt JSON (metric-metadata inkl. valens + en per-dag-tabell,
+  delad `DailyAggregation`-semantik) och POSTar till Claude Messages API
+  (`claude-sonnet-5`) via `HttpsURLConnection` — inget SDK-beroende. API-nyckeln sparas
+  lokalt (`AiSettings`, SharedPreferences) och en **engångs-samtyckesdialog** ("enda gången
+  data lämnar telefonen") krävs före första anropet. Verifierat end-to-end på telefonen: fel
+  API-nyckel → når Anthropic → 401 → "API-fel: invalid x-api-key" (payload/nätverk/parsning/
+  samtycke bekräftade; endast ett lyckat svar kräver användarens riktiga nyckel).
 
 ### 2. Klockans graf-hemskärm — KLAR (emulator-verifierad 2026-07-08)
 

@@ -71,9 +71,15 @@ pkjs → companion-appen:
   hälsodata"-knapp på Status-fliken (ingen bakgrunds-worker än — read-only historik, on-demand
   räcker). connect-client pinnad till **1.1.0-alpha10** (rc/stable kräver AGP 8.9 +
   compileSdk 36 — hela verktygskedjan skulle behöva bumpas).
-- **Fas 7 (korrelation):** Spearman + lag ±1d på per-dag-serier, generisk över alla
-  metrics (även användarskapade). AI-tillval: JSON-dump av vald period → Claude API
-  (nyckel i settings, privacy-notis) → resonemang renderas/sparas.
+- **Fas 7 (korrelation) — KLAR:** Spearman + lag ±1d på per-dag-serier, generisk över alla
+  metrics (även användarskapade + Health Connect). **AI-tillval byggt:** `ai/AiAnalyzer`
+  bygger JSON (metric-metadata + valens + per-dag-tabell, delad `DailyAggregation`) och
+  POSTar till Claude Messages API (`claude-sonnet-5`, `anthropic-version: 2023-06-01`) via
+  `HttpsURLConnection` — inget SDK. `AiSettings` (SharedPreferences) håller nyckel + engångs-
+  samtycke; UI:t (`ai/AiAnalysisSection`) sitter överst i Insikter-fliken (nyckelfält →
+  periodval → samtyckesdialog → resultat/fel). Anropet är enda vägen data lämnar telefonen.
+  Firewallnot: anropet går från TELEFONEN (normal internetåtkomst), inte containern — så
+  container-firewallen (bara telefon-IP tillåten) påverkar inte AI-anropen.
 
 ## Teknikval
 
