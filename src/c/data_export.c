@@ -156,6 +156,12 @@ static void send_done()
     DictionaryIterator* iter;
     if(!begin(&iter)) return;
     dict_write_uint8(iter, MESSAGE_KEY_EXPORT_DONE, 1);
+    // Authoritative counts so the companion can tell a COMPLETE config export
+    // (received == expected) from one that skipped an item after retries — it
+    // only reconciles deletions (drops absent metrics/groups) when complete,
+    // so a transient AppMessage failure never wipes a metric or its history.
+    dict_write_uint16(iter, MESSAGE_KEY_EXPORT_METRIC_COUNT, (uint16_t)metrics_count());
+    dict_write_uint16(iter, MESSAGE_KEY_EXPORT_GROUP_COUNT, (uint16_t)metrics_groups_count());
     app_message_outbox_send();
 }
 

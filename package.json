@@ -1246,6 +1246,8 @@
             "REG_GROUP_NAME",
             "EXPORT_ACK_THROUGH",
             "EXPORT_DONE",
+            "EXPORT_METRIC_COUNT",
+            "EXPORT_GROUP_COUNT",
             "CFG_METRIC_ID",
             "CFG_METRIC_NAME",
             "CFG_METRIC_TYPE",

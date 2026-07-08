@@ -18,6 +18,8 @@ var OPTION_TEXT_SEPARATOR = '\x1f';
 var registrations = [];
 var metrics = [];
 var groups = [];
+var expectedMetricCount = 0;
+var expectedGroupCount = 0;
 
 function metricTypeName(type) {
   // Mirrors MetricsType in src/c/data.h:
@@ -35,7 +37,15 @@ function deliverToCompanion() {
   var payload = {
     version: 2,
     exportedAt: Date.now(),
-    config: { metrics: metrics, groups: groups },
+    // metricCount/groupCount are the watch's authoritative totals; the companion
+    // only reconciles deletions when its received arrays match these (complete
+    // export), so a skipped item never triggers a false delete.
+    config: {
+      metrics: metrics,
+      groups: groups,
+      metricCount: expectedMetricCount,
+      groupCount: expectedGroupCount
+    },
     registrations: received
   };
 
@@ -81,6 +91,8 @@ function requestExport() {
   registrations = [];
   metrics = [];
   groups = [];
+  expectedMetricCount = 0;
+  expectedGroupCount = 0;
   Pebble.sendAppMessage(
     { 'EXPORT_REQUEST': 1 },
     function() {},
@@ -232,9 +244,11 @@ Pebble.addEventListener('appmessage', function(e) {
   }
 
   if (p.EXPORT_DONE !== undefined) {
+    if (p.EXPORT_METRIC_COUNT !== undefined) { expectedMetricCount = p.EXPORT_METRIC_COUNT; }
+    if (p.EXPORT_GROUP_COUNT !== undefined) { expectedGroupCount = p.EXPORT_GROUP_COUNT; }
     var received = registrations.filter(function(r) { return r !== undefined; });
-    console.log('Export complete: ' + metrics.length + ' metrics, ' +
-      groups.length + ' groups, ' + received.length + ' registrations');
+    console.log('Export complete: ' + metrics.length + '/' + expectedMetricCount + ' metrics, ' +
+      groups.length + '/' + expectedGroupCount + ' groups, ' + received.length + ' registrations');
     deliverToCompanion();
   }
 });

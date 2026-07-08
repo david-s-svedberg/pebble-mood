@@ -11,6 +11,7 @@ import se.svep.mood.companion.db.GroupEntity
 import se.svep.mood.companion.db.MembershipEntity
 import se.svep.mood.companion.db.MetricEntity
 import se.svep.mood.companion.db.RegistrationEntity
+import se.svep.mood.companion.health.HealthMetrics
 
 /** Result of one import batch, echoed back to pkjs as the ack. */
 data class ImportResult(
@@ -33,8 +34,10 @@ class ImportRepository(context: Context) {
         val now = System.currentTimeMillis()
 
         payload.optJSONObject("config")?.let { config ->
-            importMetrics(config.optJSONArray("metrics") ?: JSONArray(), now)
-            importGroups(config.optJSONArray("groups") ?: JSONArray())
+            // metricCount/groupCount are the watch's authoritative totals; -1 when
+            // absent (older pkjs) → skip deletion-reconciliation to stay safe.
+            importMetrics(config.optJSONArray("metrics") ?: JSONArray(), config.optInt("metricCount", -1), now)
+            importGroups(config.optJSONArray("groups") ?: JSONArray(), config.optInt("groupCount", -1))
         }
 
         val result = importRegistrations(payload.getJSONArray("registrations"), now)
@@ -45,7 +48,7 @@ class ImportRepository(context: Context) {
     }
 
     /** Config mirrors the watch — except valence, which is ours and survives. */
-    private suspend fun importMetrics(metrics: JSONArray, now: Long) {
+    private suspend fun importMetrics(metrics: JSONArray, expectedCount: Int, now: Long) {
         val rows = ArrayList<MetricEntity>()
         for (i in 0 until metrics.length()) {
             val m = metrics.getJSONObject(i)
@@ -69,9 +72,21 @@ class ImportRepository(context: Context) {
             )
         }
         if (rows.isNotEmpty()) db.metrics().upsertAll(rows)
+
+        // Reconcile watch→phone deletes, but ONLY on a complete export (received
+        // == the watch's authoritative count) so a skipped item never wipes a
+        // metric or its history. Health auto-metrics (companion-only) are kept.
+        if (expectedCount >= 0 && metrics.length() == expectedCount) {
+            val keep = ArrayList<Int>()
+            for (i in 0 until metrics.length()) keep.add(metrics.getJSONObject(i).getInt("metricId"))
+            keep.addAll(HealthMetrics.ALL)
+            db.metrics().deleteMetricsNotIn(keep)
+            db.registrations().deleteRegistrationsOfMetricsNotIn(keep)
+            db.groups().deleteMembershipsOfMetricsNotIn(keep)
+        }
     }
 
-    private suspend fun importGroups(groups: JSONArray) {
+    private suspend fun importGroups(groups: JSONArray, expectedCount: Int) {
         val groupRows = ArrayList<GroupEntity>()
         for (i in 0 until groups.length()) {
             val g = groups.getJSONObject(i)
@@ -92,6 +107,19 @@ class ImportRepository(context: Context) {
             )
         }
         if (groupRows.isNotEmpty()) db.groups().upsertAll(groupRows)
+
+        // Reconcile watch→phone group deletes on a complete export. Group
+        // registrations are kept (history), matching the delete cascade.
+        if (expectedCount >= 0 && groups.length() == expectedCount) {
+            if (groups.length() == 0) {
+                db.groups().deleteAllGroups()
+                db.groups().clearAllMemberships()
+            } else {
+                val keep = (0 until groups.length()).map { groups.getJSONObject(it).getInt("groupId") }
+                db.groups().deleteGroupsNotIn(keep)
+                db.groups().deleteMembershipsOfGroupsNotIn(keep)
+            }
+        }
     }
 
     private suspend fun importRegistrations(regs: JSONArray, now: Long): ImportResult {

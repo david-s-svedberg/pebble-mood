@@ -22,6 +22,10 @@ interface MetricDao {
 
     @Query("DELETE FROM metric WHERE metricId = :id")
     suspend fun deleteMetric(id: Int)
+
+    /** Reconcile: drop metrics the watch no longer exports (keep = watch ids + health). */
+    @Query("DELETE FROM metric WHERE metricId NOT IN (:keep)")
+    suspend fun deleteMetricsNotIn(keep: List<Int>)
 }
 
 @Dao
@@ -55,6 +59,22 @@ interface GroupDao {
 
     @Query("DELETE FROM grp WHERE groupId = :groupId")
     suspend fun deleteGroup(groupId: Int)
+
+    // Reconcile against a complete watch export (watch→phone deletes).
+    @Query("DELETE FROM grp WHERE groupId NOT IN (:keep)")
+    suspend fun deleteGroupsNotIn(keep: List<Int>)
+
+    @Query("DELETE FROM grp")
+    suspend fun deleteAllGroups()
+
+    @Query("DELETE FROM membership WHERE metricId NOT IN (:keep)")
+    suspend fun deleteMembershipsOfMetricsNotIn(keep: List<Int>)
+
+    @Query("DELETE FROM membership WHERE groupId NOT IN (:keep)")
+    suspend fun deleteMembershipsOfGroupsNotIn(keep: List<Int>)
+
+    @Query("DELETE FROM membership")
+    suspend fun clearAllMemberships()
 }
 
 @Dao
@@ -98,6 +118,10 @@ interface RegistrationDao {
     /** Cascade for a deleted metric — drop its history too. */
     @Query("DELETE FROM registration WHERE metricId = :metricId")
     suspend fun deleteByMetricId(metricId: Int): Int
+
+    /** Reconcile: drop history of metrics the watch no longer has (keep = watch ids + health). */
+    @Query("DELETE FROM registration WHERE metricId NOT IN (:keep)")
+    suspend fun deleteRegistrationsOfMetricsNotIn(keep: List<Int>): Int
 }
 
 data class MetricCount(val name: String, val count: Int)
