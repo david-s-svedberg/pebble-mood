@@ -152,6 +152,14 @@ static void apply_metric(DictionaryIterator* iter, uint16_t metric_id)
 // and the group-complete check stay correct wherever the answer came from.
 static void apply_registration(DictionaryIterator* iter, uint16_t metric_id)
 {
+    // Ignore a phone answer for a metric that doesn't exist here — never create
+    // an orphan registration (pkjs only sends real ids, but stay defensive).
+    if(metrics_get(metric_id) == NULL)
+    {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "config: phone registration for unknown metric %d, ignoring", metric_id);
+        return;
+    }
+
     Tuple* group = dict_find(iter, MESSAGE_KEY_SET_REG_GROUP_ID);
     Tuple* value = dict_find(iter, MESSAGE_KEY_SET_REG_VALUE);
     Tuple* stamp = dict_find(iter, MESSAGE_KEY_SET_REG_TIMESTAMP);
