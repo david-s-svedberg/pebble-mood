@@ -150,8 +150,8 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
             OutlinedButton(onClick = { creatingMetric = true }) { Text("Ny metric") }
         }
         Text(
-            "Tryck på en metric för att redigera. Valens (bra/dåligt vid högt värde) " +
-                "används för insikterna och sparas bara här.",
+            "Tryck på en metric för att redigera (hälsodata är automatiska, bara valens). " +
+                "Valens (bra/dåligt vid högt värde) används för insikterna och sparas bara här.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -164,10 +164,19 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
                     "three_option" -> "3 alternativ"
                     else -> "${metric.min}–${metric.max}"
                 }
+                // Health Connect auto-metrics aren't watch config — they can't be
+                // renamed/deleted/edited, only given a valence (below). So no
+                // editor tap; the third field notes their source instead of an icon.
+                val isHealth = metric.metricId in HealthMetrics.ALL
+                val trailer = if (isHealth) "Health Connect"
+                    else ICON_CHOICE_NAMES.getOrElse(metric.mainIcon) { "?" }
+                val nameModifier = Modifier.fillMaxWidth().let {
+                    if (isHealth) it else it.clickable { editMetric = metric }
+                }
                 Text(
-                    "${metric.name}  ·  $scale  ·  ${ICON_CHOICE_NAMES.getOrElse(metric.mainIcon) { "?" }}",
+                    "${metric.name}  ·  $scale  ·  $trailer",
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth().clickable { editMetric = metric },
+                    modifier = nameModifier,
                 )
                 Spacer(Modifier.height(4.dp))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

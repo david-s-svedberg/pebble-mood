@@ -59,6 +59,9 @@ dependencies {
     // Background periodic Health Connect refresh (so the user need not tap).
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
+    // Encrypted-at-rest storage for the optional Claude API key (phase 7).
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
     // Graph phase: Compose UI. The chart itself is hand-drawn on Canvas — full
     // control over the bespoke marks (bool-as-event tracks, normalized lines)
     // without a chart-library dependency.
