@@ -215,12 +215,33 @@ static void setup_graph_layer(Layer* window_layer, GRect bounds)
     layer_add_child(window_layer, m_graph_layer);
 }
 
-// Home screen shows either the big mood icon (no favourites) or the favourite
-// sparklines. The window stays on the stack under Settings, so this is
-// re-evaluated on every appear.
+// A sparkline only reads as a graph once it has a few days behind it. Below
+// this, the home screen keeps the icon so a lone dot never looks like the UI.
+#define MIN_GRAPH_DAYS (3)
+
+// True when at least one favourite has >= MIN_GRAPH_DAYS days of data.
+static bool graph_has_enough_data()
+{
+    uint16_t favorites[MAX_FAVORITES];
+    config_get_favorites(favorites);
+    for(uint8_t i = 0; i < MAX_FAVORITES; i++)
+    {
+        if(favorites[i] == 0 || metrics_get(favorites[i]) == NULL) continue;
+        TrendSeries series;
+        if(trend_build(favorites[i], &series) && series.points >= MIN_GRAPH_DAYS)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Home screen shows either the big mood icon or the favourite sparklines. The
+// window stays on the stack under Settings, so this is re-evaluated on every
+// appear. The graph only takes over once there's enough history to read as one.
 static void update_home_content()
 {
-    bool graph = config_favorite_count() > 0;
+    bool graph = config_favorite_count() > 0 && graph_has_enough_data();
     layer_set_hidden(bitmap_layer_get_layer(m_icon_layer), graph);
     layer_set_hidden(text_layer_get_layer(m_title_layer), graph);
     layer_set_hidden(m_graph_layer, !graph);
