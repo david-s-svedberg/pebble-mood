@@ -96,11 +96,19 @@ config-synk telefon→klocka). Klockans config förblir redigerbar; enkel konfli
   dagens slot in-place på klockan). Notiser via AlarmManager (inexakt/idle, ingen exakt-larm-
   behörighet), återarmeras vid varje träff och efter omstart (BootReceiver).
 
-**Fas 6 — Hälsodata via Health Connect (beslutat: telefonsidan, inte klockans
-HealthService).** Companion läser sömn, steg och puls ur Androids Health Connect som
-auto-metrics i grafer/korrelationer — fångar alla källor utan klock-kod. Steg 0:
-verifiera empiriskt vad som faktiskt skriver till Health Connect på telefonen (skriver
-Core Devices-appen Pebble-datan dit?); annars omprövas klock-spåret som komplement.
+**Fas 6 — Hälsodata via Health Connect — KLAR (verifierad på hårdvara 2026-07-08).**
+Companion läser sömn, steg och puls ur Androids Health Connect som auto-metrics i
+grafer/korrelationer — fångar alla källor utan klock-kod.
+- **Steg 0-utfallet:** `coredevices.coreapp` HAR beviljade HC-WRITE-behörigheter för
+  HEART_RATE/SLEEP/STEPS/EXERCISE — Core Devices-appen skriver alltså Pebble-hälsodatan till
+  Health Connect. Läsvägen fungerar, klock-spåret behövdes aldrig.
+- Companion läser STEPS/SLEEP/HEART_RATE, aggregerar per lokal dag
+  (`aggregateGroupByPeriod`, `Period.ofDays(1)`), och skapar tre auto-metrics (id 9001–9003,
+  utanför klockans id-rymd så de aldrig krockar/exporteras): Steg, Sömn (min), Puls (snitt).
+  Full-refresh av health-raderna vid varje hämtning. De dyker upp i grafen och
+  korrelationerna automatiskt (delad `DailyAggregation`); valens-default steg/sömn +1, puls −1.
+  Verifierat med riktig Pebble-data: t.ex. Stress↔Steg −0,72, Sömn→Exercised(+1d) +0,65.
+- connect-client pinnad till 1.1.0-alpha10 (rc/stable kräver AGP 8.9 + compileSdk 36).
 
 **Fas 7 — Korrelation (beslutat: matte inbyggd + AI som tillval).**
 - **Matematisk grund — KLAR (v1):** per-dag-serier per metric (delad aggregerings-semantik

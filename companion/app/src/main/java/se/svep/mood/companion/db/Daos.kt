@@ -85,6 +85,10 @@ interface RegistrationDao {
     /** Removes demo rows (DemoData marks them via importedAt). */
     @Query("DELETE FROM registration WHERE importedAt = :marker")
     suspend fun deleteByImportMarker(marker: Long): Int
+
+    /** Full-refresh of Health Connect auto-metrics (re-imported each time). */
+    @Query("DELETE FROM registration WHERE metricId IN (:ids)")
+    suspend fun deleteByMetricIds(ids: List<Int>): Int
 }
 
 data class MetricCount(val name: String, val count: Int)

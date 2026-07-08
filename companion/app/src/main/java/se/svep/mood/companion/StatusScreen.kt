@@ -26,6 +26,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import se.svep.mood.companion.db.AppDatabase
+import se.svep.mood.companion.health.HealthSection
+import androidx.compose.material3.HorizontalDivider
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -69,6 +71,11 @@ fun StatusScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
         Text(text, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(16.dp))
+
+        HealthSection()
+        Spacer(Modifier.height(16.dp))
+        HorizontalDivider()
         Spacer(Modifier.height(16.dp))
 
         // TEMPORARY: demo data so the graphs can be evaluated before real

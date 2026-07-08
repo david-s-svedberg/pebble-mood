@@ -56,8 +56,21 @@ pkjs → companion-appen:
   eller appendar. Kön töms via /pending-ack; ingen dubbelapplicering (idempotent per dag).
   **Klockgrafens trendcache är ännu inte byggd** — sync-back uppdaterar registrerings-storen,
   cachen kopplas in när den finns (§2).
-- **Fas 6 (Health Connect):** läsbehörigheter för sömn/steg/puls; daglig aggregering till
-  auto-metrics. Steg 0: `adb shell` / HC-appen — verifiera vilka källor som skriver.
+- **Fas 6 (Health Connect) — KLAR:** Steg 0 avgjord empiriskt via
+  `dumpsys package coredevices.coreapp` — Core Devices-appen har beviljade HC-WRITE-perms för
+  HEART_RATE/SLEEP/STEPS/EXERCISE, dvs den skriver Pebble-datan dit. `HealthConnectManager`
+  läser STEPS/SLEEP/HEART_RATE och aggregerar per lokal dag med `aggregateGroupByPeriod`
+  (`Period.ofDays(1)`). Resultatet blir tre syntetiska auto-metrics (`HealthMetrics` id
+  9001–9003, medvetet utanför klockans id-rymd — klockan känner inte till dem, config-exporten
+  rör dem aldrig, och de saknar grupp så de dyker ALDRIG upp i telefonläges-svarsflödet).
+  Dagsvärden lagras som `RegistrationEntity` (groupId 0, timestamp = dygnets start) →
+  grafen + Spearman plockar upp dem gratis. Full-refresh: `deleteByMetricIds` + insert varje
+  hämtning (korrekt när dagens totaler växer). Behörighet via
+  `PermissionController.createRequestPermissionResultContract` + rationale-intent-filter
+  (inkl. Android 14+-varianten `VIEW_PERMISSION_USAGE`/`HEALTH_PERMISSIONS`). Manuell "Hämta
+  hälsodata"-knapp på Status-fliken (ingen bakgrunds-worker än — read-only historik, on-demand
+  räcker). connect-client pinnad till **1.1.0-alpha10** (rc/stable kräver AGP 8.9 +
+  compileSdk 36 — hela verktygskedjan skulle behöva bumpas).
 - **Fas 7 (korrelation):** Spearman + lag ±1d på per-dag-serier, generisk över alla
   metrics (även användarskapade). AI-tillval: JSON-dump av vald period → Claude API
   (nyckel i settings, privacy-notis) → resonemang renderas/sparas.

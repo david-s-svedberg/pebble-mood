@@ -48,6 +48,14 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
+    // Phase 6: read Pebble health data (steps/sleep/heart rate) that the Core
+    // Devices app writes into Health Connect, aggregate it per day, and surface
+    // it as auto-metrics in the graph + correlation engine.
+    // Pinned to alpha10: the rc/stable line requires AGP 8.9 + compileSdk 36,
+    // which would drag the whole toolchain forward. alpha10 has the same read/
+    // aggregate API we use and builds fine against compileSdk 35.
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+
     // Graph phase: Compose UI. The chart itself is hand-drawn on Canvas — full
     // control over the bespoke marks (bool-as-event tracks, normalized lines)
     // without a chart-library dependency.
