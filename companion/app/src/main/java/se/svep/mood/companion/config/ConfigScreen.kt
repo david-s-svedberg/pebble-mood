@@ -23,6 +23,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -202,6 +203,12 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
                 editGroup = null
                 creatingGroup = false
             },
+            onDelete = group?.let {
+                {
+                    scope.launch(Dispatchers.IO) { ConfigSync.deleteGroup(context, it.groupId) }
+                    editGroup = null
+                }
+            },
         )
     }
 
@@ -217,6 +224,12 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
                 editMetric = null
                 creatingMetric = false
             },
+            onDelete = metric?.let {
+                {
+                    scope.launch(Dispatchers.IO) { ConfigSync.deleteMetric(context, it.metricId) }
+                    editMetric = null
+                }
+            },
         )
     }
 }
@@ -228,12 +241,14 @@ private fun GroupEditorDialog(
     initialMembers: Set<Int>,
     onDismiss: () -> Unit,
     onSave: (name: String, hour: Int, minute: Int, active: Boolean, members: Set<Int>) -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf(group?.name ?: "") }
     var hourText by remember { mutableStateOf((group?.hour ?: 8).toString()) }
     var minuteText by remember { mutableStateOf((group?.minute ?: 0).toString()) }
     var active by remember { mutableStateOf(group?.active ?: true) }
     var members by remember { mutableStateOf(initialMembers) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -272,6 +287,13 @@ private fun GroupEditorDialog(
                         Text(metric.name)
                     }
                 }
+                if (onDelete != null) {
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(
+                        onClick = { if (confirmDelete) onDelete() else confirmDelete = true },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    ) { Text(if (confirmDelete) "Tryck igen för att ta bort" else "Ta bort pass") }
+                }
             }
         },
         confirmButton = {
@@ -297,6 +319,7 @@ private fun MetricEditorDialog(
     metric: MetricEntity?,
     onDismiss: () -> Unit,
     onSave: (name: String, type: String, min: Int, max: Int, mainIcon: Int) -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf(metric?.name ?: "") }
     var type by remember { mutableStateOf(metric?.type ?: "interval") }
@@ -304,6 +327,7 @@ private fun MetricEditorDialog(
     var maxText by remember { mutableStateOf((metric?.max ?: 5).toString()) }
     var mainIcon by remember { mutableStateOf(metric?.mainIcon ?: 0) }
     var iconMenuOpen by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -354,6 +378,13 @@ private fun MetricEditorDialog(
                             onClick = { mainIcon = index; iconMenuOpen = false },
                         )
                     }
+                }
+                if (onDelete != null) {
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(
+                        onClick = { if (confirmDelete) onDelete() else confirmDelete = true },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    ) { Text(if (confirmDelete) "Tryck igen för att ta bort" else "Ta bort metric") }
                 }
             }
         },

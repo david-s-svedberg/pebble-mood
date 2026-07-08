@@ -1235,7 +1235,6 @@
         "messageKeys": [
             "EXPORT_REQUEST",
             "REG_INDEX",
-            "REG_TOTAL",
             "REG_METRIC_ID",
             "REG_METRIC_NAME",
             "REG_METRIC_TYPE",
@@ -1277,7 +1276,9 @@
             "SET_REG_METRIC_ID",
             "SET_REG_GROUP_ID",
             "SET_REG_VALUE",
-            "SET_REG_TIMESTAMP"
+            "SET_REG_TIMESTAMP",
+            "SET_DELETE_GROUP_ID",
+            "SET_DELETE_METRIC_ID"
         ],
         "sdkVersion": "3",
         "targetPlatforms": [

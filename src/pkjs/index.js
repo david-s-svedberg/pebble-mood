@@ -116,6 +116,12 @@ function buildChangeMessage(c) {
     // Phone mode toggle: suspend/resume the watch's own group alarms.
     return { 'SET_ALARMS_SUSPENDED': c.suspended ? 1 : 0 };
   }
+  if (c.kind === 'deleteGroup') {
+    return { 'SET_DELETE_GROUP_ID': c.groupId };
+  }
+  if (c.kind === 'deleteMetric') {
+    return { 'SET_DELETE_METRIC_ID': c.metricId };
+  }
   if (c.kind === 'registration') {
     // A registration answered on the phone, synced back so the watch's
     // "answered today" + trend cache stay correct.

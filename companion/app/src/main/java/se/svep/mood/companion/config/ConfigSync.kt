@@ -134,6 +134,31 @@ object ConfigSync {
         ImportRepository.bumpDataVersion()
     }
 
+    /** Delete a group: mirror locally (group + members) and queue for the watch. */
+    suspend fun deleteGroup(context: Context, groupId: Int) {
+        val db = AppDatabase.get(context)
+        db.groups().clearMembers(groupId)
+        db.groups().deleteGroup(groupId)
+        val payload = JSONObject().put("kind", "deleteGroup").put("groupId", groupId)
+        db.pending().enqueue(
+            PendingChangeEntity(kind = "deleteGroup", payload = payload.toString(), createdAt = System.currentTimeMillis())
+        )
+        ImportRepository.bumpDataVersion()
+    }
+
+    /** Delete a metric: mirror locally (metric + memberships + its history) and queue. */
+    suspend fun deleteMetric(context: Context, metricId: Int) {
+        val db = AppDatabase.get(context)
+        db.registrations().deleteByMetricId(metricId)
+        db.groups().clearMembershipsOfMetric(metricId)
+        db.metrics().deleteMetric(metricId)
+        val payload = JSONObject().put("kind", "deleteMetric").put("metricId", metricId)
+        db.pending().enqueue(
+            PendingChangeEntity(kind = "deleteMetric", payload = payload.toString(), createdAt = System.currentTimeMillis())
+        )
+        ImportRepository.bumpDataVersion()
+    }
+
     /** GET /pending response: the queue in pkjs wire shape. */
     suspend fun pendingJson(context: Context): String {
         val changes = AppDatabase.get(context).pending().all()
@@ -166,6 +191,8 @@ object ConfigSync {
             "metric" -> if (created) "Ny metric: $name" else "Ändrad metric: $name"
             "app" -> if (payload.optBoolean("suspended")) "Stäng av klockans larm" else "Slå på klockans larm"
             "registration" -> "Telefonsvar (metric ${payload.optInt("metricId")})"
+            "deleteGroup" -> "Ta bort pass"
+            "deleteMetric" -> "Ta bort metric"
             else -> change.kind
         }
     }

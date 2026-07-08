@@ -19,6 +19,9 @@ interface MetricDao {
 
     @Query("UPDATE metric SET valence = :valence WHERE metricId = :id")
     suspend fun setValence(id: Int, valence: Int)
+
+    @Query("DELETE FROM metric WHERE metricId = :id")
+    suspend fun deleteMetric(id: Int)
 }
 
 @Dao
@@ -31,6 +34,9 @@ interface GroupDao {
 
     @Query("DELETE FROM membership WHERE groupId = :groupId")
     suspend fun clearMembers(groupId: Int)
+
+    @Query("DELETE FROM membership WHERE metricId = :metricId")
+    suspend fun clearMembershipsOfMetric(metricId: Int)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addMembers(members: List<MembershipEntity>)
@@ -46,6 +52,9 @@ interface GroupDao {
 
     @Query("SELECT * FROM grp WHERE groupId = :groupId")
     suspend fun byId(groupId: Int): GroupEntity?
+
+    @Query("DELETE FROM grp WHERE groupId = :groupId")
+    suspend fun deleteGroup(groupId: Int)
 }
 
 @Dao
@@ -85,6 +94,10 @@ interface RegistrationDao {
     /** Full-refresh of Health Connect auto-metrics (re-imported each time). */
     @Query("DELETE FROM registration WHERE metricId IN (:ids)")
     suspend fun deleteByMetricIds(ids: List<Int>): Int
+
+    /** Cascade for a deleted metric — drop its history too. */
+    @Query("DELETE FROM registration WHERE metricId = :metricId")
+    suspend fun deleteByMetricId(metricId: Int): Int
 }
 
 data class MetricCount(val name: String, val count: Int)

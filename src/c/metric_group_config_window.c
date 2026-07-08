@@ -20,6 +20,9 @@ static char m_alarm_text_buffer[6];
 
 static DictationSession* m_dictation_session;
 static MetricsGroup* m_metric_group;
+// Two-tap delete: the first tap arms (relabels the row), the second deletes.
+// Touching any other row disarms — so a stray scroll+select can't wipe a group.
+static bool m_delete_armed = false;
 
 static void update_status_bar()
 {
@@ -53,7 +56,7 @@ static uint16_t menu_get_num_sections(MenuLayer* menu_layer, void* context)
 
 static uint16_t menu_get_num_rows(MenuLayer* menu_layer, uint16_t section, void* context)
 {
-    return (section == SECTION_GROUP) ? 2 : (uint16_t)metrics_count();
+    return (section == SECTION_GROUP) ? 3 : (uint16_t)metrics_count();
 }
 
 static int16_t menu_get_header_height(MenuLayer* menu_layer, uint16_t section, void* context)
@@ -75,9 +78,13 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
         {
             const char* title = (m_metric_group->title != NULL) ? m_metric_group->title->value : NULL;
             menu_cell_basic_draw(ctx, cell_layer, "Title", title, NULL);
-        } else
+        } else if(index->row == 1)
         {
             menu_cell_basic_draw(ctx, cell_layer, "Registration time", m_alarm_text_buffer, NULL);
+        } else
+        {
+            menu_cell_basic_draw(ctx, cell_layer,
+                m_delete_armed ? "Tap again to delete" : "Delete group", NULL, NULL);
         }
     } else
     {
@@ -100,13 +107,28 @@ static void menu_select_click(MenuLayer* menu_layer, MenuIndex* index, void* con
     {
         if(index->row == 0)
         {
+            m_delete_armed = false;
             dictation_session_start(m_dictation_session);
+        } else if(index->row == 1)
+        {
+            m_delete_armed = false;
+            setup_edit_alarm_window(m_metric_group);
         } else
         {
-            setup_edit_alarm_window(m_metric_group);
+            if(m_delete_armed)
+            {
+                uint16_t id = m_metric_group->id;
+                metrics_group_delete(id);   // m_metric_group dangles after this
+                window_stack_pop(true);
+            } else
+            {
+                m_delete_armed = true;
+                layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
+            }
         }
     } else
     {
+        m_delete_armed = false;
         Metrics* metrics = metrics_get_all();
         metrics_group_toggle_metric(m_metric_group->id, metrics[index->row].id);
         layer_mark_dirty(menu_layer_get_layer(m_config_menu_layer));
@@ -144,6 +166,7 @@ static void create_menu()
 
 static void load_metric_group_window(Window *window)
 {
+    m_delete_armed = false;
     window_set_background_color(window, config_get_background_color());
     m_status_bar = status_bar_create_themed(window_get_root_layer(window));
     create_menu();
@@ -162,6 +185,7 @@ static void unload_metric_group_window(Window *window)
 static void appear_metric_group_window(Window *window)
 {
     // Refresh after returning from the alarm editor (time may have changed).
+    m_delete_armed = false;
     if(m_config_menu_layer != NULL)
     {
         create_menu();

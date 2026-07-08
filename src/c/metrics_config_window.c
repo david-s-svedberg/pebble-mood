@@ -10,8 +10,8 @@
 #include "edit_alarm_window.h"
 #include "menu_theme.h"
 
-// Title, Type, Main icon + Max OR per-option (icon + text) rows.
-#define MAX_METRIC_ROWS (3 + 2 * MAX_METRIC_OPTIONS)
+// Title, Type, Main icon + Max OR per-option (icon + text) rows, + Delete.
+#define MAX_METRIC_ROWS (3 + 2 * MAX_METRIC_OPTIONS + 1)
 #define ROW_TEXT_LEN (20)
 #define NO_ICON (0xFF)
 
@@ -27,6 +27,7 @@ typedef enum
     RowKind_MAX,
     RowKind_OPTION_ICON,
     RowKind_OPTION_TEXT,
+    RowKind_DELETE,
 } RowKind;
 
 static Window *m_config_window;
@@ -49,6 +50,8 @@ static Metrics* m_metric = NULL;
 static int m_dictation_target = -1;  // -1 = title, 0..N = option text
 static uint8_t m_pending_option = 0; // option index awaiting an icon pick
 static int m_icon_row_index = 0;     // row that opened the icon picker
+// Two-tap delete guard (first tap arms, second deletes; other rows disarm).
+static bool m_delete_armed = false;
 
 static void metric_row_selected(int index);
 static void reload_menu();
@@ -127,6 +130,9 @@ static void build_metric_rows()
         }
     }
 
+    // Delete lives last; its label is drawn dynamically from m_delete_armed.
+    set_row(r++, RowKind_DELETE, 0, "Delete metric", NULL, NO_ICON);
+
     m_metric_row_count = r;
 }
 
@@ -181,6 +187,11 @@ static void change_type()
 
 static void metric_row_selected(int index)
 {
+    // Any tap other than the delete row itself disarms the delete confirm.
+    if(m_row_kind[index] != RowKind_DELETE)
+    {
+        m_delete_armed = false;
+    }
     switch(m_row_kind[index])
     {
         case RowKind_TITLE:
@@ -223,11 +234,25 @@ static void metric_row_selected(int index)
             m_dictation_target = m_row_option[index];
             dictation_session_start(m_dictation_session);
             break;
+        case RowKind_DELETE:
+            if(m_delete_armed)
+            {
+                uint16_t id = m_metric->id;
+                metrics_delete(id);         // m_metric dangles after this
+                config_prune_favorite(id);  // drop it from the home graph too
+                window_stack_pop(true);
+            } else
+            {
+                m_delete_armed = true;
+                mark_menu_dirty();
+            }
+            break;
     }
 }
 
 static void toggle_group_membership(int index)
 {
+    m_delete_armed = false;
     MetricsGroup* groups = metrics_groups_get_all();
     metrics_group_toggle_metric(groups[index].id, m_metric->id);
     // The checkmark is derived from live membership at draw time, so a repaint
@@ -272,6 +297,12 @@ static void menu_draw_row(GContext* ctx, const Layer* cell_layer, MenuIndex* ind
 
     if(index->section == SECTION_METRIC)
     {
+        if(m_row_kind[index->row] == RowKind_DELETE)
+        {
+            menu_cell_basic_draw(ctx, cell_layer,
+                m_delete_armed ? "Tap again to delete" : "Delete metric", NULL, NULL);
+            return;
+        }
         uint8_t choice = m_row_icon_choice[index->row];
         GBitmap* icon = (choice == NO_ICON) ? NULL : get_icon_row_by_choice(choice, light);
         const char* subtitle = m_row_subtitle[index->row][0] != '\0'
@@ -328,6 +359,7 @@ static void dictation_session_callback(
 
 static void load_main_window(Window *window)
 {
+    m_delete_armed = false;
     window_set_background_color(window, config_get_background_color());
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);

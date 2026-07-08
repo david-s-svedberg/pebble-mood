@@ -204,6 +204,25 @@ bool config_apply_handle(DictionaryIterator* iter)
         return true;
     }
 
+    Tuple* del_group = dict_find(iter, MESSAGE_KEY_SET_DELETE_GROUP_ID);
+    if(del_group != NULL)
+    {
+        uint16_t id = del_group->value->uint16;
+        metrics_group_delete(id);   // cancels the wakeup + drops memberships
+        APP_LOG(APP_LOG_LEVEL_INFO, "config: deleted group %d", id);
+        return true;
+    }
+
+    Tuple* del_metric = dict_find(iter, MESSAGE_KEY_SET_DELETE_METRIC_ID);
+    if(del_metric != NULL)
+    {
+        uint16_t id = del_metric->value->uint16;
+        metrics_delete(id);             // drops strings, registrations, memberships
+        config_prune_favorite(id);      // and any home-graph favourite pointing at it
+        APP_LOG(APP_LOG_LEVEL_INFO, "config: deleted metric %d", id);
+        return true;
+    }
+
     Tuple* group_id = dict_find(iter, MESSAGE_KEY_SET_GROUP_ID);
     if(group_id != NULL)
     {

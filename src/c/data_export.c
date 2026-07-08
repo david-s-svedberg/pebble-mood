@@ -138,7 +138,6 @@ static void send_registration(uint32_t index)
     const char* group_name = (group != NULL && group->title != NULL) ? group->title->value : "";
 
     dict_write_uint16(iter, MESSAGE_KEY_REG_INDEX, (uint16_t)index);
-    dict_write_uint16(iter, MESSAGE_KEY_REG_TOTAL, (uint16_t)registrations_count());
     dict_write_uint16(iter, MESSAGE_KEY_REG_METRIC_ID, reg->metrics_id);
     dict_write_cstring(iter, MESSAGE_KEY_REG_METRIC_NAME, name);
     dict_write_uint8(iter, MESSAGE_KEY_REG_METRIC_TYPE, type);
